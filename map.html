@@ -242,14 +242,21 @@
   .bc-cell .val { font-family:var(--mono); font-size:18px; font-weight:500; color:var(--t1); }
   .bc-cell .lbl { font-size:9px; text-transform:uppercase; letter-spacing:.08em; color:var(--t3); margin-top:3px; }
   .bc-body { padding:18px 24px; }
-  .bc-afford { background:var(--surface2); border:1px solid var(--border); border-radius:2px; padding:14px 16px; margin-bottom:14px; }
-  .bc-afford .title { font-size:11px; font-weight:600; color:var(--t1); margin-bottom:10px; text-transform:uppercase; letter-spacing:.06em; }
-  .bc-meter { margin-bottom:8px; }
+  .bc-afford { margin-bottom:14px; display:flex; flex-direction:column; gap:8px; }
+  .bc-afford-title { font-size:10px; font-weight:700; color:var(--t3); text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px; }
+  .bc-persona { background:var(--surface2); border:1px solid var(--border); border-radius:2px; padding:11px 14px; }
+  .bc-persona-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:7px; }
+  .bc-persona-label { font-size:10px; font-weight:700; color:var(--t2); text-transform:uppercase; letter-spacing:.07em; }
+  .bc-persona-badge { font-family:var(--mono); font-size:10px; font-weight:700; padding:2px 6px; border-radius:10px; }
+  .badge-ok   { background:rgba(74,200,120,.18); color:#4ac878; }
+  .badge-warn { background:rgba(245,158,11,.18);  color:#f59e0b; }
+  .badge-bad  { background:rgba(220,60,60,.18);   color:#dc3c3c; }
+  .bc-meter { margin-bottom:6px; }
   .bc-meter .row { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:3px; }
   .bc-meter .row span:first-child { font-size:10px; color:var(--t2); }
   .bc-meter .row span:last-child  { font-family:var(--mono); font-size:11px; color:var(--t1); }
-  .bc-bar { height:5px; background:var(--border2); border-radius:1px; overflow:hidden; }
-  .bc-bar-fill { height:100%; border-radius:1px; }
+  .bc-bar { height:4px; background:var(--border2); border-radius:1px; overflow:hidden; margin-top:5px; }
+  .bc-bar-fill { height:100%; border-radius:1px; transition:width .4s ease; }
   .bc-era-badge { display:inline-block; padding:3px 8px; border-radius:2px; font-size:10px; font-weight:500; margin-right:6px; }
   .era-pre45   { background:rgba(124,58,237,.25); color:#c4b5fd; }
   .era-45-65   { background:rgba(37,99,235,.25);  color:#93c5fd; }
@@ -264,7 +271,7 @@
     position:absolute; z-index:50; pointer-events:none;
     background:rgba(8,8,14,.95); border:1px solid var(--border2);
     padding:8px 12px; border-radius:2px; font-size:11px; color:var(--t1);
-    max-width:200px; white-space:nowrap; display:none;
+    max-width:260px; white-space:nowrap; display:none; line-height:1.6;
   }
 
   /* ── Gemeente notice ── */
@@ -397,7 +404,7 @@
 <div id="maptip"></div>
 
 <!-- Building card overlay -->
-<div id="bldg-card" role="dialog" aria-modal="true" aria-label="Gebouwdetails">
+<div id="bldg-card" role="dialog" aria-modal="true" aria-label="Gebouwdetails" onclick="if(event.target===this)closeBldgCard()">
   <div id="bldg-card-inner" style="position:relative">
     <button class="bc-close" onclick="closeBldgCard()">✕</button>
     <div class="bc-header">
@@ -411,14 +418,47 @@
     </div>
     <div class="bc-body">
       <div class="bc-afford">
-        <div class="title">Betaalbaarheid voor starter</div>
-        <div class="bc-meter" id="bc-meter-single">
-          <div class="row"><span>Single inkomen (CBS)</span><span id="bc-single-inc">—</span></div>
-          <div class="row"><span>Max. hypotheek (4,5×)</span><span id="bc-max-hyp">—</span></div>
-          <div class="row"><span>Tekort / overschot</span><span id="bc-gap">—</span></div>
-          <div class="bc-bar" style="margin-top:6px"><div class="bc-bar-fill" id="bc-gap-bar" style="width:0%;background:var(--red)"></div></div>
+        <div class="bc-afford-title">Betaalbaarheid</div>
+        <!-- Starter -->
+        <div class="bc-persona" id="bc-persona-starter">
+          <div class="bc-persona-head">
+            <span class="bc-persona-label">Starter (single)</span>
+            <span class="bc-persona-badge" id="bc-badge-starter">—</span>
+          </div>
+          <div class="bc-meter">
+            <div class="row"><span>Inkomen (CBS)</span><span id="bc-s-inc">—</span></div>
+            <div class="row"><span>Max. hypotheek (4,5×)</span><span id="bc-s-hyp">—</span></div>
+            <div class="row"><span>Tekort / overschot</span><span id="bc-s-gap">—</span></div>
+            <div class="bc-bar"><div class="bc-bar-fill" id="bc-s-bar" style="width:0%"></div></div>
+          </div>
         </div>
-        <div style="font-size:10px; color:var(--t2); margin-top:8px; line-height:1.5" id="bc-months"></div>
+        <!-- Huurder -->
+        <div class="bc-persona" id="bc-persona-huurder">
+          <div class="bc-persona-head">
+            <span class="bc-persona-label">Huurder</span>
+            <span class="bc-persona-badge" id="bc-badge-huurder">—</span>
+          </div>
+          <div class="bc-meter">
+            <div class="row"><span>Inkomen (CBS)</span><span id="bc-h-inc">—</span></div>
+            <div class="row"><span>Max. huur (30% netto)</span><span id="bc-h-maxhuur">—</span></div>
+            <div class="row"><span>Gesch. vrije-sector huur</span><span id="bc-h-huur">—</span></div>
+            <div class="row"><span>Sociale huurgrens 2024</span><span id="bc-h-sociaal">€879/mnd</span></div>
+            <div class="bc-bar"><div class="bc-bar-fill" id="bc-h-bar" style="width:0%"></div></div>
+          </div>
+        </div>
+        <!-- Eigenaar -->
+        <div class="bc-persona" id="bc-persona-eigenaar">
+          <div class="bc-persona-head">
+            <span class="bc-persona-label">Doorstromer (eigenaar)</span>
+            <span class="bc-persona-badge" id="bc-badge-eigenaar">—</span>
+          </div>
+          <div class="bc-meter">
+            <div class="row"><span>Inkomen (CBS)</span><span id="bc-e-inc">—</span></div>
+            <div class="row"><span>Max. hypotheek (4,5×)</span><span id="bc-e-hyp">—</span></div>
+            <div class="row"><span>Tekort / overschot</span><span id="bc-e-gap">—</span></div>
+            <div class="bc-bar"><div class="bc-bar-fill" id="bc-e-bar" style="width:0%"></div></div>
+          </div>
+        </div>
       </div>
       <div style="margin-bottom:10px" id="bc-era-wrap"></div>
       <p class="bc-context" id="bc-context"></p>
@@ -1007,7 +1047,39 @@ function addBuildingDots() {
     map.on('mousemove', 'bldg-layer', e => {
       const p = e.features?.[0]?.properties;
       if (!p) return;
-      showTip(e.point, `<strong>${p.straat || p.adres}</strong><br/><span style="color:var(--t3);font-size:10px">${p.pc} · ${p.bj} · ~${p.m2}m²</span>`);
+      const kc = KERNCIJFERS.find(r => r.jaar === currentYear);
+      const wozBase = (kc?.woz || 339) * 1000;
+      const bldgWoz = Math.round(wozBase * (0.7 + p.val * 0.8));
+      // Starter pill
+      const sInc = getMapEffectiveIncK(kc?.inkomen_single || 31.3);
+      const sHyp = sInc * 4.5 * 1000;
+      const sGap = bldgWoz - sHyp;
+      const sCol = sGap <= 0 ? '#4ac878' : sGap <= 50000 ? '#f59e0b' : '#dc3c3c';
+      const sTxt = sGap <= 0 ? 'bereikbaar' : `−€${Math.round(sGap/1000)}k`;
+      // Huurder pill
+      const hInc = getMapEffectiveIncK(kc?.inkomen_huurder || 37.0);
+      const hMax = Math.round(hInc * 1000 / 12 * 0.30);
+      const hHuur = Math.round(bldgWoz * 0.045 / 12);
+      const hGap = hHuur - hMax;
+      const hCol = hGap <= 0 ? '#4ac878' : hGap <= hMax * 0.2 ? '#f59e0b' : '#dc3c3c';
+      const hTxt = hGap <= 0 ? 'betaalbaar' : `+€${hGap}/mnd`;
+      // Eigenaar pill
+      const eInc = getMapEffectiveIncK(kc?.inkomen_eigenaar || 77.6);
+      const eHyp = eInc * 4.5 * 1000;
+      const eGap = bldgWoz - eHyp;
+      const eCol = eGap <= 0 ? '#4ac878' : eGap <= 50000 ? '#f59e0b' : '#dc3c3c';
+      const eTxt = eGap <= 0 ? 'bereikbaar' : `−€${Math.round(eGap/1000)}k`;
+      showTip(e.point,
+        `<strong>${p.straat || p.adres}</strong>` +
+        `<br/><span style="color:var(--t3);font-size:10px">${p.pc} · ${p.bj} · ~${p.m2}m² · €${Math.round(bldgWoz/1000)}k</span>` +
+        `<br/><span style="font-size:10px;margin-top:4px;display:inline-block">` +
+        `<span style="color:var(--t3)">S</span> <span style="color:${sCol}">${sTxt}</span>` +
+        `<span style="color:var(--border2)"> · </span>` +
+        `<span style="color:var(--t3)">H</span> <span style="color:${hCol}">${hTxt}</span>` +
+        `<span style="color:var(--border2)"> · </span>` +
+        `<span style="color:var(--t3)">E</span> <span style="color:${eCol}">${eTxt}</span>` +
+        `</span>`
+      );
     });
     map.on('click', 'bldg-layer', e => {
       const p = e.features?.[0]?.properties;
@@ -1305,21 +1377,36 @@ function updateBldgLegend() {
 }
 
 // ── Building card ──────────────────────────────────────────────
+// ── helpers for persona badge ───────────────────────────────────
+function _setBadge(id, gap, label) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (gap <= 0) { el.textContent = 'Bereikbaar'; el.className = 'bc-persona-badge badge-ok'; }
+  else if (gap <= 50000) { el.textContent = `−€${Math.round(gap/1000)}k`, el.className = 'bc-persona-badge badge-warn'; }
+  else { el.textContent = `−€${Math.round(gap/1000)}k`; el.className = 'bc-persona-badge badge-bad'; }
+}
+function _setBar(id, pct) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.width = pct + '%';
+  el.style.background = pct >= 90 ? 'var(--green)' : pct >= 60 ? 'var(--accent)' : 'var(--red)';
+}
+function _setGap(id, gap) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = (gap > 0 ? '−' : '+') + '€' + Math.round(Math.abs(gap)/1000) + 'k';
+  el.style.color = gap > 0 ? 'var(--red)' : 'var(--green)';
+}
+
 function openBldgCard(p) {
   const kc = KERNCIJFERS.find(r => r.jaar === currentYear);
-  const price = PRIJZEN.Twenterand[currentYear] || PRIJZEN.Vriezenveen[currentYear] || 362592;
-  const singleInc = getMapEffectiveIncK(kc?.inkomen_single || 31.3);
-  const maxHyp = singleInc * 4.5 * 1000;
 
-  // Estimate this specific building's value relative to avg
+  // ── Estimate building WOZ ─────────────────────────────────────
   const wozBase = (kc?.woz || 339) * 1000;
   const bldgWoz = Math.round(wozBase * (0.7 + p.val * 0.8));
   const m2 = p.m2 || estimateM2(p.bj);
-  const gap = bldgWoz - maxHyp;
-  const months = Math.round(bldgWoz / (singleInc * 1000 / 12));
-  const pct = Math.min(100, Math.round(maxHyp / bldgWoz * 100));
 
-  // Parse address parts
+  // ── Address ───────────────────────────────────────────────────
   const parts = (p.adres || '').split(',');
   const street = parts[0] || p.straat || 'Onbekend adres';
   const pc = p.pc || (parts[1]||'').trim();
@@ -1331,30 +1418,59 @@ function openBldgCard(p) {
   document.getElementById('bc-woz').textContent = '€' + Math.round(bldgWoz/1000) + 'k';
   document.getElementById('bc-woz-year').textContent = currentYear;
 
-  document.getElementById('bc-single-inc').textContent = '€' + (singleInc*1000).toLocaleString('nl');
-  document.getElementById('bc-max-hyp').textContent = '€' + Math.round(maxHyp/1000) + 'k';
-  const gapEl = document.getElementById('bc-gap');
-  gapEl.textContent = (gap > 0 ? '−' : '+') + '€' + Math.round(Math.abs(gap)/1000) + 'k';
-  gapEl.style.color = gap > 0 ? 'var(--red)' : 'var(--green)';
-  const bar = document.getElementById('bc-gap-bar');
-  bar.style.width = pct + '%';
-  bar.style.background = pct >= 90 ? 'var(--green)' : pct >= 60 ? 'var(--accent)' : 'var(--red)';
+  // ── STARTER (single, koopwoning) ──────────────────────────────
+  const sInc = getMapEffectiveIncK(kc?.inkomen_single || 31.3); // k€/yr
+  const sHyp = sInc * 4.5 * 1000;
+  const sGap = bldgWoz - sHyp;
+  const sPct = Math.min(100, Math.round(sHyp / bldgWoz * 100));
+  document.getElementById('bc-s-inc').textContent = '€' + Math.round(sInc) + 'k/jr';
+  document.getElementById('bc-s-hyp').textContent = '€' + Math.round(sHyp/1000) + 'k';
+  _setGap('bc-s-gap', sGap);
+  _setBar('bc-s-bar', sPct);
+  _setBadge('bc-badge-starter', sGap);
 
-  document.getElementById('bc-months').textContent =
-    `Kosten = ${months} maanden besteedbaar single inkomen. ` +
-    `Hypotheekdekking: ${pct}% van de geschatte waarde.`;
+  // ── HUURDER ───────────────────────────────────────────────────
+  const hInc = getMapEffectiveIncK(kc?.inkomen_huurder || 37.0); // k€/yr
+  const hMaxHuur = Math.round(hInc * 1000 / 12 * 0.30);          // 30% netto norm
+  const hHuur = Math.round(bldgWoz * 0.045 / 12);                 // ~4.5% gross yield
+  const sociaalGrens = 879; // 2024 liberalisatiegrens
+  const hGap = hHuur - hMaxHuur;
+  const hPct = Math.min(100, Math.round(hMaxHuur / hHuur * 100));
+  document.getElementById('bc-h-inc').textContent = '€' + Math.round(hInc) + 'k/jr';
+  document.getElementById('bc-h-maxhuur').textContent = '€' + hMaxHuur + '/mnd';
+  document.getElementById('bc-h-huur').textContent = '€' + hHuur + '/mnd';
+  document.getElementById('bc-h-sociaal').textContent = hHuur <= sociaalGrens ? `€${sociaalGrens}/mnd ✓ sociaal` : `€${sociaalGrens}/mnd · vrije sector`;
+  _setBar('bc-h-bar', hPct);
+  // Badge: betaalbaar if estimated rent ≤ 30%-norm; warn if within 20% over
+  const hBadge = document.getElementById('bc-badge-huurder');
+  if (hHuur <= hMaxHuur) { hBadge.textContent = 'Betaalbaar'; hBadge.className = 'bc-persona-badge badge-ok'; }
+  else if (hHuur <= hMaxHuur * 1.2) { hBadge.textContent = `+€${hGap}/mnd`; hBadge.className = 'bc-persona-badge badge-warn'; }
+  else { hBadge.textContent = `+€${hGap}/mnd`; hBadge.className = 'bc-persona-badge badge-bad'; }
 
+  // ── EIGENAAR/DOORSTROMER ──────────────────────────────────────
+  const eInc = getMapEffectiveIncK(kc?.inkomen_eigenaar || 77.6); // k€/yr
+  const eHyp = eInc * 4.5 * 1000;
+  const eGap = bldgWoz - eHyp;
+  const ePct = Math.min(100, Math.round(eHyp / bldgWoz * 100));
+  document.getElementById('bc-e-inc').textContent = '€' + Math.round(eInc) + 'k/jr';
+  document.getElementById('bc-e-hyp').textContent = '€' + Math.round(eHyp/1000) + 'k';
+  _setGap('bc-e-gap', eGap);
+  _setBar('bc-e-bar', ePct);
+  _setBadge('bc-badge-eigenaar', eGap);
+
+  // ── Era badge + context ───────────────────────────────────────
   const era = eraLabel(p.bj);
   document.getElementById('bc-era-wrap').innerHTML =
     `<span class="bc-era-badge ${era.cls}">${era.label}</span>` +
     `<span style="font-size:10px;color:var(--t3)">Energielabel schatting: ${p.bj>=2015?'A/B':p.bj>=2000?'C/D':p.bj>=1980?'D/E':'E/F/G'}</span>`;
 
   const contextLines = [];
-  if (gap > 50000) contextLines.push(`Dit pand is €${Math.round(gap/1000)}k boven de max. hypotheek van een single — niet bereikbaar zonder eigen vermogen of starterslening.`);
-  else if (gap > 0) contextLines.push(`Met een starterslening van €${Math.round(gap/1000)}k (SVn) of eigen vermogen zou dit pand bereikbaar zijn.`);
-  else contextLines.push(`Dit pand valt binnen de maximale hypotheek van een single starter in ${currentYear}.`);
-  if (p.bj < 1970) contextLines.push(`Pre-1970 woning: hoge energiekosten te verwachten, verduurzaming kost typisch €25–50k extra.`);
-  if (p.bj >= 2015) contextLines.push(`Nieuwbouw: energielabel A, lagere woonlasten, geen directe verduurzamingskosten.`);
+  if (sGap > 50000) contextLines.push(`Voor een starter is dit pand €${Math.round(sGap/1000)}k boven de maximale hypotheek — eigen vermogen of starterslening vereist.`);
+  else if (sGap > 0) contextLines.push(`Starter kan dit pand bereiken met een SVn-starterslening van €${Math.round(sGap/1000)}k.`);
+  else contextLines.push(`Dit pand valt binnen de maximale hypotheek van een single starter (${currentYear}).`);
+  if (hHuur > hMaxHuur * 1.2) contextLines.push(`Voor een huurder is de vrije-sector huur (€${hHuur}/mnd) ruim boven de betaalbaarheidsgrens van €${hMaxHuur}/mnd.`);
+  if (p.bj < 1970) contextLines.push(`Pre-1970: verduurzaming kost typisch €25–50k extra.`);
+  if (p.bj >= 2015) contextLines.push(`Nieuwbouw: energielabel A, geen directe verduurzamingskosten.`);
   document.getElementById('bc-context').textContent = contextLines.join(' ');
 
   document.getElementById('bldg-card').classList.add('open');
