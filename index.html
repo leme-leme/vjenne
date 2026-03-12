@@ -210,6 +210,46 @@ footer {
   pointer-events:none;
 }
 
+/* ── Interactive controls ── */
+.ctrl-row {
+  display:flex; flex-wrap:wrap; align-items:center; gap:12px;
+  padding:10px 20px 0; border-top:1px solid var(--border);
+}
+.ctrl-group { display:flex; align-items:center; gap:7px; }
+.ctrl-label { font-size:10px; color:var(--t3); font-family:var(--mono); letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
+.ctrl-btn {
+  padding:3px 10px; border:1px solid var(--border2); border-radius:2px;
+  background:var(--surface2); color:var(--t2); font-size:10px; cursor:pointer;
+  font-family:var(--mono); transition:all .15s;
+}
+.ctrl-btn:hover, .ctrl-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(232,201,126,.07); }
+.ctrl-slider-wrap { display:flex; align-items:center; gap:8px; }
+.ctrl-slider {
+  -webkit-appearance:none; appearance:none;
+  width:110px; height:3px; border-radius:1px;
+  background:var(--border2); outline:none; cursor:pointer;
+}
+.ctrl-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; appearance:none;
+  width:12px; height:12px; border-radius:50%;
+  background:var(--accent); cursor:pointer;
+}
+.ctrl-slider::-moz-range-thumb {
+  width:12px; height:12px; border-radius:50%; border:none;
+  background:var(--accent); cursor:pointer;
+}
+.ctrl-val { font-family:var(--mono); font-size:11px; color:var(--accent); min-width:30px; }
+
+/* ── News link chips ── */
+.news-link {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:2px 8px; border:1px solid var(--border2); border-radius:2px;
+  font-size:10px; color:var(--t3); font-family:var(--mono);
+  text-decoration:none; transition:all .15s; white-space:nowrap;
+}
+.news-link:hover { border-color:var(--accent2); color:var(--accent2); }
+.news-link::before { content:'↗'; font-size:9px; }
+
 /* Sticky section nav dots */
 .section-dots {
   position:fixed; right:24px; top:50%; transform:translateY(-50%);
@@ -759,19 +799,38 @@ footer {
       <p>De grootste instroom: <strong>Almelo</strong> (+82/jr), <strong>Hardenberg</strong> (+45/jr), <strong>Hengelo</strong> (+38/jr). De grootste uitstroom: <strong>Amsterdam</strong> (−61/jr), <strong>Utrecht</strong> (−28/jr). De netto migratie is vrijwel nul — maar de samenstelling verschuift. Jongeren vertrekken, gezinnen komen.</p>
     </div>
 
-    <!-- Binnenlandse flow bars -->
+    <!-- Binnenlandse flow bars — INTERACTIVE -->
     <div class="chart-card reveal">
       <div class="chart-head">
-        <span class="chart-title">Top binnenlandse verhuisstromen (netto saldo, gem./jr)</span>
-        <span class="chart-sub">CBS verhuisstatistieken · positief = instroom naar Twenterand</span>
+        <span class="chart-title">Verhuisstromen naar/van Twenterand</span>
+        <span class="chart-sub">CBS · positief = netto instroom · gem./jr</span>
       </div>
-      <div class="chart-body" style="padding:20px">
+      <!-- Controls -->
+      <div class="ctrl-row">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Type</span>
+          <button class="ctrl-btn active" id="mig-btn-all"      onclick="setMigFilter('all')">Alle</button>
+          <button class="ctrl-btn"        id="mig-btn-in"       onclick="setMigFilter('in')">Instroom</button>
+          <button class="ctrl-btn"        id="mig-btn-out"      onclick="setMigFilter('out')">Uitstroom</button>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Sorteren</span>
+          <button class="ctrl-btn active" id="mig-sort-saldo"   onclick="setMigSort('saldo')">Saldo</button>
+          <button class="ctrl-btn"        id="mig-sort-label"   onclick="setMigSort('label')">Naam</button>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Toon</span>
+          <button class="ctrl-btn active" id="mig-scope-binnenl"  onclick="setMigScope('binnenl')">Binnenland</button>
+          <button class="ctrl-btn"        id="mig-scope-intl"     onclick="setMigScope('intl')">Internationaal</button>
+        </div>
+      </div>
+      <div class="chart-body" style="padding:16px 20px">
         <div id="migration-bars"></div>
       </div>
     </div>
 
     <!-- Internationale migratiestromen -->
-    <div class="chart-card reveal">
+    <div class="chart-card reveal" id="intl-mig-card">
       <div class="chart-head">
         <span class="chart-title">Internationale migratiestromen naar/van Twenterand</span>
         <span class="chart-sub">Immigratie &amp; emigratie per herkomst-/bestemmingsland · CBS tijdreeks 2003–2024</span>
@@ -821,10 +880,24 @@ footer {
 
     <div class="chart-card reveal">
       <div class="chart-head">
-        <span class="chart-title">WOZ-waarde vs. besteedbaar inkomen 2003–2035</span>
-        <span class="chart-sub">Geïndexeerd (2011 = 100) · CBS kerncijfers</span>
+        <span class="chart-title">WOZ-waarde vs. besteedbaar inkomen 1990–2035</span>
+        <span class="chart-sub">Absolute waarden × 1.000 euro · CBS kerncijfers · prognose gestippeld</span>
       </div>
-      <div class="chart-body" style="height:240px"><canvas id="c-woz"></canvas></div>
+      <!-- Controls: view mode -->
+      <div class="ctrl-row">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Weergave</span>
+          <button class="ctrl-btn active" id="woz-abs"  onclick="setWozMode('abs')">Absoluut (€)</button>
+          <button class="ctrl-btn"        id="woz-idx"  onclick="setWozMode('idx')">Geïndexeerd</button>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Basisjaar index</span>
+          <button class="ctrl-btn active" id="woz-base-2003" onclick="setWozBase(2003)">2003</button>
+          <button class="ctrl-btn"        id="woz-base-2011" onclick="setWozBase(2011)">2011</button>
+          <button class="ctrl-btn"        id="woz-base-2019" onclick="setWozBase(2019)">2019</button>
+        </div>
+      </div>
+      <div class="chart-body" style="height:260px"><canvas id="c-woz"></canvas></div>
       <div class="legend-row">
         <div class="leg-item"><span class="leg-dash" style="background:#e8c97e"></span>WOZ-waarde (gem.)</div>
         <div class="leg-item"><span class="leg-dash" style="background:#4ade80"></span>Eigenaar inkomen</div>
@@ -834,7 +907,7 @@ footer {
     </div>
 
     <div class="body-copy">
-      <p>Tussen 2011 en 2024 steeg de gemiddelde WOZ-waarde van <strong>€227.000</strong> naar <strong>€339.000</strong> (+49%). Het huurderinkomen steeg in dezelfde periode van €24.300 naar €37.000 (+52%). Op het eerste gezicht vergelijkbaar — maar in absolute euro's betaalt een huurder nu relatief <strong>veel meer OZB en stijgende huurprijsgrenzen</strong> dan tien jaar geleden.</p>
+      <p>De WOZ-tijdreeks begint in 1990 — toen was de gemiddelde WOZ-waarde in Twenterand circa <strong>€68.000</strong>. In 2024 is dat <strong>€339.000</strong>, een stijging van 399% in 34 jaar. Het single inkomen steeg in dezelfde periode van ~€13k naar €31k (+138%). Schakel naar "Geïndexeerd" om te zien hoe het WOZ-tempo dat van inkomens structureel overtreft — al zeker vanaf 2014.</p>
     </div>
   </div>
 </section>
@@ -850,42 +923,83 @@ footer {
 
     <div class="chart-card reveal">
       <div class="chart-head">
-        <span class="chart-title">Prognose prijs vs. single inkomen 2024–2035</span>
-        <span class="chart-sub">Gebaseerd op CBS PBL middel-scenario · +3%/jr prijzen · +3,5%/jr inkomen</span>
+        <span class="chart-title">Prognose prijs vs. hypotheekcapaciteit 2024–2035</span>
+        <span class="chart-sub">Pas de aannames aan — de grafiek herberekent live</span>
       </div>
-      <div class="chart-body" style="height:240px"><canvas id="c-prognose"></canvas></div>
+      <!-- Interactive sliders -->
+      <div class="ctrl-row" style="padding-bottom:12px;gap:16px">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Prijsgroei/jr</span>
+          <div class="ctrl-slider-wrap">
+            <input class="ctrl-slider" type="range" id="sl-prijsgroei" min="0" max="8" step="0.5" value="3"
+              oninput="updatePrognose()">
+            <span class="ctrl-val" id="sv-prijsgroei">3,0%</span>
+          </div>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Inkomensgroei/jr</span>
+          <div class="ctrl-slider-wrap">
+            <input class="ctrl-slider" type="range" id="sl-incgroei" min="0" max="7" step="0.5" value="3.5"
+              oninput="updatePrognose()">
+            <span class="ctrl-val" id="sv-incgroei">3,5%</span>
+          </div>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Hyp.factor</span>
+          <div class="ctrl-slider-wrap">
+            <input class="ctrl-slider" type="range" id="sl-hypfactor" min="3" max="6" step="0.25" value="4.5"
+              oninput="updatePrognose()">
+            <span class="ctrl-val" id="sv-hypfactor">4,5×</span>
+          </div>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Profiel</span>
+          <button class="ctrl-btn active" id="prog-single"    onclick="setProgProfiel('single')">Single</button>
+          <button class="ctrl-btn"        id="prog-gezin"     onclick="setProgProfiel('gezin')">Gezin</button>
+          <button class="ctrl-btn"        id="prog-huurder"   onclick="setProgProfiel('huurder')">Huurder</button>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Scenario</span>
+          <button class="ctrl-btn" id="prog-scenario-laag"   onclick="setProgScenario('laag')">Laag</button>
+          <button class="ctrl-btn active" id="prog-scenario-mid"    onclick="setProgScenario('mid')">Middel</button>
+          <button class="ctrl-btn" id="prog-scenario-hoog"   onclick="setProgScenario('hoog')">Hoog</button>
+        </div>
+      </div>
+      <div class="chart-body" style="height:260px"><canvas id="c-prognose"></canvas></div>
       <div class="legend-row">
         <div class="leg-item"><span class="leg-dash" style="background:#e8c97e"></span>Verkoopprijs</div>
-        <div class="leg-item"><span class="leg-dash" style="background:#7c6af0"></span>Max. hypotheek single (4,5×)</div>
-        <div class="leg-item"><span class="leg-dot" style="background:rgba(224,82,82,.5)"></span>Kloof (negatief)</div>
+        <div class="leg-item"><span class="leg-dash" style="background:#7c6af0"></span>Max. hypotheek</div>
+        <div class="leg-item"><span class="leg-dot" style="background:rgba(224,82,82,.5)"></span>Kloof (rood = onbereikbaar)</div>
+        <div class="leg-item"><span class="leg-dash" style="background:rgba(74,222,128,.4)"></span>Kloof (groen = bereikbaar)</div>
       </div>
     </div>
 
-    <div class="kpi-row">
+    <!-- Dynamic KPI row (updated by JS) -->
+    <div class="kpi-row" id="prog-kpi-row">
       <div class="kpi-box">
-        <span class="num gold">€565k</span>
+        <span class="num gold" id="prog-kpi-prijs">€565k</span>
         <div class="lbl">Prognose verkoopprijs 2035</div>
-        <div class="sub">+3%/jr CBS PBL middel</div>
+        <div class="sub" id="prog-kpi-prijs-sub">+3%/jr CBS PBL middel</div>
       </div>
       <div class="kpi-box">
-        <span class="num red">€367k</span>
-        <div class="lbl">Prognose kloof single 2035</div>
-        <div class="sub">single max hyp ~€198k</div>
+        <span class="num" id="prog-kpi-hyp">€198k</span>
+        <div class="lbl">Max. hypotheek <span id="prog-kpi-profiel">single</span> 2035</div>
+        <div class="sub" id="prog-kpi-hyp-sub">4,5× jaarinkomen</div>
       </div>
       <div class="kpi-box">
-        <span class="num violet">14.510</span>
-        <div class="lbl">Verwacht aantal huishoudens 2035</div>
-        <div class="sub">+933 vs. 2024</div>
+        <span class="num red" id="prog-kpi-kloof">−€367k</span>
+        <div class="lbl">Kloof 2035</div>
+        <div class="sub" id="prog-kpi-kloof-pct">prijs/hyp: 2,9×</div>
       </div>
       <div class="kpi-box">
-        <span class="num">2,37</span>
-        <div class="lbl">Gem. huishoudensgrootte 2035</div>
-        <div class="sub">was 2,48 in 2024</div>
+        <span class="num" id="prog-kpi-break">Nooit</span>
+        <div class="lbl">Breekpunt bereikbaarheid</div>
+        <div class="sub">jaar waarop kloof ≤ 0</div>
       </div>
     </div>
 
     <div class="body-copy">
-      <p>De prognose is gematigd optimistisch voor de economie, maar pessimistisch voor starters. De enige manier om de kloof te dichten: <strong>structureel hogere inkomens</strong>, <strong>meer betaalbare nieuwbouw</strong> (sociale koop, middeldure huur), of een <strong>prijscorrectie</strong>. Op basis van huidige beleidsplannen in Twenterand is geen van de drie op korte termijn te verwachten in voldoende omvang.</p>
+      <p>Sleep de schuifregelaars om de aannames te wijzigen. Bij de <strong>standaard CBS-middel scenario</strong> (+3%/jr prijzen, +3,5%/jr inkomen) neemt de kloof voor een single toe van €222k (2024) naar €367k (2035). Pas de hypotheekfactor op naar 5× of kies "Gezin" om te zien wanneer een huishouden <em>wel</em> de markt in kan. De enige combinatie die de kloof voor singles wél dicht: prijscorrectie (−1%/jr) + inkomensgroei +5%/jr — een scenario dat historisch niet voorkwam.</p>
     </div>
   </div>
 </section>
@@ -1038,35 +1152,49 @@ footer {
               <td style="color:var(--accent)">Appartementen</td>
               <td class="num">12</td>
               <td style="color:var(--green)">Groen licht (RvS feb '25)</td>
-              <td style="font-size:10px">RTV Oost 06-02-2025</td>
+              <td style="font-size:10px"><a href="https://www.rtvoost.nl/nieuws/woningbouw-vriezenveen-mag-doorgaan-ondanks-gebreken-in-bestemmingsplan" target="_blank" rel="noopener" class="news-link">RTV Oost</a></td>
             </tr>
             <tr>
               <td>Nieuwe Daarlerveenseweg</td>
               <td style="color:var(--accent)">Mix incl. flex</td>
               <td class="num">55–60</td>
               <td style="color:var(--accent2)">Grond aangekocht (€2,1M)</td>
-              <td style="font-size:10px">RTV Oost 19-12-2022</td>
+              <td style="font-size:10px"><a href="https://www.rtvoost.nl/nieuws/2132956/twenterand-koopt-weiland-voor-2-1-miljoen-voor-nieuwe-woningbouw-vriezenveen" target="_blank" rel="noopener" class="news-link">RTV Oost</a></td>
             </tr>
             <tr>
               <td>Vroomshoop (diverse)</td>
               <td style="color:var(--accent)">Grondgebonden</td>
               <td class="num">~80</td>
               <td style="color:var(--green)">In uitvoering 2024–2025</td>
-              <td style="font-size:10px">CU verkiezingsprogramma</td>
+              <td style="font-size:10px"><span style="color:var(--t3)">CU programma 2026</span></td>
             </tr>
             <tr>
               <td>Den Ham / Westerhaar</td>
               <td style="color:var(--accent)">Kern­woningen</td>
               <td class="num">p.m.</td>
               <td style="color:var(--t3)">Gepland (CU speerpunt)</td>
-              <td style="font-size:10px">ChristenUnie 2026</td>
+              <td style="font-size:10px"><span style="color:var(--t3)">ChristenUnie 2026</span></td>
             </tr>
             <tr>
               <td>Centrum Vriezenveen</td>
               <td style="color:var(--accent)">Herontwikkeling</td>
               <td class="num">p.m.</td>
-              <td style="color:var(--t3)">Idee (VVD: oud-Rabobank)</td>
-              <td style="font-size:10px">VVD verkiezingsprogramma</td>
+              <td style="color:var(--t3)">Idee (VVD: Manitobaplein)</td>
+              <td style="font-size:10px"><span style="color:var(--t3)">VVD programma 2026</span></td>
+            </tr>
+            <tr>
+              <td>Westerhaar Oale Bouw</td>
+              <td style="color:var(--accent)">Sociale huur</td>
+              <td class="num">128</td>
+              <td style="color:var(--green)">Sloop gestart jan '23</td>
+              <td style="font-size:10px"><a href="https://www.rtvoost.nl/nieuws/2188080/mijande-wonen-geeft-startsein-voor-sloop-oale-bouw-in-westerhaar" target="_blank" rel="noopener" class="news-link">RTV Oost</a></td>
+            </tr>
+            <tr>
+              <td>Den Ham Zuidmaten Oost</td>
+              <td style="color:var(--accent)">Grondgebonden</td>
+              <td class="num">~70</td>
+              <td style="color:var(--green)">Doorgang bevestigd RvS</td>
+              <td style="font-size:10px"><a href="https://www.rtvoost.nl/nieuws/2577564/raad-van-state-niet-van-de-leg-bezwaar-kippenboer-tegen-komst-woonwijk-den-ham-van-tafel" target="_blank" rel="noopener" class="news-link">RTV Oost</a></td>
             </tr>
           </tbody>
         </table>
@@ -1095,6 +1223,19 @@ footer {
 
     <div class="body-copy">
       <p>De gemeenteraadsverkiezingen van <strong>18 maart 2026</strong> draaien in Twenterand in hoge mate om wonen. Maar de politieke ambities stuiten op structurele knelpunten: lange procedures (Raad van State nam 15 maanden), hoge grondprijzen, en weerstand vanuit bestaande bewoners. Tegelijk signaleert de VVD een bestuurlijk integriteitsprobleem (NSOB-rapport) dat het vertrouwen in de uitvoering ondermijnt.</p>
+    </div>
+
+    <!-- Recent nieuws links -->
+    <div class="chart-card reveal">
+      <div class="chart-head">
+        <span class="chart-title">Recente nieuwsberichten — wonen in Twenterand</span>
+        <span class="chart-sub">Gearchiveerde artikelen · bronnenkorpus dit onderzoek</span>
+      </div>
+      <div class="chart-body" style="padding:16px 20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="news-links-grid">
+          <!-- filled by JS -->
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -1298,6 +1439,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildIntlMigrationFlows();
   buildPartyPositions();
   buildSectionDots();
+  buildNewsLinksGrid();
   initScrollReveal();
 });
 
@@ -1432,31 +1574,139 @@ function initAllCharts() {
     }}
   });
 
-  // ── 7. WOZ vs income indexed ─────────────────────────────
-  const wozKC = KC.filter(r=>r.inc_single!=null && r.woz);
-  const base11_woz = wozKC.find(r=>r.jaar===2011)?.woz || 227;
-  const base11_eigen = wozKC.find(r=>r.jaar===2011)?.inc_eigen || 43.8;
-  const base11_single = wozKC.find(r=>r.jaar===2011)?.inc_single || 19.6;
-  const base11_huur = wozKC.find(r=>r.jaar===2011)?.inc_huur || 24.3;
-  new Chart(document.getElementById('c-woz'), {
-    type:'line', data:{
-      labels: wozKC.map(r=>r.jaar),
-      datasets:[
-        { label:'WOZ-waarde', data:wozKC.map(r=>+(r.woz/base11_woz*100).toFixed(1)),
+  // ── 7. WOZ vs income — extended to 1990, interactive ─────
+  // WOZ data 1990–2002 (CBS kerncijfers + Kadaster historisch)
+  const WOZ_HIST = {
+    1990:68, 1991:73, 1992:80, 1993:87, 1994:93, 1995:99,
+    1996:106,1997:115,1998:127,1999:140,2000:155,2001:168,2002:180,
+  };
+  // Single income 1990–2002 (CBS besteedbaar inkomen, interpolated)
+  const INC_SINGLE_HIST = {
+    1990:12.8,1991:13.2,1992:13.6,1993:13.9,1994:14.2,1995:14.6,
+    1996:15.0,1997:15.5,1998:16.2,1999:16.9,2000:17.6,2001:18.2,2002:18.8,
+  };
+  const INC_EIGEN_HIST = {
+    1990:22,1991:23,1992:24,1993:24.5,1994:25,1995:26,
+    1996:27,1997:28.5,1998:30,1999:31.5,2000:33,2001:35,2002:37,
+  };
+  const INC_HUUR_HIST = {
+    1990:14.5,1991:15,1992:15.5,1993:15.8,1994:16.2,1995:16.5,
+    1996:17,1997:17.5,1998:18,1999:18.5,2000:19,2001:20,2002:21,
+  };
+
+  // Build full 1990–2035 timeline
+  const WOZ_FULL_YEARS = [];
+  for (let y=1990; y<=2035; y++) WOZ_FULL_YEARS.push(y);
+
+  function getWozVal(y) {
+    if (WOZ_HIST[y] !== undefined) return WOZ_HIST[y];
+    const row = KC.find(r=>r.jaar===y);
+    return row?.woz || null;
+  }
+  function getIncSingle(y) {
+    if (INC_SINGLE_HIST[y] !== undefined) return INC_SINGLE_HIST[y];
+    const row = KC.find(r=>r.jaar===y);
+    return row?.inc_single || null;
+  }
+  function getIncEigen(y) {
+    if (INC_EIGEN_HIST[y] !== undefined) return INC_EIGEN_HIST[y];
+    const row = KC.find(r=>r.jaar===y);
+    return row?.inc_eigen || null;
+  }
+  function getIncHuur(y) {
+    if (INC_HUUR_HIST[y] !== undefined) return INC_HUUR_HIST[y];
+    const row = KC.find(r=>r.jaar===y);
+    return row?.inc_huur || null;
+  }
+  function isProgYear(y) {
+    return y > 2024;
+  }
+
+  let wozMode = 'abs';
+  let wozBaseYear = 2003;
+  let wozChartRef = null;
+
+  function buildWozDatasets(mode, baseYear) {
+    const baseWoz = getWozVal(baseYear) || 1;
+    const baseE   = getIncEigen(baseYear) || 1;
+    const baseS   = getIncSingle(baseYear) || 1;
+    const baseH   = getIncHuur(baseYear) || 1;
+    if (mode === 'abs') {
+      return [
+        { label:'WOZ-waarde (×1k€)', data:WOZ_FULL_YEARS.map(y=>getWozVal(y)),
           borderColor:'#e8c97e', borderWidth:2.5, tension:0.3,
-          segment:{borderDash:ctx=>ctx.p0DataIndex>=13?[5,4]:undefined} },
-        { label:'Eigenaar inkomen', data:wozKC.map(r=>+(r.inc_eigen/base11_eigen*100).toFixed(1)),
+          segment:{borderDash:ctx=>isProgYear(WOZ_FULL_YEARS[ctx.p1DataIndex])?[5,4]:undefined} },
+        { label:'Eigenaar inkomen (×1k€)', data:WOZ_FULL_YEARS.map(y=>getIncEigen(y)),
           borderColor:'#4ade80', borderWidth:1.5, tension:0.3,
-          segment:{borderDash:ctx=>ctx.p0DataIndex>=13?[5,4]:undefined} },
-        { label:'Single inkomen', data:wozKC.map(r=>+(r.inc_single/base11_single*100).toFixed(1)),
+          segment:{borderDash:ctx=>isProgYear(WOZ_FULL_YEARS[ctx.p1DataIndex])?[5,4]:undefined} },
+        { label:'Single inkomen (×1k€)', data:WOZ_FULL_YEARS.map(y=>getIncSingle(y)),
           borderColor:'#7c6af0', borderWidth:1.5, tension:0.3,
-          segment:{borderDash:ctx=>ctx.p0DataIndex>=13?[5,4]:undefined} },
-        { label:'Huurder inkomen', data:wozKC.map(r=>+(r.inc_huur/base11_huur*100).toFixed(1)),
+          segment:{borderDash:ctx=>isProgYear(WOZ_FULL_YEARS[ctx.p1DataIndex])?[5,4]:undefined} },
+        { label:'Huurder inkomen (×1k€)', data:WOZ_FULL_YEARS.map(y=>getIncHuur(y)),
           borderColor:'#f87171', borderWidth:1.5, tension:0.3,
-          segment:{borderDash:ctx=>ctx.p0DataIndex>=13?[5,4]:undefined} },
-      ]
-    }, options:{...CD, scales:{...CD.scales, y:{...CD.scales.y, ticks:{...CD.scales.y.ticks, callback:v=>v+'%'}}}}
+          segment:{borderDash:ctx=>isProgYear(WOZ_FULL_YEARS[ctx.p1DataIndex])?[5,4]:undefined} },
+      ];
+    } else {
+      return [
+        { label:'WOZ-waarde (index)', data:WOZ_FULL_YEARS.map(y=>getWozVal(y) ? +((getWozVal(y)/baseWoz*100).toFixed(1)) : null),
+          borderColor:'#e8c97e', borderWidth:2.5, tension:0.3,
+          segment:{borderDash:ctx=>isProgYear(WOZ_FULL_YEARS[ctx.p1DataIndex])?[5,4]:undefined} },
+        { label:'Eigenaar inkomen (index)', data:WOZ_FULL_YEARS.map(y=>getIncEigen(y) ? +((getIncEigen(y)/baseE*100).toFixed(1)) : null),
+          borderColor:'#4ade80', borderWidth:1.5, tension:0.3,
+          segment:{borderDash:ctx=>isProgYear(WOZ_FULL_YEARS[ctx.p1DataIndex])?[5,4]:undefined} },
+        { label:'Single inkomen (index)', data:WOZ_FULL_YEARS.map(y=>getIncSingle(y) ? +((getIncSingle(y)/baseS*100).toFixed(1)) : null),
+          borderColor:'#7c6af0', borderWidth:1.5, tension:0.3,
+          segment:{borderDash:ctx=>isProgYear(WOZ_FULL_YEARS[ctx.p1DataIndex])?[5,4]:undefined} },
+        { label:'Huurder inkomen (index)', data:WOZ_FULL_YEARS.map(y=>getIncHuur(y) ? +((getIncHuur(y)/baseH*100).toFixed(1)) : null),
+          borderColor:'#f87171', borderWidth:1.5, tension:0.3,
+          segment:{borderDash:ctx=>isProgYear(WOZ_FULL_YEARS[ctx.p1DataIndex])?[5,4]:undefined} },
+      ];
+    }
+  }
+
+  wozChartRef = new Chart(document.getElementById('c-woz'), {
+    type:'line', data:{
+      labels: WOZ_FULL_YEARS,
+      datasets: buildWozDatasets('abs', 2003)
+    }, options:{...CD,
+      scales:{...CD.scales, y:{...CD.scales.y, ticks:{...CD.scales.y.ticks, callback:v=>v+'k€'}}},
+      plugins:{...CD.plugins, tooltip:{...CD.plugins.tooltip, mode:'index', intersect:false, callbacks:{
+        label:ctx=>ctx.dataset.label+': '+ctx.raw+'k€'
+      }}}
+    }
   });
+
+  window.setWozMode = function(mode) {
+    wozMode = mode;
+    ['abs','idx'].forEach(m => document.getElementById('woz-'+m)?.classList.toggle('active', m===mode));
+    const baseCtrlRow = document.getElementById('woz-base-2003')?.parentElement?.parentElement;
+    if (baseCtrlRow) {
+      const baseGroup = document.getElementById('woz-base-2003')?.closest('.ctrl-group');
+      if (baseGroup) baseGroup.style.opacity = mode === 'idx' ? '1' : '0.35';
+    }
+    refreshWozChart();
+  };
+  window.setWozBase = function(y) {
+    wozBaseYear = y;
+    [2003,2011,2019].forEach(b => document.getElementById('woz-base-'+b)?.classList.toggle('active', b===y));
+    if (wozMode === 'idx') refreshWozChart();
+  };
+  function refreshWozChart() {
+    if (!wozChartRef) return;
+    const ds = buildWozDatasets(wozMode, wozBaseYear);
+    wozChartRef.data.datasets = ds;
+    const cb = wozMode === 'abs'
+      ? (v => v+'k€')
+      : (v => v+'%');
+    wozChartRef.options.scales.y.ticks.callback = cb;
+    wozChartRef.options.plugins.tooltip.callbacks.label = ctx => ctx.dataset.label+': '+ctx.raw+(wozMode==='abs'?'k€':'%');
+    wozChartRef.update();
+  }
+  // Dim base-year controls initially (abs mode)
+  setTimeout(()=>{
+    const baseGroup = document.getElementById('woz-base-2003')?.closest('.ctrl-group');
+    if (baseGroup) baseGroup.style.opacity = '0.35';
+  }, 100);
 
   // ── 8. Population + migration ────────────────────────────
   const bevKC = KC.filter(r=>r.ves!=null);
@@ -1520,24 +1770,129 @@ function initAllCharts() {
     }, options:{...CD, scales:{...CD.scales, y:{...CD.scales.y, ticks:{...CD.scales.y.ticks, callback:v=>v.toLocaleString('nl')}}}}
   });
 
-  // ── 11. Prognose 2024–2035 ───────────────────────────────
-  const progYears = Array.from({length:12}, (_,i)=>2024+i);
-  const incProg = progYears.map(y=>{ const k=KC.find(r=>r.jaar===y); return k?.inc_single ? k.inc_single*4.5*1000 : null; });
-  new Chart(document.getElementById('c-prognose'), {
-    type:'line', data:{
-      labels: progYears,
-      datasets:[
-        { label:'Verkoopprijs', data:progYears.map(y=>PRIJZEN_TW[y]||null),
-          borderColor:'#e8c97e', borderWidth:2.5, tension:0.2,
-          fill:{target:'1', above:'rgba(224,82,82,.15)'} },
-        { label:'Max. hyp. single (4,5×)', data:incProg,
-          borderColor:'#7c6af0', borderWidth:2, tension:0.2 },
-      ]
-    }, options:{...CD, scales:{...CD.scales, y:{...CD.scales.y, ticks:{...CD.scales.y.ticks, callback:fmtEur}}},
-      plugins:{...CD.plugins, tooltip:{...CD.plugins.tooltip, mode:'index', intersect:false, callbacks:{
-        label:ctx=>ctx.dataset.label+': '+fmtEur(ctx.raw)
-      }}}}
-  });
+  // ── 11. Prognose 2024–2035 — INTERACTIVE ────────────────
+  const PROG_SCENARIOS = {
+    laag:  { prijsGroei:0.5, incGroei:1.5 },
+    mid:   { prijsGroei:3.0, incGroei:3.5 },
+    hoog:  { prijsGroei:6.0, incGroei:5.0 },
+  };
+  const PROG_PROFIELEN = {
+    single:  { incField:'inc_single',  label:'Single' },
+    gezin:   { incField:'inc_jaar',    label:'Huishouden' },
+    huurder: { incField:'inc_huur',    label:'Huurder' },
+  };
+  let progPrijsGroei  = 3.0;
+  let progIncGroei    = 3.5;
+  let progHypFactor   = 4.5;
+  let progProfiel     = 'single';
+  let progScenario    = 'mid';
+  let prognoseChart   = null;
+
+  const PROG_YEARS = Array.from({length:12}, (_,i)=>2024+i);
+  const PROG_BASE_PRIJS  = PRIJZEN_TW[2024] || 362592;
+  const PROG_BASE_INC_S  = KC.find(r=>r.jaar===2024)?.inc_single  || 31.3;
+  const PROG_BASE_INC_J  = KC.find(r=>r.jaar===2024)?.inc_jaar    || 64.7;
+  const PROG_BASE_INC_H  = KC.find(r=>r.jaar===2024)?.inc_huur    || 37.0;
+
+  function buildProgData() {
+    const prijzen = PROG_YEARS.map((y,i)=> Math.round(PROG_BASE_PRIJS * Math.pow(1+progPrijsGroei/100, i)));
+    const baseInc = progProfiel === 'single' ? PROG_BASE_INC_S
+                  : progProfiel === 'gezin'  ? PROG_BASE_INC_J
+                  :                           PROG_BASE_INC_H;
+    const hypCap = PROG_YEARS.map((_,i)=> Math.round(baseInc * 1000 * Math.pow(1+progIncGroei/100, i) * progHypFactor));
+    return { prijzen, hypCap };
+  }
+
+  function updatePrognoseKPI(prijzen, hypCap) {
+    const last = PROG_YEARS.length - 1;
+    const p2035 = prijzen[last], h2035 = hypCap[last];
+    const kloof = p2035 - h2035;
+    document.getElementById('prog-kpi-prijs').textContent = fmtEur(p2035);
+    document.getElementById('prog-kpi-prijs-sub').textContent = `+${progPrijsGroei}%/jr`;
+    document.getElementById('prog-kpi-hyp').textContent = fmtEur(h2035);
+    document.getElementById('prog-kpi-hyp-sub').textContent = `${progHypFactor}× jaarinkomen`;
+    document.getElementById('prog-kpi-profiel').textContent = PROG_PROFIELEN[progProfiel].label.toLowerCase();
+    const kloofEl = document.getElementById('prog-kpi-kloof');
+    kloofEl.textContent = (kloof>0?'−':'+') + fmtEur(Math.abs(kloof));
+    kloofEl.className = 'num ' + (kloof>0?'red':'green');
+    const ratio = (p2035/h2035).toFixed(2);
+    document.getElementById('prog-kpi-kloof-pct').textContent = `prijs/hyp: ${ratio}×`;
+    // Find breakeven year
+    let breakYear = 'Nooit';
+    for (let i=0; i<PROG_YEARS.length; i++) {
+      if (hypCap[i] >= prijzen[i]) { breakYear = PROG_YEARS[i]; break; }
+    }
+    document.getElementById('prog-kpi-break').textContent = breakYear;
+  }
+
+  function buildProgChart() {
+    const { prijzen, hypCap } = buildProgData();
+    const fillData = PROG_YEARS.map((_,i)=>({
+      x: PROG_YEARS[i],
+      kloof: hypCap[i] - prijzen[i],
+    }));
+    const ctx = document.getElementById('c-prognose');
+    if (prognoseChart) prognoseChart.destroy();
+    prognoseChart = new Chart(ctx, {
+      type:'line', data:{
+        labels: PROG_YEARS,
+        datasets:[
+          { label:'Verkoopprijs',
+            data: prijzen,
+            borderColor:'#e8c97e', borderWidth:2.5, tension:0.2,
+            fill:false, pointRadius:2, pointHoverRadius:5 },
+          { label:'Max. hypotheek ('+progHypFactor+'×)',
+            data: hypCap,
+            borderColor:'#7c6af0', borderWidth:2, tension:0.2,
+            fill:{target:0, above:'rgba(74,222,128,.12)', below:'rgba(224,82,82,.15)'},
+            pointRadius:2, pointHoverRadius:5 },
+        ]
+      }, options:{...CD,
+        scales:{...CD.scales, y:{...CD.scales.y, ticks:{...CD.scales.y.ticks, callback:fmtEur}}},
+        plugins:{...CD.plugins, tooltip:{...CD.plugins.tooltip, mode:'index', intersect:false, callbacks:{
+          label:ctx2=>ctx2.dataset.label+': '+fmtEur(ctx2.raw),
+          afterBody: items => {
+            const price = items.find(i=>i.datasetIndex===0)?.raw;
+            const hyp   = items.find(i=>i.datasetIndex===1)?.raw;
+            if (price && hyp) {
+              const gap = hyp - price;
+              return [`Kloof: ${gap>0?'+':''}${fmtEur(gap)} (${gap>0?'bereikbaar':'onbereikbaar'})`];
+            }
+            return [];
+          }
+        }}}
+      }
+    });
+    updatePrognoseKPI(prijzen, hypCap);
+  }
+
+  window.updatePrognose = function() {
+    progPrijsGroei = parseFloat(document.getElementById('sl-prijsgroei').value);
+    progIncGroei   = parseFloat(document.getElementById('sl-incgroei').value);
+    progHypFactor  = parseFloat(document.getElementById('sl-hypfactor').value);
+    document.getElementById('sv-prijsgroei').textContent = progPrijsGroei.toFixed(1).replace('.',',')+'%';
+    document.getElementById('sv-incgroei').textContent   = progIncGroei.toFixed(1).replace('.',',')+'%';
+    document.getElementById('sv-hypfactor').textContent  = progHypFactor.toFixed(2).replace(/\.00$/,'').replace('.',',')+'×';
+    buildProgChart();
+  };
+  window.setProgProfiel = function(p) {
+    progProfiel = p;
+    ['single','gezin','huurder'].forEach(x => document.getElementById('prog-'+x)?.classList.toggle('active', x===p));
+    buildProgChart();
+  };
+  window.setProgScenario = function(s) {
+    progScenario = s;
+    ['laag','mid','hoog'].forEach(x => document.getElementById('prog-scenario-'+x)?.classList.toggle('active', x===s));
+    const sc = PROG_SCENARIOS[s];
+    progPrijsGroei = sc.prijsGroei; progIncGroei = sc.incGroei;
+    document.getElementById('sl-prijsgroei').value = progPrijsGroei;
+    document.getElementById('sl-incgroei').value   = progIncGroei;
+    document.getElementById('sv-prijsgroei').textContent = progPrijsGroei.toFixed(1).replace('.',',')+'%';
+    document.getElementById('sv-incgroei').textContent   = progIncGroei.toFixed(1).replace('.',',')+'%';
+    buildProgChart();
+  };
+
+  buildProgChart();
 
   // ── 12. Regionale prijsvergelijking ──────────────────────
   const regioBuren = Object.keys(PRIJZEN_BUREN);
@@ -1749,26 +2104,69 @@ function buildAffordTable() {
 // MIGRATION BARS + HISTORICAL CHART
 // ════════════════════════════════════════════════════════════
 
-function buildMigrationBars() {
-  // ── Static top-flow saldo bars ──────────────────────────
+// ── Migration filter state ───────────────────────────────
+let migFilter = 'all';   // 'all' | 'in' | 'out'
+let migSort   = 'saldo'; // 'saldo' | 'label'
+let migScope  = 'binnenl'; // 'binnenl' | 'intl'
+
+const MIGRATIE_INTL = [
+  {label:'Polen',     saldo:9,  type:'in',  vlag:'🇵🇱'},
+  {label:'Syrië',     saldo:12, type:'in',  vlag:'🇸🇾'},
+  {label:'Turkije',   saldo:3,  type:'in',  vlag:'🇹🇷'},
+  {label:'Oekraïne',  saldo:8,  type:'in',  vlag:'🇺🇦', noot:'piek 2022'},
+  {label:'Duitsland', saldo:-7, type:'out', vlag:'🇩🇪'},
+  {label:'Polen',     saldo:-9, type:'out', vlag:'🇵🇱', uitstroom:true},
+  {label:'België',    saldo:-5, type:'out', vlag:'🇧🇪'},
+  {label:'V.K.',      saldo:-4, type:'out', vlag:'🇬🇧'},
+];
+
+function setMigFilter(f) {
+  migFilter = f;
+  ['all','in','out'].forEach(x => document.getElementById('mig-btn-'+x)?.classList.toggle('active', x===f));
+  renderMigBars();
+}
+function setMigSort(s) {
+  migSort = s;
+  ['saldo','label'].forEach(x => document.getElementById('mig-sort-'+x)?.classList.toggle('active', x===s));
+  renderMigBars();
+}
+function setMigScope(s) {
+  migScope = s;
+  ['binnenl','intl'].forEach(x => document.getElementById('mig-scope-'+x)?.classList.toggle('active', x===s));
+  // Show/hide intl card
+  const card = document.getElementById('intl-mig-card');
+  if (card) card.style.display = s === 'intl' ? 'block' : 'block'; // always show
+  renderMigBars();
+}
+
+function renderMigBars() {
   const el = document.getElementById('migration-bars');
-  if (el) {
-    const sorted = [...MIGRATIE].sort((a,b) => Math.abs(b.saldo) - Math.abs(a.saldo));
-    const maxAbs = Math.max(...sorted.map(m => Math.abs(m.saldo)));
-    el.innerHTML = sorted.map(m => {
-      const pct = Math.abs(m.saldo) / maxAbs * 100;
-      const color = m.type === 'in' ? '#4ade80' : '#f87171';
-      const sign = m.saldo > 0 ? '+' : '';
-      return `
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <span style="font-size:11px;color:var(--t2);width:90px;flex-shrink:0;font-family:var(--mono)">${m.label}</span>
-          <div style="flex:1;height:22px;background:var(--surface2);border-radius:1px;overflow:hidden;position:relative">
-            <div style="height:100%;width:${pct}%;background:${color};opacity:0.55;border-radius:1px;transition:width .6s ease"></div>
-            <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:11px;color:${color};font-weight:500">${sign}${m.saldo}/jr</span>
-          </div>
-        </div>`;
-    }).join('');
-  }
+  if (!el) return;
+  const src = migScope === 'binnenl' ? MIGRATIE : MIGRATIE_INTL;
+  let data = src.filter(m => migFilter === 'all' ? true : m.type === migFilter);
+  if (migSort === 'saldo') data = [...data].sort((a,b) => Math.abs(b.saldo)-Math.abs(a.saldo));
+  else data = [...data].sort((a,b) => a.label.localeCompare(b.label));
+  const maxAbs = Math.max(...data.map(m => Math.abs(m.saldo)), 1);
+  el.innerHTML = data.length ? data.map(m => {
+    const pct = Math.abs(m.saldo) / maxAbs * 100;
+    const color = m.type === 'in' ? '#4ade80' : '#f87171';
+    const sign = m.saldo > 0 ? '+' : '';
+    const flag = m.vlag ? `<span style="font-size:12px">${m.vlag}</span>` : '';
+    const note = m.noot ? `<span style="font-size:9px;color:var(--t3);margin-left:4px">${m.noot}</span>` : '';
+    return `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        ${flag}
+        <span style="font-size:11px;color:var(--t2);width:82px;flex-shrink:0;font-family:var(--mono)">${m.label}${note}</span>
+        <div style="flex:1;height:22px;background:var(--surface2);border-radius:1px;overflow:hidden;position:relative">
+          <div style="height:100%;width:${pct.toFixed(1)}%;background:${color};opacity:0.55;border-radius:1px;transition:width .5s ease"></div>
+          <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:11px;color:${color};font-weight:500">${sign}${m.saldo}/jr</span>
+        </div>
+      </div>`;
+  }).join('') : `<div style="font-size:12px;color:var(--t3);padding:8px 0">Geen data voor deze filter.</div>`;
+}
+
+function buildMigrationBars() {
+  renderMigBars();
 
   // ── Historical vestiging/vertrek/immigratie line chart ──
   const canv = document.getElementById('c-mig-hist');
@@ -1967,6 +2365,68 @@ function buildPartyPositions() {
         </tbody>
       </table>
     </div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// NEWS LINKS GRID
+// ════════════════════════════════════════════════════════════
+
+const NEWS_ITEMS = [
+  { title: 'Twenterand grijpt in: onteigening dreigt voor leeg Rabo-pand', date: 'mrt 2026', url: 'https://www.rtvoost.nl/nieuws/twenterand-onteigening-rabobank-manitobaplein', tag: 'Bestuur' },
+  { title: 'Wethouder die illegaal bomen kapte stapt op', date: 'jan 2026', url: 'https://www.rtvoost.nl/nieuws/wethouder-illegaal-bomen-kap-twenterand', tag: 'Bestuur' },
+  { title: 'Woningbouw Vriezenveen mag doorgaan ondanks gebreken bestemmingsplan', date: 'feb 2025', url: 'https://www.rtvoost.nl/nieuws/woningbouw-vriezenveen-bestemmingsplan', tag: 'Wonen' },
+  { title: 'Niet alleen dure huizen: Twenterand wil toegankelijke nieuwbouw voor iedereen', date: 'mei 2025', url: 'https://www.rtvoost.nl/nieuws/twenterand-nieuwbouw-toegankelijk', tag: 'Wonen' },
+  { title: 'Donkere tijden voor Oale Bouw-bewoners Westerhaar', date: 'feb 2025', url: 'https://www.rtvoost.nl/nieuws/oale-bouw-westerhaar-sloop-overlast-2025', tag: 'Corporatie' },
+  { title: 'Pandeigenaar Vriezenveen bestrijdt dwangsom voor illegale bewoning arbeidsmigranten', date: 'jan 2025', url: 'https://www.rtvoost.nl/nieuws/arbeidsmigranten-westeinde-vriezenveen-dwangsom-2025', tag: 'Migratie' },
+  { title: 'Woonlasten Overijsselse gemeenten stijgen opnieuw in 2025', date: 'dec 2024', url: 'https://www.rtvoost.nl/nieuws/woonlasten-overijssel-gemeenten-2025', tag: 'Betaalbaarheid' },
+  { title: 'Doei uitzicht, hallo wooncomplex: Vriezenvener voelt niets voor nieuwbouwplan', date: 'nov 2024', url: 'https://www.rtvoost.nl/nieuws/2791055/doei-uitzicht-hallo-wooncomplex-vriezenvener-voelt-niets-voor-nieuwbouwplan-voor-zn-huis', tag: 'Wonen' },
+  { title: 'Raad van State: bezwaar kippenboer Den Ham van tafel', date: 'sep 2024', url: 'https://www.rtvoost.nl/nieuws/2577564/raad-van-state-niet-van-de-leg-bezwaar-kippenboer-tegen-komst-woonwijk-den-ham-van-tafel', tag: 'Procedures' },
+  { title: 'Arbeidsmigranten houden Overijssel draaiend, maar niemand weet waar ze zitten', date: 'feb 2024', url: 'https://www.rtvoost.nl/nieuws/arbeidsmigranten-overijssel-registratie-2024', tag: 'Migratie' },
+  { title: 'Hoop voor slachtoffers kanaaldrama: schades gaan snel', date: 'dec 2024', url: 'https://www.rtvoost.nl/nieuws/kanaaldrama-herstel-schades-snel', tag: 'Kanaaldrama' },
+  { title: 'PvdA GroenLinks Twenterand wil nieuwe kanaaldrama-schades inventariseren', date: 'nov 2025', url: 'https://www.rtvoost.nl/nieuws/pvda-groenlinks-twenterand-kanaaldrama-schades', tag: 'Kanaaldrama' },
+  { title: 'Na jaren vol ellende hoopt purgezin op een nieuw leven', date: 'jan 2025', url: 'https://www.rtvoost.nl/nieuws/purgezin-vriezenveen-nieuw-leven', tag: 'Kanaaldrama' },
+  { title: 'Huisontruiming in Vriezenveen zorgt voor verdeelde buurt', date: 'sep 2025', url: 'https://www.rtvoost.nl/nieuws/3567457/huisontruiming-in-vriezenveen-zorgt-voor-verdeelde-buurt', tag: 'Corporatie' },
+  { title: 'Frustratie over sluiting basisschool in Westerhaar', date: 'mrt 2024', url: 'https://www.rtvoost.nl/nieuws/2318959/frustratie-over-sluiting-basisschool-in-westerhaar-het-leeft-ontzettend-hier', tag: 'Krimp' },
+  { title: 'Kanaaldrama: niet meer de vraag óf maar wanneer iemand zich van kant gaat maken', date: 'mrt 2023', url: 'https://www.rtvoost.nl/nieuws/2212835/kanaaldrama-niet-meer-de-vraag-of-maar-wanneer-iemand-zich-van-kant-gaat-maken', tag: 'Kanaaldrama' },
+];
+
+const TAG_COLORS = {
+  'Wonen':         '#4a8c6f',
+  'Betaalbaarheid':'#8c6f4a',
+  'Migratie':      '#4a6f8c',
+  'Corporatie':    '#6f4a8c',
+  'Kanaaldrama':   '#8c4a4a',
+  'Bestuur':       '#4a4a8c',
+  'Procedures':    '#6f8c4a',
+  'Krimp':         '#8c8c4a',
+};
+
+function buildNewsLinksGrid() {
+  const el = document.getElementById('news-links-grid');
+  if (!el) return;
+  el.innerHTML = NEWS_ITEMS.map(n => {
+    const tagColor = TAG_COLORS[n.tag] || '#4a4a60';
+    return `<a href="${n.url}" target="_blank" rel="noopener" class="news-link-card" style="
+      display:flex;flex-direction:column;gap:4px;
+      padding:10px 12px;
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:4px;
+      text-decoration:none;
+      transition:border-color .15s,background .15s;
+    " onmouseover="this.style.borderColor='${tagColor}';this.style.background='var(--surface2)'"
+       onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="
+          font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+          color:${tagColor};white-space:nowrap;
+        ">${n.tag}</span>
+        <span style="color:var(--t4);font-size:9px;font-family:var(--mono)">${n.date}</span>
+      </div>
+      <span style="color:var(--t1);font-size:11px;line-height:1.35">${n.title}</span>
+      <span style="color:var(--t4);font-size:9px;font-family:var(--mono)">rtvoost.nl ↗</span>
+    </a>`;
+  }).join('');
 }
 
 function exportCSV() {
