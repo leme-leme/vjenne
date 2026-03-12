@@ -1,0 +1,10 @@
+{
+  "name": "vjenne-woningmarkt",
+  "version": "1.0.0",
+  "description": "Vriezenveen / Twenterand woningmarkt data journalistiek — scrollytelling artikel + interactieve kaart",
+  "private": true,
+  "scripts": {
+    "dev": "python3 -m http.server 8765",
+    "preview": "python3 -m http.server 8765"
+  }
+}

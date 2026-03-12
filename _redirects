@@ -1,0 +1,4 @@
+# Clean URL aliases
+/kaart      /map.html   200
+/analyse    /index.html 200
+/artikel    /index.html 200

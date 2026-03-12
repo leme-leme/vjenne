@@ -1,0 +1,1745 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Vriezenveen — Woningmarkt · Data Journalistiek</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet"/>
+<script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="data/kadaster/adressen_compact.js"></script>
+<style>
+  :root {
+    --bg:       #08080e;
+    --surface:  #0f0f1a;
+    --surface2: #161624;
+    --border:   rgba(255,255,255,.07);
+    --border2:  rgba(255,255,255,.12);
+    --t1:       #f0f0f5;
+    --t2:       #9090a8;
+    --t3:       #505068;
+    --accent:   #e8c97e;   /* gold */
+    --accent2:  #7c6af0;   /* violet */
+    --red:      #e05252;
+    --green:    #4ade80;
+    --mono:     'JetBrains Mono', monospace;
+    --serif:    'Playfair Display', Georgia, serif;
+    --sans:     'Inter', system-ui, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+  html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--t1); font-family:var(--sans); font-size:13px; }
+
+  /* ── Map ── */
+  #map { position:absolute; inset:0; }
+
+  /* ── Top bar ── */
+  #topbar {
+    position:absolute; top:0; left:0; right:0; z-index:40;
+    height:52px;
+    background:linear-gradient(to bottom, rgba(8,8,14,.98) 0%, rgba(8,8,14,.85) 100%);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:0; padding:0 18px;
+  }
+  #topbar .pub { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--t3); font-weight:500; margin-right:20px; white-space:nowrap; }
+  #topbar h1  { font-family:var(--serif); font-size:17px; font-weight:700; color:var(--t1); margin-right:auto; white-space:nowrap; }
+  #topbar h1 span { color:var(--accent); }
+  .topbar-pill {
+    display:flex; align-items:center; gap:6px; padding:5px 11px;
+    border:1px solid var(--border2); border-radius:3px;
+    font-size:11px; font-weight:500; color:var(--t2);
+    cursor:pointer; transition:all .15s; background:transparent;
+    margin-left:8px;
+  }
+  .topbar-pill:hover { border-color:var(--accent); color:var(--accent); }
+  .topbar-pill.active { background:var(--accent); color:#0a0a0f; border-color:var(--accent); font-weight:600; }
+  .topbar-sep { width:1px; height:22px; background:var(--border); margin:0 10px; }
+
+  /* ── Left panel ── */
+  #left-panel {
+    position:absolute; left:0; top:52px; bottom:64px; z-index:30;
+    width:300px;
+    background:linear-gradient(to right, rgba(8,8,14,.97) 0%, rgba(8,8,14,.88) 80%, rgba(8,8,14,0) 100%);
+    display:flex; flex-direction:column;
+    pointer-events:none;
+  }
+  #left-panel > * { pointer-events:auto; }
+  .panel-inner { padding:18px 18px 0 18px; }
+
+  /* Headline KPIs */
+  .kpi-hero {
+    padding:18px 18px 14px 18px;
+    border-bottom:1px solid var(--border);
+  }
+  .kpi-hero .year-badge {
+    display:inline-flex; align-items:center; gap:5px;
+    font-family:var(--mono); font-size:10px; font-weight:500;
+    color:var(--t3); letter-spacing:.06em; margin-bottom:8px;
+  }
+  .kpi-hero .year-badge.prog { color:var(--accent2); }
+  .kpi-hero .price-big {
+    font-family:var(--serif); font-size:34px; font-weight:900; color:var(--t1); line-height:1; letter-spacing:-.02em;
+  }
+  .kpi-hero .price-big .euro { font-size:20px; color:var(--t3); }
+  .kpi-hero .price-label { font-size:10px; color:var(--t2); margin-top:3px; }
+  .kpi-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); border-top:1px solid var(--border); }
+  .kpi-cell { background:var(--bg); padding:11px 14px; }
+  .kpi-cell .kv { font-family:var(--mono); font-size:15px; font-weight:500; color:var(--t1); }
+  .kpi-cell .kv.red { color:var(--red); }
+  .kpi-cell .kv.green { color:var(--green); }
+  .kpi-cell .kv.gold { color:var(--accent); }
+  .kpi-cell .kl { font-size:9px; color:var(--t3); text-transform:uppercase; letter-spacing:.07em; margin-top:2px; }
+  .delta { font-size:9px; margin-left:4px; }
+  .delta.up { color:var(--red); }
+  .delta.dn { color:var(--green); }
+
+  /* color mode selector */
+  .mode-row { display:flex; gap:3px; padding:12px 18px 8px 18px; }
+  .mode-btn {
+    flex:1; padding:6px 4px; border:1px solid var(--border2); border-radius:2px;
+    font-size:10px; font-weight:500; color:var(--t3); cursor:pointer;
+    transition:all .15s; background:transparent; text-align:center;
+    letter-spacing:.04em;
+  }
+  .mode-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(232,201,126,.08); }
+
+  /* Building legend */
+  #bldg-legend { padding:0 18px 12px 18px; }
+
+  /* Story cards */
+  .story-wrap { padding:12px 18px 18px; display:flex; flex-direction:column; gap:8px; }
+  .story-card {
+    border-left:2px solid var(--border2); padding:8px 10px; background:transparent;
+    font-size:11px; line-height:1.55; color:var(--t2);
+  }
+  .story-card.gold { border-color:var(--accent); }
+  .story-card.red  { border-color:var(--red); }
+  .story-card.violet { border-color:var(--accent2); }
+  .story-card .hed { font-weight:600; color:var(--t1); display:block; margin-bottom:3px; font-size:11.5px; }
+
+  /* ── Right panel ── */
+  #right-panel {
+    position:absolute; right:0; top:52px; bottom:64px; z-index:30;
+    width:320px;
+    background:linear-gradient(to left, rgba(8,8,14,.97) 0%, rgba(8,8,14,.88) 80%, rgba(8,8,14,0) 100%);
+    display:flex; flex-direction:column; overflow-y:auto;
+    scrollbar-width:thin; scrollbar-color:var(--border2) transparent;
+  }
+  .rp-section { padding:16px 18px; border-bottom:1px solid var(--border); }
+  .rp-label { font-size:9px; text-transform:uppercase; letter-spacing:.1em; color:var(--t3); font-weight:600; margin-bottom:10px; }
+  .chart-wrap { position:relative; }
+  .chart-wrap canvas { width:100% !important; }
+
+  /* Affordability bar */
+  .afford-bar { height:6px; border-radius:1px; background:var(--border2); margin-top:6px; overflow:hidden; position:relative; }
+  .afford-bar-fill { height:100%; border-radius:1px; transition:width .4s ease; }
+  .afford-label { display:flex; justify-content:space-between; font-size:9px; color:var(--t3); margin-top:3px; }
+
+  /* ── Year scrubber ── */
+  #scrubber {
+    position:absolute; bottom:0; left:0; right:0; z-index:40; height:64px;
+    background:linear-gradient(to top, rgba(8,8,14,.98) 0%, rgba(8,8,14,.85) 100%);
+    border-top:1px solid var(--border);
+    display:flex; align-items:center; gap:12px; padding:0 20px;
+  }
+  #scrubber .year-num {
+    font-family:var(--mono); font-size:22px; font-weight:500; color:var(--t1);
+    min-width:48px; text-align:center; line-height:1;
+    transition:color .2s;
+  }
+  #scrubber .year-num.prog { color:var(--accent2); }
+  #year-slider {
+    flex:1; -webkit-appearance:none; appearance:none; height:3px;
+    background:var(--border2); border-radius:1px; outline:none; cursor:pointer;
+  }
+  #year-slider::-webkit-slider-thumb {
+    -webkit-appearance:none; width:14px; height:14px;
+    border-radius:50%; background:var(--accent); cursor:pointer;
+    box-shadow:0 0 0 3px rgba(232,201,126,.2);
+  }
+  #year-slider::-moz-range-thumb {
+    width:14px; height:14px; border:none;
+    border-radius:50%; background:var(--accent); cursor:pointer;
+  }
+  .scrub-btn {
+    padding:6px 14px; border:1px solid var(--border2); border-radius:2px;
+    font-size:11px; font-weight:500; color:var(--t2); cursor:pointer;
+    transition:all .15s; background:transparent; font-family:var(--mono);
+  }
+  .scrub-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .scrub-ticks { display:flex; justify-content:space-between; font-size:9px; color:var(--t3); font-family:var(--mono); padding:0 7px; position:absolute; bottom:8px; left:80px; right:160px; pointer-events:none; }
+
+  /* ── Building card (full-screen slide-in) ── */
+  #bldg-card {
+    position:absolute; inset:0; z-index:60;
+    background:rgba(8,8,14,.92); backdrop-filter:blur(16px);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .25s;
+  }
+  #bldg-card.open { opacity:1; pointer-events:auto; }
+  #bldg-card-inner {
+    width:540px; max-width:calc(100vw - 40px);
+    background:var(--surface); border:1px solid var(--border2);
+    border-radius:2px; overflow:hidden;
+    transform:translateY(24px); transition:transform .25s ease;
+  }
+  #bldg-card.open #bldg-card-inner { transform:translateY(0); }
+  .bc-header { padding:22px 24px 18px; border-bottom:1px solid var(--border); }
+  .bc-address { font-family:var(--serif); font-size:22px; font-weight:700; color:var(--t1); line-height:1.2; }
+  .bc-postcode { font-family:var(--mono); font-size:11px; color:var(--t3); margin-top:4px; }
+  .bc-close {
+    position:absolute; top:16px; right:18px;
+    font-size:18px; color:var(--t3); cursor:pointer; background:none; border:none;
+    transition:color .15s;
+  }
+  .bc-close:hover { color:var(--t1); }
+  .bc-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; background:var(--border); }
+  .bc-cell { background:var(--surface); padding:14px 16px; }
+  .bc-cell .val { font-family:var(--mono); font-size:18px; font-weight:500; color:var(--t1); }
+  .bc-cell .lbl { font-size:9px; text-transform:uppercase; letter-spacing:.08em; color:var(--t3); margin-top:3px; }
+  .bc-body { padding:18px 24px; }
+  .bc-afford { background:var(--surface2); border:1px solid var(--border); border-radius:2px; padding:14px 16px; margin-bottom:14px; }
+  .bc-afford .title { font-size:11px; font-weight:600; color:var(--t1); margin-bottom:10px; text-transform:uppercase; letter-spacing:.06em; }
+  .bc-meter { margin-bottom:8px; }
+  .bc-meter .row { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:3px; }
+  .bc-meter .row span:first-child { font-size:10px; color:var(--t2); }
+  .bc-meter .row span:last-child  { font-family:var(--mono); font-size:11px; color:var(--t1); }
+  .bc-bar { height:5px; background:var(--border2); border-radius:1px; overflow:hidden; }
+  .bc-bar-fill { height:100%; border-radius:1px; }
+  .bc-era-badge { display:inline-block; padding:3px 8px; border-radius:2px; font-size:10px; font-weight:500; margin-right:6px; }
+  .era-pre45   { background:rgba(124,58,237,.25); color:#c4b5fd; }
+  .era-45-65   { background:rgba(37,99,235,.25);  color:#93c5fd; }
+  .era-65-85   { background:rgba(14,165,233,.25); color:#7dd3fc; }
+  .era-85-05   { background:rgba(20,184,166,.25); color:#5eead4; }
+  .era-05-15   { background:rgba(245,158,11,.25); color:#fcd34d; }
+  .era-post15  { background:rgba(249,115,22,.25); color:#fdba74; }
+  .bc-context  { font-size:11px; color:var(--t2); line-height:1.6; }
+
+  /* ── Tooltip ── */
+  #maptip {
+    position:absolute; z-index:50; pointer-events:none;
+    background:rgba(8,8,14,.95); border:1px solid var(--border2);
+    padding:8px 12px; border-radius:2px; font-size:11px; color:var(--t1);
+    max-width:200px; white-space:nowrap; display:none;
+  }
+
+  /* ── Gemeente notice ── */
+  #gemeente-notice {
+    position:absolute; top:62px; left:50%; transform:translateX(-50%); z-index:50;
+    background:rgba(124,107,16,.95); border:1px solid rgba(232,201,126,.4);
+    padding:7px 16px; border-radius:2px; font-size:11px; color:var(--accent);
+    white-space:nowrap; pointer-events:none; opacity:0; transition:opacity .3s;
+  }
+  #gemeente-notice.show { opacity:1; }
+
+  /* Pulsing new-build dots */
+  @keyframes pulse-ring {
+    0%   { opacity:.8; transform:scale(1); }
+    70%  { opacity:0;  transform:scale(2.2); }
+    100% { opacity:0;  transform:scale(2.2); }
+  }
+
+  /* Scrollbar */
+  #right-panel::-webkit-scrollbar { width:4px; }
+  #right-panel::-webkit-scrollbar-track { background:transparent; }
+  #right-panel::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+
+  /* Layer toggles */
+  .layer-row { display:flex; align-items:center; gap:8px; padding:7px 18px; cursor:pointer; }
+  .layer-row:hover { background:rgba(255,255,255,.02); }
+  .layer-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .layer-lbl { font-size:11px; color:var(--t2); flex:1; }
+  .layer-toggle { width:28px; height:16px; border-radius:8px; position:relative; cursor:pointer; transition:background .2s; }
+  .layer-toggle::after { content:''; position:absolute; top:2px; left:2px; width:12px; height:12px; border-radius:50%; background:#fff; transition:transform .2s; }
+  .layer-toggle.on { background:var(--accent); }
+  .layer-toggle.on::after { transform:translateX(12px); }
+  .layer-toggle.off { background:var(--border2); }
+
+  /* Tip tooltips */
+  [data-tip] { cursor:help; border-bottom:1px dotted var(--t3); }
+  [data-tip]:hover::after {
+    content:attr(data-tip); position:fixed; z-index:100;
+    background:var(--surface); border:1px solid var(--border2);
+    padding:8px 12px; border-radius:2px; font-size:11px; color:var(--t2);
+    max-width:240px; white-space:normal; line-height:1.5;
+    pointer-events:none;
+  }
+
+  /* ── Mobile responsive ── */
+  @media (max-width:760px) {
+    /* Collapse topbar to minimal */
+    #topbar { padding:0 12px; gap:0; }
+    #topbar .pub { display:none; }
+    #topbar h1 { font-size:14px; margin-right:8px; }
+    .topbar-sep { margin:0 6px; }
+    #style-light, #style-sat { display:none; }
+    #btn-3d { display:none; }
+
+    /* Left panel: collapsed to a bottom drawer on mobile */
+    #left-panel {
+      top:auto;
+      bottom:64px;
+      left:0; right:0;
+      width:100%;
+      height:auto;
+      max-height:45vh;
+      overflow-y:auto;
+      background:linear-gradient(to top, rgba(8,8,14,.97) 0%, rgba(8,8,14,.95) 100%);
+      border-top:1px solid var(--border);
+      flex-direction:row;
+      flex-wrap:wrap;
+      align-items:flex-start;
+      pointer-events:auto;
+    }
+    #left-panel.collapsed { max-height:52px; overflow:hidden; }
+
+    .kpi-hero { padding:12px 16px; border-bottom:none; flex:1 1 auto; }
+    .kpi-hero .price-big { font-size:24px; }
+    .kpi-grid { grid-template-columns:repeat(3,1fr); flex:1 1 100%; }
+    .kpi-cell { padding:8px 10px; }
+    .kpi-cell .kv { font-size:13px; }
+    .mode-row { flex-wrap:wrap; padding:8px 12px 4px; flex:1 1 100%; }
+    .mode-btn { font-size:9px; padding:5px 3px; }
+    #bldg-legend { padding:0 12px 8px; flex:1 1 100%; }
+    .story-wrap { display:none; } /* hide on mobile to save space */
+
+    /* Right panel: hidden on mobile (data is on article page) */
+    #right-panel { display:none; }
+
+    /* Scrubber full width */
+    #scrubber { padding:0 12px; gap:8px; }
+    #scrubber .year-num { font-size:18px; min-width:38px; }
+    .scrub-ticks { display:none; }
+    .scrub-btn { padding:5px 10px; font-size:10px; }
+
+    /* Building card — full screen on mobile */
+    #bldg-card-inner { width:calc(100vw - 24px); }
+    .bc-address { font-size:17px; }
+    .bc-grid { grid-template-columns:1fr 1fr 1fr; }
+    .bc-cell { padding:10px 12px; }
+    .bc-cell .val { font-size:15px; }
+
+    /* Toggle button for left panel on mobile */
+    #mobile-panel-toggle {
+      display:flex;
+      position:absolute;
+      top:52px; left:50%; transform:translateX(-50%);
+      z-index:45;
+      background:var(--surface); border:1px solid var(--border2);
+      border-top:none; border-radius:0 0 4px 4px;
+      padding:3px 16px; cursor:pointer;
+      font-size:9px; letter-spacing:.08em; color:var(--t3); text-transform:uppercase;
+      align-items:center; gap:4px;
+    }
+  }
+
+  /* Show toggle only on mobile */
+  #mobile-panel-toggle { display:none; }
+</style>
+</head>
+<body>
+
+<!-- Map -->
+<div id="map"></div>
+
+<!-- Mobile panel toggle (visible only on small screens) -->
+<button id="mobile-panel-toggle" onclick="toggleMobilePanel()" aria-label="Toon/verberg paneel">
+  <span id="mobile-panel-arrow">▾</span> Statistieken
+</button>
+
+<!-- Gemeente transition notice -->
+<div id="gemeente-notice" aria-live="polite"></div>
+
+<!-- Map tooltip -->
+<div id="maptip"></div>
+
+<!-- Building card overlay -->
+<div id="bldg-card" role="dialog" aria-modal="true" aria-label="Gebouwdetails">
+  <div id="bldg-card-inner" style="position:relative">
+    <button class="bc-close" onclick="closeBldgCard()">✕</button>
+    <div class="bc-header">
+      <div class="bc-address" id="bc-address">—</div>
+      <div class="bc-postcode" id="bc-postcode"></div>
+    </div>
+    <div class="bc-grid">
+      <div class="bc-cell"><div class="val" id="bc-bj">—</div><div class="lbl">Bouwjaar</div></div>
+      <div class="bc-cell"><div class="val" id="bc-m2">—</div><div class="lbl">Geschat m²</div></div>
+      <div class="bc-cell"><div class="val" id="bc-woz">—</div><div class="lbl">Gesch. WOZ <span id="bc-woz-year" style="font-size:9px"></span></div></div>
+    </div>
+    <div class="bc-body">
+      <div class="bc-afford">
+        <div class="title">Betaalbaarheid voor starter</div>
+        <div class="bc-meter" id="bc-meter-single">
+          <div class="row"><span>Single inkomen (CBS)</span><span id="bc-single-inc">—</span></div>
+          <div class="row"><span>Max. hypotheek (4,5×)</span><span id="bc-max-hyp">—</span></div>
+          <div class="row"><span>Tekort / overschot</span><span id="bc-gap">—</span></div>
+          <div class="bc-bar" style="margin-top:6px"><div class="bc-bar-fill" id="bc-gap-bar" style="width:0%;background:var(--red)"></div></div>
+        </div>
+        <div style="font-size:10px; color:var(--t2); margin-top:8px; line-height:1.5" id="bc-months"></div>
+      </div>
+      <div style="margin-bottom:10px" id="bc-era-wrap"></div>
+      <p class="bc-context" id="bc-context"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOP BAR ── -->
+<header id="topbar">
+  <span class="pub">Woningmarkt analyse</span>
+  <h1>Vriezenveen <span>·</span> <span id="nav-gemeente">Twenterand</span></h1>
+
+  <div class="topbar-sep"></div>
+
+  <!-- Style switcher -->
+  <button class="topbar-pill active" id="style-dark" onclick="setStyle('dark')">Nacht</button>
+  <button class="topbar-pill" id="style-light" onclick="setStyle('light')">Dag</button>
+  <button class="topbar-pill" id="style-sat" onclick="setStyle('satellite')">Satelliet</button>
+
+  <div class="topbar-sep"></div>
+
+  <!-- 3D toggle -->
+  <button class="topbar-pill" id="btn-3d" onclick="toggle3D()">3D</button>
+
+  <div class="topbar-sep"></div>
+
+  <button class="topbar-pill" onclick="exportCSV()" title="Download data als CSV">↓ CSV</button>
+  <button class="topbar-pill" onclick="window.location='index.html'" style="margin-left:4px">Analyse →</button>
+</header>
+
+<!-- ── LEFT PANEL ── -->
+<aside id="left-panel">
+
+  <!-- Headline KPI -->
+  <div class="kpi-hero">
+    <div class="year-badge" id="year-badge">
+      <span id="nav-gemeente-badge">Twenterand</span>
+      <span id="kpi-year">2024</span>
+    </div>
+    <div class="price-big"><span class="euro">€</span><span id="year-price">362.592</span></div>
+    <div class="price-label">gem. verkoopprijs <span id="price-prog-lbl" style="color:var(--accent2);margin-left:4px;display:none">prognose</span></div>
+  </div>
+
+  <!-- KPI grid -->
+  <div class="kpi-grid">
+    <div class="kpi-cell">
+      <div class="kv" id="kv-woz">—</div>
+      <div class="kl"><span data-tip="WOZ-waarde = officiële belastingwaarde. Wordt jaarlijks vastgesteld door gemeente. Basis voor OZB en andere belastingen.">WOZ-waarde</span></div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kv" id="kv-inc">—</div>
+      <div class="kl"><span data-tip="Besteedbaar inkomen van een eenpersoonshuishouden (single). CBS tabel 70072ned. Basis voor hypotheekberekening starters.">Single inkomen/jr</span></div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kv red" id="kv-gap">—</div>
+      <div class="kl"><span data-tip="Betaalbaarheidskloof = verschil tussen gemiddelde verkoopprijs en maximale hypotheek van een single starter (4,5× inkomen).">Betaalbaarheids&shy;kloof</span></div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kv" id="kv-koop">—</div>
+      <div class="kl"><span data-tip="Percentage woningen in eigendom van bewoner. Twenterand heeft relatief hoge koopquote vs. nationaal gemiddelde (~56%).">Koopquote</span></div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kv" id="kv-bev">—</div>
+      <div class="kl">Bevolking</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kv" id="kv-hh">—</div>
+      <div class="kl">Huishoudens</div>
+    </div>
+  </div>
+
+  <!-- Color mode -->
+  <div class="mode-row">
+    <button class="mode-btn active" id="cm-prijs" onclick="setColorMode('prijs')">Prijs</button>
+    <button class="mode-btn" id="cm-bouwjaar" onclick="setColorMode('bouwjaar')">Bouwjaar</button>
+    <button class="mode-btn" id="cm-bezit" onclick="setColorMode('bezit')">Koop/huur</button>
+    <button class="mode-btn" id="cm-nieuw" onclick="setColorMode('nieuw')">Nieuwbouw</button>
+  </div>
+  <div id="bldg-legend"></div>
+
+  <!-- Story cards -->
+  <div class="story-wrap">
+    <div class="story-card red">
+      <span class="hed">Betaalbaarheid onder druk.</span>
+      Prijzen +124% sinds 2010, single inkomen +60%. De kloof voor starters groeit elk jaar.
+    </div>
+    <div class="story-card gold">
+      <span class="hed">Vergrijzing van de voorraad.</span>
+      36% gebouwd vóór 1985. Selecteer <em>Bouwjaar</em> om de tijdlagen zichtbaar te maken. Klik een pand voor details.
+    </div>
+    <div class="story-card violet">
+      <span class="hed">Nieuwbouw zichtbaar op kaart.</span>
+      651 panden gebouwd na 2015. Selecteer <em>Nieuwbouw</em> of schuif de tijdlijn om de groei te volgen.
+    </div>
+  </div>
+
+</aside>
+
+<!-- ── RIGHT PANEL ── -->
+<aside id="right-panel">
+
+  <!-- Price chart -->
+  <div class="rp-section">
+    <div class="rp-label">Verkoopprijs 1995–2035</div>
+    <div class="chart-wrap" style="height:130px">
+      <canvas id="chart-price"></canvas>
+    </div>
+  </div>
+
+  <!-- Starter affordability -->
+  <div class="rp-section" id="starter-section">
+    <div class="rp-label">Starter bereikbaarheid <span id="starter-year" style="color:var(--t3)"></span></div>
+    <div id="starter-card"></div>
+  </div>
+
+  <!-- Income chart -->
+  <div class="rp-section">
+    <div class="rp-label">Inkomen per type huishouden</div>
+    <div class="chart-wrap" style="height:130px">
+      <canvas id="chart-inkomen"></canvas>
+    </div>
+  </div>
+
+  <!-- Betaalbaarheidskloof chart -->
+  <div class="rp-section">
+    <div class="rp-label">Betaalbaarheidskloof single starter</div>
+    <div class="chart-wrap" style="height:130px">
+      <canvas id="chart-afford"></canvas>
+    </div>
+  </div>
+
+  <!-- Migration panel -->
+  <div class="rp-section" id="migration-panel">
+    <div class="rp-label">Verhuisbewegingen <span id="mig-year" style="color:var(--t3)"></span></div>
+    <div id="mig-totals" style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin-bottom:8px"></div>
+    <div id="mig-flows"></div>
+  </div>
+
+  <!-- Population chart -->
+  <div class="rp-section">
+    <div class="rp-label">Bevolking &amp; migratie</div>
+    <div class="chart-wrap" style="height:120px">
+      <canvas id="chart-pop"></canvas>
+    </div>
+  </div>
+
+  <!-- Housing tenure chart -->
+  <div class="rp-section">
+    <div class="rp-label">Woningbezit 2009–2035</div>
+    <div class="chart-wrap" style="height:110px">
+      <canvas id="chart-tenure"></canvas>
+    </div>
+  </div>
+
+  <!-- Household composition chart -->
+  <div class="rp-section">
+    <div class="rp-label">Huishoudensamenstelling</div>
+    <div class="chart-wrap" style="height:110px">
+      <canvas id="chart-hh-comp"></canvas>
+    </div>
+  </div>
+
+  <!-- Regional price comparison -->
+  <div class="rp-section">
+    <div class="rp-label">Prijsvergelijking regio 1995–2025</div>
+    <div class="chart-wrap" style="height:120px">
+      <canvas id="chart-regio"></canvas>
+    </div>
+  </div>
+
+  <!-- Layer toggles -->
+  <div class="rp-section">
+    <div class="rp-label">Kaartlagen</div>
+    <div id="layer-list"></div>
+  </div>
+
+</aside>
+
+<!-- ── YEAR SCRUBBER ── -->
+<div id="scrubber">
+  <div class="year-num" id="year-display">2024</div>
+  <div style="flex:1;position:relative;display:flex;flex-direction:column;gap:6px">
+    <input type="range" id="year-slider" min="1995" max="2035" value="2024" step="1" oninput="onYear(+this.value)"/>
+    <div class="scrub-ticks">
+      <span>1995</span><span>2000</span><span>2005</span><span>2010</span>
+      <span>2015</span><span>2020</span><span>2025</span>
+      <span style="color:var(--accent2)">2030</span><span style="color:var(--accent2)">2035</span>
+    </div>
+  </div>
+  <button class="scrub-btn" id="btn-play" onclick="togglePlay()">▶ Play</button>
+  <button class="scrub-btn" onclick="resetYear()">↺</button>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════════
+
+// Neighbouring municipality prices (CBS 83625NED)
+const PRIJZEN_BUREN = {
+  Almelo:     {1995:72108,1996:75984,1997:82409,1998:90416,1999:100990,2000:120928,2001:137626,2002:148314,2003:149677,2004:155412,2005:163863,2006:174661,2007:178376,2008:172286,2009:171564,2010:172505,2011:170489,2012:171217,2013:152775,2014:164312,2015:157127,2016:169101,2017:177040,2018:191387,2019:209973,2020:222697,2021:273244,2022:293519,2023:306698,2024:313612,2025:337477},
+  Wierden:    {1995:89463,1996:104039,1997:113746,1998:121319,1999:149433,2000:187520,2001:184980,2002:207984,2003:206371,2004:227542,2005:209917,2006:221374,2007:244213,2008:252368,2009:224637,2010:228279,2011:210798,2012:226982,2013:195900,2014:208272,2015:206915,2016:230277,2017:232211,2018:252398,2019:270534,2020:311055,2021:336553,2022:382521,2023:378701,2024:410964,2025:454281},
+  Hellendoorn:{1995:70509,1996:79072,1997:87390,1998:96038,1999:118588,2000:147520,2001:166067,2002:172561,2003:184536,2004:184453,2005:192965,2006:200673,2007:210984,2008:211700,2009:206932,2010:205165,2011:214811,2012:203303,2013:180761,2014:196528,2015:194410,2016:207765,2017:226791,2018:248134,2019:264234,2020:288511,2021:343585,2022:382158,2023:367666,2024:400782,2025:447838},
+  Tubbergen:  {1995:117029,1996:128331,1997:146641,1998:151750,1999:163577,2000:193233,2001:230321,2002:225394,2003:236780,2004:250168,2005:239137,2006:256939,2007:277665,2008:276697,2009:260821,2010:239302,2011:231795,2012:227427,2013:227766,2014:237096,2015:234903,2016:254193,2017:260435,2018:294259,2019:303668,2020:344270,2021:393372,2022:438023,2023:453709,2024:480929,2025:528513},
+};
+
+const PRIJZEN = {
+  Twenterand:{
+    2002:191529,2003:183397,2004:196133,2005:206476,2006:224464,
+    2007:225192,2008:239847,2009:211473,2010:209680,2011:206908,
+    2012:196497,2013:198645,2014:187335,2015:195482,2016:201440,
+    2017:221020,2018:237752,2019:248957,2020:273030,2021:309662,
+    2022:348114,2023:338159,2024:362592,2025:420039,
+    2026:432640,2027:445619,2028:458988,2029:472758,2030:486941,
+    2031:501549,2032:516595,2033:532093,2034:548056,2035:564498
+  },
+  Vriezenveen:{
+    1995:88969,1996:95891,1997:112334,1998:123860,
+    1999:139834,2000:167109,2001:182916,2002:193768
+  },
+  Overijssel:{
+    1995:83597,1996:90786,1997:102179,1998:110332,1999:128295,
+    2000:152617,2001:170174,2002:178482,2003:185090,2004:191927,
+    2005:198475,2006:206909,2007:215724,2008:219612,2009:212375,
+    2010:211088,2011:208185,2012:202549,2013:189733,2014:197070,
+    2015:198713,2016:210683,2017:227193,2018:244270,2019:260130,
+    2020:282983,2021:325701,2022:365460,2023:365733,2024:393428,2025:420923
+  },
+  Nederland:{
+    1995:93750,1996:102607,1997:113163,1998:124540,1999:144778,
+    2000:172050,2001:188397,2002:199752,2003:204829,2004:212723,
+    2005:222706,2006:235843,2007:248325,2008:254918,2009:238259,
+    2010:239530,2011:240059,2012:226661,2013:213353,2014:222218,
+    2015:230194,2016:243837,2017:263295,2018:287267,2019:307978,
+    2020:334488,2021:386714,2022:428591,2023:416153,2024:450985,2025:479527
+  }
+};
+
+// Fields: jaar, bev, woz, vestiging, vertrek, binnenl_saldo, verhuismob,
+//         immigratie, emigratie (international), koop, corp, vrij (tenure %),
+//         inkomen_jaar/single/eigenaar/huurder (x1000 €/jr),
+//         hh_totaal, hh_single, hh_paar, hh_gezin, hh_grootte
+const KERNCIJFERS = [
+  {jaar:2003,bev:33427,woz:124,vestiging:701, vertrek:822, binnenl_saldo:-121,verhuismob:71.6,immigratie:51, emigratie:81, koop:null, corp:null, vrij:null, inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:11779,hh_single:2267,hh_paar:3550,hh_gezin:5962,hh_grootte:2.82},
+  {jaar:2004,bev:33493,woz:125,vestiging:730, vertrek:865, binnenl_saldo:-135,verhuismob:73.2,immigratie:65, emigratie:60, koop:null, corp:null, vrij:null, inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:11893,hh_single:2342,hh_paar:3581,hh_gezin:5970,hh_grootte:2.80},
+  {jaar:2005,bev:33549,woz:192,vestiging:680, vertrek:925, binnenl_saldo:-245,verhuismob:72.3,immigratie:54, emigratie:69, koop:null, corp:null, vrij:null, inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:11983,hh_single:2419,hh_paar:3624,hh_gezin:5940,hh_grootte:2.78},
+  {jaar:2006,bev:33438,woz:193,vestiging:690, vertrek:855, binnenl_saldo:-165,verhuismob:68.5,immigratie:43, emigratie:35, koop:62.2,corp:null, vrij:null, inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:12091,hh_single:2515,hh_paar:3651,hh_gezin:5925,hh_grootte:2.75},
+  {jaar:2007,bev:33461,woz:208,vestiging:738, vertrek:941, binnenl_saldo:-203,verhuismob:81.0,immigratie:48, emigratie:39, koop:61.9,corp:null, vrij:null, inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:12138,hh_single:2545,hh_paar:3706,hh_gezin:5887,hh_grootte:2.73},
+  {jaar:2008,bev:33461,woz:222,vestiging:789, vertrek:806, binnenl_saldo:-17, verhuismob:71.0,immigratie:59, emigratie:62, koop:62.6,corp:null, vrij:null, inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:12263,hh_single:2650,hh_paar:3809,hh_gezin:5804,hh_grootte:2.71},
+  {jaar:2009,bev:33605,woz:228,vestiging:632, vertrek:784, binnenl_saldo:-152,verhuismob:62.0,immigratie:51, emigratie:39, koop:62.5,corp:28.2,vrij:8.8,  inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:12391,hh_single:2711,hh_paar:3884,hh_gezin:5796,hh_grootte:2.69},
+  {jaar:2010,bev:33580,woz:232,vestiging:646, vertrek:665, binnenl_saldo:-19, verhuismob:61.0,immigratie:71, emigratie:34, koop:62.2,corp:28.0,vrij:9.4,  inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:12484,hh_single:2785,hh_paar:3935,hh_gezin:5764,hh_grootte:2.67},
+  {jaar:2011,bev:33727,woz:227,vestiging:748, vertrek:686, binnenl_saldo:62,  verhuismob:64.3,immigratie:60, emigratie:52, koop:61.6,corp:27.9,vrij:10.1, inkomen_jaar:37.3,inkomen_single:19.6,inkomen_eigenaar:43.8,inkomen_huurder:24.3,hh_totaal:12563,hh_single:2859,hh_paar:3922,hh_gezin:5782,hh_grootte:2.66},
+  {jaar:2012,bev:33929,woz:217,vestiging:717, vertrek:800, binnenl_saldo:-83, verhuismob:63.8,immigratie:59, emigratie:36, koop:64.9,corp:27.5,vrij:6.4,  inkomen_jaar:37.2,inkomen_single:20.2,inkomen_eigenaar:43.4,inkomen_huurder:24.5,hh_totaal:12678,hh_single:2892,hh_paar:3986,hh_gezin:5800,hh_grootte:2.65},
+  {jaar:2013,bev:33971,woz:212,vestiging:728, vertrek:854, binnenl_saldo:-126,verhuismob:59.4,immigratie:53, emigratie:57, koop:65.3,corp:27.2,vrij:6.5,  inkomen_jaar:37.1,inkomen_single:20.1,inkomen_eigenaar:43.7,inkomen_huurder:24.0,hh_totaal:12867,hh_single:3028,hh_paar:4036,hh_gezin:5803,hh_grootte:2.62},
+  {jaar:2014,bev:33929,woz:202,vestiging:741, vertrek:847, binnenl_saldo:-106,verhuismob:61.0,immigratie:51, emigratie:68, koop:64.4,corp:26.3,vrij:7.1,  inkomen_jaar:38.9,inkomen_single:20.8,inkomen_eigenaar:46.0,inkomen_huurder:24.4,hh_totaal:12886,hh_single:3044,hh_paar:4057,hh_gezin:5785,hh_grootte:2.61},
+  {jaar:2015,bev:33874,woz:197,vestiging:739, vertrek:862, binnenl_saldo:-123,verhuismob:69.1,immigratie:59, emigratie:53, koop:64.5,corp:26.4,vrij:6.8,  inkomen_jaar:38.9,inkomen_single:21.0,inkomen_eigenaar:45.8,inkomen_huurder:24.5,hh_totaal:12927,hh_single:3104,hh_paar:4083,hh_gezin:5740,hh_grootte:2.59},
+  {jaar:2016,bev:33846,woz:195,vestiging:792, vertrek:830, binnenl_saldo:-38, verhuismob:68.4,immigratie:56, emigratie:36, koop:64.6,corp:25.6,vrij:7.5,  inkomen_jaar:40.7,inkomen_single:21.7,inkomen_eigenaar:48.2,inkomen_huurder:25.4,hh_totaal:12991,hh_single:3162,hh_paar:4163,hh_gezin:5666,hh_grootte:2.58},
+  {jaar:2017,bev:33845,woz:198,vestiging:866, vertrek:893, binnenl_saldo:-27, verhuismob:78.7,immigratie:51, emigratie:42, koop:64.5,corp:25.5,vrij:7.6,  inkomen_jaar:42.0,inkomen_single:22.5,inkomen_eigenaar:49.8,inkomen_huurder:26.1,hh_totaal:13032,hh_single:3249,hh_paar:4156,hh_gezin:5627,hh_grootte:2.57},
+  {jaar:2018,bev:33903,woz:206,vestiging:865, vertrek:1028,binnenl_saldo:-163,verhuismob:80.4,immigratie:71, emigratie:39, koop:65.2,corp:25.7,vrij:6.8,  inkomen_jaar:43.2,inkomen_single:22.7,inkomen_eigenaar:51.3,inkomen_huurder:26.5,hh_totaal:13086,hh_single:3302,hh_paar:4160,hh_gezin:5624,hh_grootte:2.56},
+  {jaar:2019,bev:33792,woz:222,vestiging:852, vertrek:893, binnenl_saldo:-41, verhuismob:82.1,immigratie:58, emigratie:49, koop:65.3,corp:27.0,vrij:7.6,  inkomen_jaar:46.0,inkomen_single:23.8,inkomen_eigenaar:54.9,inkomen_huurder:27.6,hh_totaal:13142,hh_single:3377,hh_paar:4150,hh_gezin:5615,hh_grootte:2.54},
+  {jaar:2020,bev:33743,woz:234,vestiging:889, vertrek:913, binnenl_saldo:-24, verhuismob:78.8,immigratie:43, emigratie:36, koop:65.5,corp:26.4,vrij:8.0,  inkomen_jaar:47.1,inkomen_single:24.6,inkomen_eigenaar:55.8,inkomen_huurder:28.6,hh_totaal:13184,hh_single:3426,hh_paar:4192,hh_gezin:5566,hh_grootte:2.53},
+  {jaar:2021,bev:33699,woz:251,vestiging:867, vertrek:823, binnenl_saldo:44,  verhuismob:71.7,immigratie:37, emigratie:35, koop:65.8,corp:26.3,vrij:7.9,  inkomen_jaar:48.9,inkomen_single:25.9,inkomen_eigenaar:57.9,inkomen_huurder:29.9,hh_totaal:13253,hh_single:3502,hh_paar:4210,hh_gezin:5541,hh_grootte:2.51},
+  {jaar:2022,bev:33718,woz:277,vestiging:852, vertrek:827, binnenl_saldo:25,  verhuismob:66.5,immigratie:238,emigratie:88, koop:65.9,corp:26.0,vrij:8.0,  inkomen_jaar:51.7,inkomen_single:27.8,inkomen_eigenaar:60.8,inkomen_huurder:31.8,hh_totaal:13360,hh_single:3602,hh_paar:4260,hh_gezin:5498,hh_grootte:2.50},
+  {jaar:2023,bev:33867,woz:326,vestiging:1028,vertrek:912, binnenl_saldo:116, verhuismob:64.9,immigratie:148,emigratie:58, koop:66.1,corp:25.6,vrij:8.2,  inkomen_jaar:60.2,inkomen_single:29.9,inkomen_eigenaar:72.1,inkomen_huurder:34.3,hh_totaal:13434,hh_single:3639,hh_paar:4249,hh_gezin:5546,hh_grootte:2.49},
+  {jaar:2024,bev:34073,woz:339,vestiging:907, vertrek:866, binnenl_saldo:41,  verhuismob:65.4,immigratie:150,emigratie:111,koop:66.8,corp:25.1,vrij:8.1,  inkomen_jaar:64.7,inkomen_single:31.3,inkomen_eigenaar:77.6,inkomen_huurder:37.0,hh_totaal:13561,hh_single:3694,hh_paar:4287,hh_gezin:5580,hh_grootte:2.48},
+  {jaar:2025,bev:34113,woz:354,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:null, corp:null, vrij:null, inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:13617,hh_single:3769,hh_paar:4243,hh_gezin:5605,hh_grootte:2.47},
+  {jaar:2026,bev:34200,woz:368,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:67.2,corp:24.8,vrij:8.0,  inkomen_jaar:67.0,inkomen_single:32.4,inkomen_eigenaar:80.4,inkomen_huurder:38.3,hh_totaal:13700,hh_single:3840,hh_paar:4310,hh_gezin:5550,hh_grootte:2.46,prognose:true},
+  {jaar:2027,bev:34270,woz:383,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:67.5,corp:24.5,vrij:8.0,  inkomen_jaar:69.4,inkomen_single:33.5,inkomen_eigenaar:83.2,inkomen_huurder:39.6,hh_totaal:13790,hh_single:3915,hh_paar:4340,hh_gezin:5535,hh_grootte:2.45,prognose:true},
+  {jaar:2028,bev:34330,woz:398,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:67.8,corp:24.2,vrij:8.0,  inkomen_jaar:71.8,inkomen_single:34.7,inkomen_eigenaar:86.1,inkomen_huurder:41.0,hh_totaal:13880,hh_single:3990,hh_paar:4370,hh_gezin:5520,hh_grootte:2.44,prognose:true},
+  {jaar:2029,bev:34380,woz:414,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:68.0,corp:24.0,vrij:8.0,  inkomen_jaar:74.3,inkomen_single:35.9,inkomen_eigenaar:89.1,inkomen_huurder:42.4,hh_totaal:13970,hh_single:4065,hh_paar:4400,hh_gezin:5505,hh_grootte:2.43,prognose:true},
+  {jaar:2030,bev:34420,woz:430,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:68.2,corp:23.8,vrij:8.0,  inkomen_jaar:76.9,inkomen_single:37.1,inkomen_eigenaar:92.2,inkomen_huurder:43.9,hh_totaal:14060,hh_single:4145,hh_paar:4430,hh_gezin:5485,hh_grootte:2.42,prognose:true},
+  {jaar:2031,bev:34450,woz:447,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:68.5,corp:23.5,vrij:8.0,  inkomen_jaar:79.6,inkomen_single:38.4,inkomen_eigenaar:95.4,inkomen_huurder:45.4,hh_totaal:14150,hh_single:4225,hh_paar:4455,hh_gezin:5470,hh_grootte:2.41,prognose:true},
+  {jaar:2032,bev:34480,woz:465,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:68.7,corp:23.3,vrij:8.0,  inkomen_jaar:82.4,inkomen_single:39.7,inkomen_eigenaar:98.7,inkomen_huurder:47.0,hh_totaal:14240,hh_single:4310,hh_paar:4480,hh_gezin:5450,hh_grootte:2.40,prognose:true},
+  {jaar:2033,bev:34500,woz:484,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:68.9,corp:23.1,vrij:8.0,  inkomen_jaar:85.3,inkomen_single:41.1,inkomen_eigenaar:102.2,inkomen_huurder:48.6,hh_totaal:14330,hh_single:4395,hh_paar:4500,hh_gezin:5435,hh_grootte:2.39,prognose:true},
+  {jaar:2034,bev:34520,woz:503,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:69.1,corp:22.9,vrij:8.0,  inkomen_jaar:88.3,inkomen_single:42.5,inkomen_eigenaar:105.8,inkomen_huurder:50.3,hh_totaal:14420,hh_single:4480,hh_paar:4520,hh_gezin:5420,hh_grootte:2.38,prognose:true},
+  {jaar:2035,bev:34540,woz:523,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:69.3,corp:22.7,vrij:8.0,  inkomen_jaar:91.4,inkomen_single:44.0,inkomen_eigenaar:109.5,inkomen_huurder:52.1,hh_totaal:14510,hh_single:4570,hh_paar:4540,hh_gezin:5400,hh_grootte:2.37,prognose:true},
+];
+
+const WONINGVOORRAAD = [
+  {jaar:2012,totaal:13097},{jaar:2013,totaal:13124},{jaar:2014,totaal:13488},
+  {jaar:2015,totaal:13574},{jaar:2016,totaal:13609},{jaar:2017,totaal:13621},
+  {jaar:2018,totaal:13664},{jaar:2019,totaal:13705},{jaar:2020,totaal:13819},
+  {jaar:2021,totaal:13847},{jaar:2022,totaal:13931},{jaar:2023,totaal:14016},
+  {jaar:2024,totaal:14106},{jaar:2025,totaal:14192},
+  {jaar:2026,totaal:14280,prognose:true},{jaar:2027,totaal:14370,prognose:true},
+  {jaar:2028,totaal:14460,prognose:true},{jaar:2029,totaal:14550,prognose:true},
+  {jaar:2030,totaal:14640,prognose:true},{jaar:2031,totaal:14730,prognose:true},
+  {jaar:2032,totaal:14820,prognose:true},{jaar:2033,totaal:14910,prognose:true},
+  {jaar:2034,totaal:15000,prognose:true},{jaar:2035,totaal:15090,prognose:true},
+];
+
+// Static arc routes — saldo is scaled per year from total vestiging/vertrek
+const VV_ARC = [6.6400, 52.4265]; // exact Vriezenveen centre
+const MIGRATIE_ROUTES = [
+  {from:[6.6634,52.3518],to:VV_ARC,label:'Almelo',     share:0.115,type:'in'},
+  {from:[6.6191,52.5775],to:VV_ARC,label:'Hardenberg', share:0.063,type:'in'},
+  {from:[6.7935,52.2630],to:VV_ARC,label:'Hengelo',    share:0.053,type:'in'},
+  {from:[6.5274,52.5186],to:VV_ARC,label:'Ommen',      share:0.043,type:'in'},
+  {from:[6.6034,52.5100],to:VV_ARC,label:'Wierden',    share:0.041,type:'in'},
+  {from:[6.5665,53.2194],to:VV_ARC,label:'Groningen',  share:0.031,type:'in'},
+  {from:VV_ARC,to:[4.9041,52.3676],label:'Amsterdam',  share:0.085,type:'out'},
+  {from:VV_ARC,to:[5.1214,52.0907],label:'Utrecht',    share:0.039,type:'out'},
+  {from:VV_ARC,to:[4.3007,52.0705],label:'Den Haag',   share:0.026,type:'out'},
+  {from:VV_ARC,to:[7.0580,52.2750],label:'Duitsland',  share:0.017,type:'out'},
+];
+
+// Build MIGRATIE for a given year from CBS totals
+function migraatieVoorJaar(year) {
+  const kc = KERNCIJFERS.find(r => r.jaar === year);
+  // Fall back to most recent year with data
+  const kcData = kc?.vestiging ? kc : KERNCIJFERS.filter(r=>r.vestiging).slice(-1)[0];
+  const ves = kcData?.vestiging || 866;
+  const vert = kcData?.vertrek  || 893;
+  return MIGRATIE_ROUTES.map(r => ({
+    ...r,
+    saldo: r.type === 'in'
+      ? Math.round(ves  * r.share)
+      : -Math.round(vert * r.share),
+    abs: r.type === 'in'
+      ? Math.round(ves  * r.share)
+      : Math.round(vert * r.share),
+  }));
+}
+
+// Estimated m² by bouwjaar era (based on Dutch housing stock research, CBS)
+function estimateM2(bj) {
+  if (!bj) return 95;
+  if (bj < 1945) return 115;  // pre-war: large, high ceilings
+  if (bj < 1965) return 85;   // post-war reconstruction: small
+  if (bj < 1985) return 95;   // expansion: modest
+  if (bj < 2000) return 108;  // 90s: bigger
+  if (bj < 2010) return 118;  // 2000s: spacious
+  if (bj < 2020) return 130;  // 2010s: large new builds
+  return 140;                  // post-2020: energy efficient, larger
+}
+
+function eraLabel(bj) {
+  if (!bj) return {label:'Onbekend', cls:'era-85-05'};
+  if (bj < 1945) return {label:'Vooroorlogs (vóór 1945)', cls:'era-pre45'};
+  if (bj < 1965) return {label:'Wederopbouw (1945–1965)', cls:'era-45-65'};
+  if (bj < 1985) return {label:'Uitbreiding (1965–1985)', cls:'era-65-85'};
+  if (bj < 2005) return {label:'Modernisering (1985–2005)', cls:'era-85-05'};
+  if (bj < 2015) return {label:'Verstedelijking (2005–2015)', cls:'era-05-15'};
+  return {label:'Nieuwbouw (na 2015)', cls:'era-post15'};
+}
+
+// ── State ──────────────────────────────────────────────────────
+let currentYear = 2024;
+let playing = false, playTimer = null;
+let colorMode = 'prijs';
+let currentStyle = 'dark';
+let tilt3D = false;
+let layerOn = { prices:true, buildings:true, migration:true, newbuilds:false };
+let _prevGemeenteEra = null;
+
+const VV = {lng:6.6400, lat:52.4265};
+const MAP_STYLES = {
+  dark:      'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+  satellite: 'https://tiles.stadiamaps.com/styles/alidade_satellite.json',
+  light:     'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+};
+
+// ══════════════════════════════════════════════════════════════
+// MAP INIT
+// ══════════════════════════════════════════════════════════════
+
+const map = new maplibregl.Map({
+  container: 'map',
+  style: MAP_STYLES.dark,
+  center: [VV.lng, VV.lat],
+  zoom: 13.5, pitch: 48, bearing: -18, antialias: true,
+});
+
+map.addControl(new maplibregl.NavigationControl({showCompass:false}), 'bottom-right');
+map.addControl(new maplibregl.ScaleControl({unit:'metric'}), 'bottom-left');
+
+map.on('load', () => {
+  add3DBuildings();
+  addPriceHeatmap();
+  addBuildingDots();
+  addNewBuildsLayer();
+  addMigrationArcs();
+  applyLayerVisibility();
+  initCharts();
+  buildLayerList();
+  onYear(currentYear);
+});
+
+// ── 3D buildings ───────────────────────────────────────────────
+function add3DBuildings() {
+  const layers = map.getStyle().layers;
+  let labelLayer;
+  for (const l of layers) { if (l.type === 'symbol' && l.layout?.['text-field']) { labelLayer = l.id; break; } }
+  if (map.getLayer('3d-buildings')) return;
+  map.addLayer({
+    id: '3d-buildings', source: 'openmaptiles', 'source-layer': 'building',
+    type: 'fill-extrusion', minzoom: 14,
+    paint: {
+      'fill-extrusion-color': '#1a1a2e',
+      'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 8],
+      'fill-extrusion-base':   ['coalesce', ['get', 'render_min_height'], 0],
+      'fill-extrusion-opacity': 0.65
+    }
+  }, labelLayer);
+}
+
+// ── WOZ heatmap ────────────────────────────────────────────────
+function buildPriceGeoJSON() {
+  const features = [];
+  const lat0=52.395, lat1=52.460, lng0=6.570, lng1=6.715, step=0.003;
+  const rnd = s => { const x = Math.sin(s*127.1+311.7)*43758.5; return x - Math.floor(x); };
+  let idx = 0;
+  for (let lat=lat0; lat<lat1; lat+=step) {
+    for (let lng=lng0; lng<lng1; lng+=step) {
+      const dlat=(lat-VV.lat)/0.035, dlng=(lng-VV.lng)/0.055;
+      const dist = Math.sqrt(dlat*dlat + dlng*dlng);
+      if (dist > 1.12) { idx++; continue; }
+      const base = Math.max(0, 1 - dist*0.65);
+      const noise = (rnd(idx++) - 0.5) * 0.18;
+      const val = Math.min(1, Math.max(0, base + noise));
+      features.push({ type:'Feature', geometry:{type:'Point',coordinates:[lng,lat]}, properties:{val, weight:val} });
+    }
+  }
+  return { type:'FeatureCollection', features };
+}
+
+function addPriceHeatmap() {
+  if (map.getSource('price-src')) return;
+  map.addSource('price-src', { type:'geojson', data:buildPriceGeoJSON() });
+  map.addLayer({ id:'price-heat', type:'heatmap', source:'price-src',
+    paint:{
+      'heatmap-weight':['get','weight'],
+      'heatmap-intensity':['interpolate',['linear'],['zoom'],10,0.8,15,2.5],
+      'heatmap-radius':   ['interpolate',['linear'],['zoom'],10,20,15,50],
+      'heatmap-color':['interpolate',['linear'],['heatmap-density'],
+        0,'rgba(0,0,0,0)', 0.2,'rgba(29,78,216,0.4)',
+        0.5,'rgba(245,158,11,0.7)', 0.8,'rgba(220,38,38,0.85)', 1,'rgba(185,28,28,1)'],
+      'heatmap-opacity': 0.7,
+    }
+  });
+  map.addLayer({ id:'price-dots', type:'circle', source:'price-src', minzoom:14,
+    paint:{
+      'circle-radius': 5,
+      'circle-color': ['interpolate',['linear'],['get','val'],
+        0,'#1d4ed8', 0.4,'#f59e0b', 0.7,'#ef4444', 1,'#991b1b'],
+      'circle-opacity': 0.6, 'circle-blur': 0.3,
+    }
+  });
+}
+
+// ── BAG building dots ──────────────────────────────────────────
+function buildBldgGeoJSON() {
+  // Use all dots — no sampling for full resolution
+  return {
+    type: 'FeatureCollection',
+    features: PDOK_COORDS.map(([lng, lat, bj, adres]) => {
+      // Spatial value estimate: distance from centre
+      const dlat=(lat-VV.lat)/0.035, dlng=(lng-VV.lng)/0.055;
+      const dist = Math.sqrt(dlat*dlat + dlng*dlng);
+      const val = Math.max(0, Math.min(1, 1 - dist*0.7 + (Math.sin(lng*317+lat*211)*0.1)));
+      // Koop/huur heuristic: pre-1970 centre = more huur; newer = more koop
+      const koop = bj >= 1980 ? (val > 0.4 ? 1 : 0) : (val > 0.6 ? 1 : 0);
+      const m2 = estimateM2(bj);
+      const isNew = bj >= 2015;
+      // Parse postcode from adres string
+      const pc = adres ? (adres.match(/\d{4}[A-Z]{2}/)||[''])[0] : '';
+      const straat = adres ? adres.split(',')[0] : '';
+      return {
+        type: 'Feature',
+        geometry: { type:'Point', coordinates:[lng, lat] },
+        properties: { bj: bj||1970, val: +val.toFixed(3), koop, m2, isNew: isNew?1:0, adres: adres||'', straat, pc }
+      };
+    })
+  };
+}
+
+function bldgColorExpr(mode, year) {
+  if (mode === 'bouwjaar') {
+    return ['interpolate', ['linear'], ['get','bj'],
+      1880,'#7c3aed', 1944,'#7c3aed',
+      1945,'#2563eb', 1964,'#2563eb',
+      1965,'#0ea5e9', 1984,'#0ea5e9',
+      1985,'#14b8a6', 2004,'#14b8a6',
+      2005,'#f59e0b', 2014,'#f59e0b',
+      2015,'#f97316', 2024,'#fb923c'];
+  }
+  if (mode === 'bezit') {
+    return ['case', ['==',['get','koop'],1], '#4ade80', '#f87171'];
+  }
+  if (mode === 'nieuw') {
+    return ['case', ['>=',['get','bj'],2015], '#fbbf24',
+            ['>=',['get','bj'],2010], '#fb923c',
+            '#1e293b'];
+  }
+  // prijs: spatial gradient, shifts slightly with price index
+  const priceNL2024 = PRIJZEN.Nederland[2024] || 450985;
+  const priceNow = PRIJZEN.Twenterand[year] || PRIJZEN.Vriezenveen[year] || 362592;
+  const factor = priceNow / priceNL2024;
+  return ['interpolate', ['linear'], ['get','val'],
+    0,    `hsl(220,60%,${Math.round(18+factor*5)}%)`,
+    0.25, `hsl(210,70%,${Math.round(28+factor*8)}%)`,
+    0.5,  `hsl(35,${Math.round(70+factor*15)}%,${Math.round(45+factor*10)}%)`,
+    0.75, `hsl(22,85%,${Math.round(52+factor*8)}%)`,
+    1,    `hsl(12,90%,${Math.round(58+factor*6)}%)`];
+}
+
+function bldgOpacityExpr(year) {
+  if (colorMode === 'bouwjaar' || colorMode === 'nieuw') {
+    // Fade out dots not yet built when scrubbing timeline
+    return ['case', ['<=',['get','bj'],year], 0.82, 0.06];
+  }
+  return 0.82;
+}
+
+function bldgRadiusExpr() {
+  // Size dots by estimated m²
+  return ['interpolate',['linear'],['get','m2'],
+    60, 2.5, 90, 3, 120, 3.8, 160, 4.5];
+}
+
+function addBuildingDots() {
+  if (map.getSource('bldg-src')) return;
+  const geo = buildBldgGeoJSON();
+  map.addSource('bldg-src', { type:'geojson', data:geo });
+
+  map.addLayer({
+    id: 'bldg-layer', type:'circle', source:'bldg-src',
+    paint: {
+      'circle-color': bldgColorExpr(colorMode, currentYear),
+      'circle-radius': bldgRadiusExpr(),
+      'circle-opacity': bldgOpacityExpr(currentYear),
+      'circle-stroke-width': 0,
+    }
+  });
+
+  // Hover tooltip
+  map.on('mouseenter', 'bldg-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
+  map.on('mouseleave', 'bldg-layer', () => { map.getCanvas().style.cursor = ''; hideTip(); });
+  map.on('mousemove', 'bldg-layer', e => {
+    const p = e.features?.[0]?.properties;
+    if (!p) return;
+    showTip(e.point, `<strong>${p.straat || p.adres}</strong><br/><span style="color:var(--t3);font-size:10px">${p.pc} · ${p.bj} · ~${p.m2}m²</span>`);
+  });
+  map.on('click', 'bldg-layer', e => {
+    const p = e.features?.[0]?.properties;
+    if (p) openBldgCard(p);
+  });
+}
+
+// ── New builds dedicated layer (post-2015, pulsing) ────────────
+function addNewBuildsLayer() {
+  if (map.getSource('newbuild-src')) return;
+  const geo = {
+    type: 'FeatureCollection',
+    features: PDOK_COORDS
+      .filter(([,,bj]) => bj >= 2015)
+      .map(([lng,lat,bj,adres]) => ({
+        type:'Feature',
+        geometry:{type:'Point',coordinates:[lng,lat]},
+        properties:{bj, adres}
+      }))
+  };
+  map.addSource('newbuild-src', { type:'geojson', data:geo });
+  // Outer pulse ring
+  map.addLayer({
+    id:'newbuild-ring', type:'circle', source:'newbuild-src',
+    paint:{
+      'circle-radius':  8,
+      'circle-color':   '#fbbf24',
+      'circle-opacity': 0.18,
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#fbbf24',
+      'circle-stroke-opacity': 0.4,
+    }
+  });
+  // Core dot
+  map.addLayer({
+    id:'newbuild-dot', type:'circle', source:'newbuild-src',
+    paint:{
+      'circle-radius': 4,
+      'circle-color': '#fbbf24',
+      'circle-opacity': 0.9,
+    }
+  });
+  // Start hidden
+  map.setLayoutProperty('newbuild-ring', 'visibility', 'none');
+  map.setLayoutProperty('newbuild-dot',  'visibility', 'none');
+
+  // Animate the ring
+  let step = 0;
+  function animateNewbuilds() {
+    step = (step + 1) % 100;
+    const r = 8 + step * 0.12;
+    const op = Math.max(0, 0.35 - step * 0.0035);
+    if (map.getLayer('newbuild-ring')) {
+      map.setPaintProperty('newbuild-ring', 'circle-radius', r);
+      map.setPaintProperty('newbuild-ring', 'circle-opacity', op);
+    }
+    requestAnimationFrame(animateNewbuilds);
+  }
+  requestAnimationFrame(animateNewbuilds);
+}
+
+// ── Migration arcs ─────────────────────────────────────────────
+function buildArcGeoJSON(year) {
+  const arcs = migraatieVoorJaar(year);
+  return {
+    type:'FeatureCollection',
+    features: arcs.map(arc => {
+      const steps=60, coords=[];
+      for (let i=0; i<=steps; i++) {
+        const t = i/steps;
+        coords.push([
+          arc.from[0] + (arc.to[0]-arc.from[0])*t,
+          arc.from[1] + (arc.to[1]-arc.from[1])*t + Math.sin(t*Math.PI)*0.07
+        ]);
+      }
+      return { type:'Feature', geometry:{type:'LineString',coordinates:coords},
+               properties:{label:arc.label, saldo:arc.saldo, type:arc.type, abs:arc.abs} };
+    })
+  };
+}
+
+let arcAnimFrame = null;
+let arcDashPhase = 0;
+let arcMarkers = []; // store markers so we can remove & recreate per year
+
+function addMigrationArcs() {
+  if (map.getSource('arc-src')) return;
+  map.addSource('arc-src', { type:'geojson', data:buildArcGeoJSON(currentYear) });
+
+  // Glow
+  map.addLayer({ id:'arc-glow', type:'line', source:'arc-src', paint:{
+    'line-color': ['case',['==',['get','type'],'in'],'#4ade80','#f87171'],
+    'line-width': ['interpolate',['linear'],['get','abs'],5,1.5,120,6],
+    'line-opacity': 0.12, 'line-blur': 6,
+  }});
+  // Base
+  map.addLayer({ id:'arc-line', type:'line', source:'arc-src', paint:{
+    'line-color': ['case',['==',['get','type'],'in'],'#4ade80','#f87171'],
+    'line-width': ['interpolate',['linear'],['get','abs'],5,0.8,120,3.5],
+    'line-opacity': 0.35,
+  }});
+  // Animated dash
+  map.addLayer({ id:'arc-dash', type:'line', source:'arc-src', paint:{
+    'line-color': ['case',['==',['get','type'],'in'],'#4ade80','#f87171'],
+    'line-width': ['interpolate',['linear'],['get','abs'],5,1,120,4],
+    'line-opacity': 0.85,
+    'line-dasharray': [0, 4, 3],
+  }});
+
+  _rebuildArcMarkers(currentYear);
+
+  // Animate dasharray via rAF
+  function animateArcs() {
+    arcDashPhase = (arcDashPhase + 0.18) % 7;
+    const d = arcDashPhase;
+    if (map.getLayer('arc-dash')) {
+      map.setPaintProperty('arc-dash','line-dasharray',[d%4, 4-d%4, 3]);
+    }
+    arcAnimFrame = requestAnimationFrame(animateArcs);
+  }
+  animateArcs();
+}
+
+function _rebuildArcMarkers(year) {
+  // Remove old markers
+  arcMarkers.forEach(m => m.remove());
+  arcMarkers = [];
+  const arcs = migraatieVoorJaar(year);
+  arcs.forEach(arc => {
+    const mid = [
+      arc.from[0]+(arc.to[0]-arc.from[0])*0.5,
+      arc.from[1]+(arc.to[1]-arc.from[1])*0.5 + 0.035
+    ];
+    const sign = arc.saldo >= 0 ? '+' : '';
+    const m = new maplibregl.Marker({ element: createArcMarker(arc.label, sign+arc.saldo, arc.type) })
+      .setLngLat(mid).addTo(map);
+    arcMarkers.push(m);
+  });
+}
+
+function updateMigrationArcs(year) {
+  if (!map.getSource('arc-src')) return;
+  map.getSource('arc-src').setData(buildArcGeoJSON(year));
+  _rebuildArcMarkers(year);
+  updateMigrationPanel(year);
+}
+
+function updateMigrationPanel(year) {
+  const kc  = KERNCIJFERS.find(r => r.jaar === year);
+  // For years without data, use nearest past year
+  const kcM = kc?.vestiging != null ? kc : [...KERNCIJFERS].reverse().find(r => r.vestiging != null);
+  const ves  = kcM?.vestiging  ?? 0;
+  const vert = kcM?.vertrek    ?? 0;
+  const imm  = kcM?.immigratie ?? 0;
+  const emi  = kcM?.emigratie  ?? 0;
+  const saldo = ves - vert;
+  const isProg = !kc?.vestiging && year > 2024;
+
+  const yearEl = document.getElementById('mig-year');
+  if (yearEl) yearEl.textContent = isProg ? `(geschat ~${Math.round(year/5)*5})` : year;
+
+  const totEl = document.getElementById('mig-totals');
+  if (totEl) totEl.innerHTML = `
+    <div style="background:var(--surface);padding:8px 10px">
+      <div style="font-family:var(--mono);font-size:13px;color:#4ade80">+${ves}</div>
+      <div style="font-size:9px;color:var(--t3);margin-top:1px">vestiging</div>
+    </div>
+    <div style="background:var(--surface);padding:8px 10px">
+      <div style="font-family:var(--mono);font-size:13px;color:#f87171">−${vert}</div>
+      <div style="font-size:9px;color:var(--t3);margin-top:1px">vertrek</div>
+    </div>
+    <div style="background:var(--surface);padding:8px 10px">
+      <div style="font-family:var(--mono);font-size:13px;color:${saldo>=0?'#4ade80':'#f87171'}">${saldo>=0?'+':''}${saldo}</div>
+      <div style="font-size:9px;color:var(--t3);margin-top:1px">binnenlands saldo</div>
+    </div>
+    <div style="background:var(--surface);padding:8px 10px">
+      <div style="font-family:var(--mono);font-size:13px;color:var(--t2)">${imm>0?'+'+imm+'/−'+emi:'—'}</div>
+      <div style="font-size:9px;color:var(--t3);margin-top:1px">immigr./emigr.</div>
+    </div>`;
+
+  const flowEl = document.getElementById('mig-flows');
+  if (!flowEl) return;
+  const arcs = migraatieVoorJaar(year);
+  const maxAbs = Math.max(...arcs.map(a => a.abs), 1);
+  flowEl.innerHTML = arcs.map(a => {
+    const pct = Math.round(a.abs / maxAbs * 100);
+    const color = a.type === 'in' ? '#4ade80' : '#f87171';
+    const sign  = a.saldo >= 0 ? '+' : '';
+    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+      <span style="font-size:10px;color:var(--t2);width:72px;flex-shrink:0;font-family:var(--mono)">${a.label}</span>
+      <div style="flex:1;height:14px;background:var(--surface2);border-radius:1px;overflow:hidden;position:relative">
+        <div style="height:100%;width:${pct}%;background:${color};opacity:.55;border-radius:1px"></div>
+        <span style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:9px;color:${color}">${sign}${a.saldo}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function createArcMarker(label, saldo, type) {
+  const el = document.createElement('div');
+  el.style.cssText = `
+    background:rgba(8,8,14,.88);border:1px solid ${type==='in'?'rgba(74,222,128,.3)':'rgba(248,113,113,.3)'};
+    padding:2px 6px;border-radius:2px;font-size:9px;font-family:var(--mono);
+    color:${type==='in'?'#4ade80':'#f87171'};white-space:nowrap;pointer-events:none;
+    letter-spacing:.03em;
+  `;
+  el.textContent = `${label} ${saldo}`;
+  return el;
+}
+
+// ── Layer visibility ───────────────────────────────────────────
+const LAYER_MAP = {
+  prices:    ['price-heat','price-dots'],
+  buildings: ['bldg-layer'],
+  migration: ['arc-glow','arc-line','arc-dash'],
+  newbuilds: ['newbuild-ring','newbuild-dot'],
+};
+
+function applyLayerVisibility() {
+  Object.entries(LAYER_MAP).forEach(([key, ids]) => {
+    const vis = layerOn[key] ? 'visible' : 'none';
+    ids.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis); });
+  });
+}
+
+function toggleLayer(key) {
+  layerOn[key] = !layerOn[key];
+  applyLayerVisibility();
+  buildLayerList();
+}
+
+// ── Color mode ─────────────────────────────────────────────────
+function setColorMode(mode) {
+  colorMode = mode;
+  ['cm-prijs','cm-bouwjaar','cm-bezit','cm-nieuw'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.classList.toggle('active', id === `cm-${mode}`);
+  });
+  applyBldgColor(currentYear);
+  updateBldgLegend();
+  // Auto-enable new builds layer when in nieuw mode
+  if (mode === 'nieuw' && !layerOn.newbuilds) { layerOn.newbuilds = true; applyLayerVisibility(); buildLayerList(); }
+}
+
+function applyBldgColor(year) {
+  if (!map.getLayer('bldg-layer')) return;
+  map.setPaintProperty('bldg-layer', 'circle-color',   bldgColorExpr(colorMode, year));
+  map.setPaintProperty('bldg-layer', 'circle-opacity', bldgOpacityExpr(year));
+}
+
+function updateBldgLegend() {
+  const el = document.getElementById('bldg-legend');
+  if (!el) return;
+  if (colorMode === 'bouwjaar') {
+    el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:10px;color:var(--t2)">
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#7c3aed;flex-shrink:0"></span>Vóór 1945</div>
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#2563eb;flex-shrink:0"></span>1945–1965</div>
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#0ea5e9;flex-shrink:0"></span>1965–1985</div>
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#14b8a6;flex-shrink:0"></span>1985–2005</div>
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0"></span>2005–2015</div>
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#f97316;flex-shrink:0"></span>Na 2015</div>
+    </div>`;
+  } else if (colorMode === 'bezit') {
+    el.innerHTML = `<div style="display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--t2)">
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#4ade80;flex-shrink:0"></span>Koopwoning (schatting)</div>
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#f87171;flex-shrink:0"></span>Huurwoning (schatting)</div>
+    </div>`;
+  } else if (colorMode === 'nieuw') {
+    el.innerHTML = `<div style="display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--t2)">
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#fbbf24;flex-shrink:0"></span>Na 2015 (nieuwbouw)</div>
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#fb923c;flex-shrink:0"></span>2010–2015</div>
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#1e293b;flex-shrink:0"></span>Ouder</div>
+      <div style="font-size:9px;color:var(--t3);margin-top:2px">651 panden na 2015 · 612 panden 2010–2015</div>
+    </div>`;
+  } else {
+    el.innerHTML = `<div style="font-size:10px;color:var(--t2)">
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--t3);margin-bottom:4px"><span>Lagere WOZ</span><span>Hogere WOZ</span></div>
+      <div style="height:5px;border-radius:1px;background:linear-gradient(to right,#1d4ed8,#0ea5e9,#f59e0b,#ef4444)"></div>
+      <div style="font-size:9px;color:var(--t3);margin-top:3px">Schaal = ruimtelijke WOZ-schatting op basis van locatie</div>
+    </div>`;
+  }
+}
+
+// ── Building card ──────────────────────────────────────────────
+function openBldgCard(p) {
+  const kc = KERNCIJFERS.find(r => r.jaar === currentYear);
+  const price = PRIJZEN.Twenterand[currentYear] || PRIJZEN.Vriezenveen[currentYear] || 362592;
+  const singleInc = kc?.inkomen_single || 31.3;
+  const maxHyp = singleInc * 4.5 * 1000;
+
+  // Estimate this specific building's value relative to avg
+  const wozBase = (kc?.woz || 339) * 1000;
+  const bldgWoz = Math.round(wozBase * (0.7 + p.val * 0.8));
+  const m2 = p.m2 || estimateM2(p.bj);
+  const gap = bldgWoz - maxHyp;
+  const months = Math.round(bldgWoz / (singleInc * 1000 / 12));
+  const pct = Math.min(100, Math.round(maxHyp / bldgWoz * 100));
+
+  // Parse address parts
+  const parts = (p.adres || '').split(',');
+  const street = parts[0] || p.straat || 'Onbekend adres';
+  const pc = p.pc || (parts[1]||'').trim();
+
+  document.getElementById('bc-address').textContent = street;
+  document.getElementById('bc-postcode').textContent = pc + (p.bj ? ` · Gebouwd ${p.bj}` : '');
+  document.getElementById('bc-bj').textContent = p.bj || '—';
+  document.getElementById('bc-m2').textContent = `~${m2} m²`;
+  document.getElementById('bc-woz').textContent = '€' + Math.round(bldgWoz/1000) + 'k';
+  document.getElementById('bc-woz-year').textContent = currentYear;
+
+  document.getElementById('bc-single-inc').textContent = '€' + (singleInc*1000).toLocaleString('nl');
+  document.getElementById('bc-max-hyp').textContent = '€' + Math.round(maxHyp/1000) + 'k';
+  const gapEl = document.getElementById('bc-gap');
+  gapEl.textContent = (gap > 0 ? '−' : '+') + '€' + Math.round(Math.abs(gap)/1000) + 'k';
+  gapEl.style.color = gap > 0 ? 'var(--red)' : 'var(--green)';
+  const bar = document.getElementById('bc-gap-bar');
+  bar.style.width = pct + '%';
+  bar.style.background = pct >= 90 ? 'var(--green)' : pct >= 60 ? 'var(--accent)' : 'var(--red)';
+
+  document.getElementById('bc-months').textContent =
+    `Kosten = ${months} maanden besteedbaar single inkomen. ` +
+    `Hypotheekdekking: ${pct}% van de geschatte waarde.`;
+
+  const era = eraLabel(p.bj);
+  document.getElementById('bc-era-wrap').innerHTML =
+    `<span class="bc-era-badge ${era.cls}">${era.label}</span>` +
+    `<span style="font-size:10px;color:var(--t3)">Energielabel schatting: ${p.bj>=2015?'A/B':p.bj>=2000?'C/D':p.bj>=1980?'D/E':'E/F/G'}</span>`;
+
+  const contextLines = [];
+  if (gap > 50000) contextLines.push(`Dit pand is €${Math.round(gap/1000)}k boven de max. hypotheek van een single — niet bereikbaar zonder eigen vermogen of starterslening.`);
+  else if (gap > 0) contextLines.push(`Met een starterslening van €${Math.round(gap/1000)}k (SVn) of eigen vermogen zou dit pand bereikbaar zijn.`);
+  else contextLines.push(`Dit pand valt binnen de maximale hypotheek van een single starter in ${currentYear}.`);
+  if (p.bj < 1970) contextLines.push(`Pre-1970 woning: hoge energiekosten te verwachten, verduurzaming kost typisch €25–50k extra.`);
+  if (p.bj >= 2015) contextLines.push(`Nieuwbouw: energielabel A, lagere woonlasten, geen directe verduurzamingskosten.`);
+  document.getElementById('bc-context').textContent = contextLines.join(' ');
+
+  document.getElementById('bldg-card').classList.add('open');
+  document.addEventListener('keydown', escBldgCard);
+}
+
+function closeBldgCard() {
+  document.getElementById('bldg-card').classList.remove('open');
+  document.removeEventListener('keydown', escBldgCard);
+}
+function escBldgCard(e) { if (e.key === 'Escape') closeBldgCard(); }
+
+// ── Tooltip ────────────────────────────────────────────────────
+function showTip(point, html) {
+  const tip = document.getElementById('maptip');
+  tip.innerHTML = html;
+  tip.style.display = 'block';
+  tip.style.left = (point.x + 14) + 'px';
+  tip.style.top  = (point.y - 10) + 'px';
+}
+function hideTip() {
+  document.getElementById('maptip').style.display = 'none';
+}
+
+// ── Layer list (right panel) ────────────────────────────────────
+const LAYERS_CFG = [
+  { id:'prices',    label:'WOZ heatmap',       color:'#ef4444', on:true  },
+  { id:'buildings', label:'BAG gebouwen',       color:'#38bdf8', on:true  },
+  { id:'migration', label:'Verhuisbewegingen',  color:'#4ade80', on:true  },
+  { id:'newbuilds', label:'Nieuwbouw (post-2015)', color:'#fbbf24', on:false },
+];
+
+function buildLayerList() {
+  const el = document.getElementById('layer-list');
+  if (!el) return;
+  el.innerHTML = LAYERS_CFG.map(l => `
+    <div class="layer-row" onclick="toggleLayer('${l.id}')">
+      <span class="layer-dot" style="background:${l.color}"></span>
+      <span class="layer-lbl">${l.label}</span>
+      <span class="layer-toggle ${layerOn[l.id]?'on':'off'}"></span>
+    </div>`).join('');
+}
+
+// ── Map style ──────────────────────────────────────────────────
+function setStyle(s) {
+  currentStyle = s;
+  ['dark','light','sat'].forEach(id => {
+    document.getElementById(`style-${id}`)?.classList.toggle('active', id === s);
+  });
+  map.setStyle(MAP_STYLES[s]);
+  map.once('style.load', () => {
+    add3DBuildings(); addPriceHeatmap(); addBuildingDots();
+    addNewBuildsLayer(); addMigrationArcs(); applyLayerVisibility();
+    applyBldgColor(currentYear);
+  });
+}
+
+function toggle3D() {
+  tilt3D = !tilt3D;
+  document.getElementById('btn-3d')?.classList.toggle('active', tilt3D);
+  map.easeTo({ pitch: tilt3D ? 52 : 0, duration: 600 });
+}
+
+// ══════════════════════════════════════════════════════════════
+// KPI + YEAR
+// ══════════════════════════════════════════════════════════════
+
+function fmt(n, prefix='€', suffix='') {
+  if (n == null) return '—';
+  return prefix + Math.round(n).toLocaleString('nl') + suffix;
+}
+
+function updateKPIs(year) {
+  const kc = KERNCIJFERS.find(r => r.jaar === year);
+  const price = PRIJZEN.Twenterand[year] || PRIJZEN.Vriezenveen[year];
+  const singleInc = kc?.inkomen_single;
+  const maxHyp = singleInc ? singleInc * 4.5 * 1000 : null;
+  const gap = (price && maxHyp) ? price - maxHyp : null;
+
+  set('kv-woz',  kc?.woz ? '€'+kc.woz+'k' : '—');
+  set('kv-inc',  singleInc ? '€'+Math.round(singleInc)+'k' : '—');
+  set('kv-gap',  gap ? (gap>0?'−':'+')+fmt(Math.abs(gap)).replace('€','')+'€'.replace('€','') : '—');
+  // Fix: proper formatting
+  if (gap != null) {
+    const sign = gap > 0 ? '−' : '+';
+    const abs = Math.abs(gap);
+    document.getElementById('kv-gap').textContent = sign + '€' + Math.round(abs/1000) + 'k';
+    document.getElementById('kv-gap').className = 'kv ' + (gap>0?'red':'green');
+  }
+  set('kv-koop', kc?.koop ? kc.koop.toFixed(1)+'%' : '—');
+  set('kv-bev',  kc?.bev  ? kc.bev.toLocaleString('nl') : '—');
+  set('kv-hh',   kc?.hh_totaal ? kc.hh_totaal.toLocaleString('nl') : '—');
+
+  // Main price display
+  if (price) {
+    document.getElementById('year-price').textContent = price.toLocaleString('nl');
+  }
+
+  // Starter card
+  updateStarterCard(year, kc, price);
+
+  // Year badge prognose
+  const isProg = year >= 2026;
+  document.getElementById('year-badge').classList.toggle('prog', isProg);
+  document.getElementById('price-prog-lbl').style.display = isProg ? '' : 'none';
+  document.getElementById('kpi-year').textContent = year;
+  document.getElementById('kpi-year').style.color = isProg ? 'var(--accent2)' : '';
+}
+
+function set(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function updateStarterCard(year, kc, price) {
+  const el = document.getElementById('starter-card');
+  document.getElementById('starter-year').textContent = year;
+  if (!el) return;
+
+  const singleInc = kc?.inkomen_single;
+  if (!singleInc || !price) {
+    el.innerHTML = `<p style="color:var(--t3);font-size:11px">Geen inkomensdata voor ${year}</p>`;
+    return;
+  }
+
+  const maxHyp  = singleInc * 4.5 * 1000;
+  const gap     = price - maxHyp;
+  const pct     = Math.min(100, Math.round(maxHyp / price * 100));
+  const months  = Math.round(price / (singleInc * 1000 / 12));
+  const gapSign = gap > 0 ? '−' : '+';
+  const gapColor = gap > 0 ? 'var(--red)' : 'var(--green)';
+
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+      <span style="font-family:var(--mono);font-size:20px;font-weight:500;color:${gapColor}">${gapSign}€${Math.round(Math.abs(gap)/1000)}k</span>
+      <span style="font-size:10px;color:var(--t3)">kloof</span>
+    </div>
+    <div style="height:4px;background:var(--border2);border-radius:1px;overflow:hidden;margin-bottom:6px">
+      <div style="height:100%;width:${pct}%;background:${pct>80?'var(--green)':pct>50?'var(--accent)':'var(--red)'};border-radius:1px;transition:width .4s"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--t3);margin-bottom:10px">
+      <span>Hyp. dekking: ${pct}%</span><span>${months} mnd. inkomen</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <div style="background:var(--surface2);padding:8px 10px;border-radius:1px">
+        <div style="font-family:var(--mono);font-size:12px;color:var(--t1)">€${Math.round(singleInc)}k</div>
+        <div style="font-size:9px;color:var(--t3);margin-top:1px">Single inkomen</div>
+      </div>
+      <div style="background:var(--surface2);padding:8px 10px;border-radius:1px">
+        <div style="font-family:var(--mono);font-size:12px;color:var(--t1)">€${Math.round(maxHyp/1000)}k</div>
+        <div style="font-size:9px;color:var(--t3);margin-top:1px">Max. hypotheek</div>
+      </div>
+    </div>
+    <div style="margin-top:8px;padding:8px 10px;background:var(--surface2);border-radius:1px">
+      <div style="font-size:10px;color:var(--t2);line-height:1.5">
+        ${kc?.prognose ? '<em style="color:var(--accent2)">Prognose</em> · ' : ''}
+        Starterslening (SVn) +€25–40k · OVB 0% &lt;35jr · NHG tot €435k
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// GEMEENTE CONTEXT
+// ══════════════════════════════════════════════════════════════
+
+function updateGemeenteContext(year) {
+  const isOld = year <= 2001;
+  const name  = isOld ? 'Vriezenveen' : 'Twenterand';
+  ['nav-gemeente', 'nav-gemeente-badge'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = name;
+  });
+  const era = isOld ? 'old' : 'new';
+  const notice = document.getElementById('gemeente-notice');
+  if (notice && era !== _prevGemeenteEra && _prevGemeenteEra !== null) {
+    notice.textContent = isOld
+      ? '← Gemeente Vriezenveen (GM0186, vóór fusie 2001)'
+      : 'Fusie 2001 → gemeente Twenterand (GM1700)';
+    notice.classList.add('show');
+    clearTimeout(notice._t);
+    notice._t = setTimeout(() => notice.classList.remove('show'), 3500);
+  }
+  _prevGemeenteEra = era;
+}
+
+// ══════════════════════════════════════════════════════════════
+// YEAR SCRUBBER
+// ══════════════════════════════════════════════════════════════
+
+function onYear(year) {
+  currentYear = year;
+  const disp = document.getElementById('year-display');
+  disp.textContent = year;
+  disp.classList.toggle('prog', year >= 2026);
+  applyBldgColor(year);
+  updateGemeenteContext(year);
+  updateKPIs(year);
+  updatePriceMarker(year);
+  updateMigrationArcs(year);
+}
+
+function updatePriceMarker(year) {
+  // Highlight current year on price chart
+  if (!chartPrice) return;
+  const baseYears = Array.from({length:41}, (_,i)=>1995+i);
+  const idx = baseYears.indexOf(year);
+  const ds = chartPrice.data.datasets;
+  ds.forEach(d => {
+    d.pointRadius = d.data.map((_, i) => i === idx ? 5 : 0);
+    d.pointBorderWidth = d.data.map((_, i) => i === idx ? 2 : 0);
+  });
+  chartPrice.update('none');
+}
+
+function resetYear() {
+  document.getElementById('year-slider').value = 2024;
+  onYear(2024);
+}
+
+function togglePlay() {
+  playing = !playing;
+  document.getElementById('btn-play').textContent = playing ? '■ Stop' : '▶ Play';
+  if (playing) {
+    let y = currentYear >= 2035 ? 1995 : currentYear;
+    playTimer = setInterval(() => {
+      if (y > 2035) { togglePlay(); return; }
+      document.getElementById('year-slider').value = y;
+      onYear(y); y++;
+    }, 600);
+  } else {
+    clearInterval(playTimer);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// CHARTS
+// ══════════════════════════════════════════════════════════════
+
+let chartPrice, chartInkomen, chartAfford, chartPop;
+
+const CHART_DEFAULTS = {
+  responsive: true, maintainAspectRatio: false,
+  animation: { duration: 200 },
+  plugins: { legend: { display:false }, tooltip: { enabled:false } },
+  elements: { point: { radius:0, hoverRadius:0 } },
+  scales: {
+    x: { ticks:{color:'#505068',font:{size:8},maxTicksLimit:8}, grid:{color:'rgba(255,255,255,.04)'}, border:{color:'rgba(255,255,255,.06)'} },
+    y: { ticks:{color:'#505068',font:{size:8},maxTicksLimit:5,callback:v=>v>=1000?'€'+Math.round(v/1000)+'k':v}, grid:{color:'rgba(255,255,255,.04)'}, border:{display:false} }
+  }
+};
+
+function initCharts() {
+  const years   = Array.from({length:41}, (_,i)=>1995+i);
+  const kcYears = KERNCIJFERS.map(r=>r.jaar);
+
+  // ── Price chart ──────────────────────────────────────────────
+  const ctxP = document.getElementById('chart-price')?.getContext('2d');
+  if (ctxP) {
+    chartPrice = new Chart(ctxP, {
+      type: 'line',
+      data: {
+        labels: years,
+        datasets: [
+          { label:'Twenterand', data:years.map(y=>PRIJZEN.Twenterand[y]||PRIJZEN.Vriezenveen[y]||null),
+            borderColor:'#e8c97e', borderWidth:2, tension:0.3,
+            segment:{ borderDash:ctx=>ctx.p1DataIndex>=30?[4,3]:[] },
+            pointBackgroundColor:'#e8c97e' },
+          { label:'Overijssel', data:years.map(y=>PRIJZEN.Overijssel[y]||null),
+            borderColor:'#505068', borderWidth:1, tension:0.3 },
+          { label:'Nederland', data:years.map(y=>PRIJZEN.Nederland[y]||null),
+            borderColor:'#374151', borderWidth:1, tension:0.3 },
+        ]
+      },
+      options: { ...CHART_DEFAULTS, scales:{
+        x:CHART_DEFAULTS.scales.x,
+        y:{...CHART_DEFAULTS.scales.y, ticks:{...CHART_DEFAULTS.scales.y.ticks, callback:v=>'€'+Math.round(v/1000)+'k'}}
+      }}
+    });
+  }
+
+  // ── Inkomen chart ─────────────────────────────────────────────
+  const ctxI = document.getElementById('chart-inkomen')?.getContext('2d');
+  if (ctxI) {
+    const kcData = y => KERNCIJFERS.find(r=>r.jaar===y);
+    chartInkomen = new Chart(ctxI, {
+      type: 'line',
+      data: {
+        labels: kcYears,
+        datasets: [
+          { label:'Single', data:kcYears.map(y=>kcData(y)?.inkomen_single!=null?kcData(y).inkomen_single*1000:null),
+            borderColor:'#e8c97e', borderWidth:2, tension:0.3,
+            segment:{ borderDash:ctx=>ctx.p1DataIndex>=21?[4,3]:[] } },
+          { label:'Eigenaar', data:kcYears.map(y=>kcData(y)?.inkomen_eigenaar!=null?kcData(y).inkomen_eigenaar*1000:null),
+            borderColor:'#4ade80', borderWidth:1.5, tension:0.3,
+            segment:{ borderDash:ctx=>ctx.p1DataIndex>=21?[4,3]:[] } },
+          { label:'Huurder', data:kcYears.map(y=>kcData(y)?.inkomen_huurder!=null?kcData(y).inkomen_huurder*1000:null),
+            borderColor:'#f87171', borderWidth:1.5, tension:0.3,
+            segment:{ borderDash:ctx=>ctx.p1DataIndex>=21?[4,3]:[] } },
+        ]
+      },
+      options: { ...CHART_DEFAULTS, scales:{
+        x:CHART_DEFAULTS.scales.x,
+        y:{...CHART_DEFAULTS.scales.y, ticks:{...CHART_DEFAULTS.scales.y.ticks, callback:v=>'€'+Math.round(v/1000)+'k'}}
+      }, plugins:{ ...CHART_DEFAULTS.plugins, legend:{
+        display:true, position:'bottom',
+        labels:{color:'#505068',font:{size:8},boxWidth:10,padding:8}
+      }}}
+    });
+  }
+
+  // ── Affordability chart ────────────────────────────────────────
+  const ctxA = document.getElementById('chart-afford')?.getContext('2d');
+  if (ctxA) {
+    const kcInc = KERNCIJFERS.filter(r=>r.inkomen_single!=null);
+    chartAfford = new Chart(ctxA, {
+      type: 'bar',
+      data: {
+        labels: kcInc.map(r=>r.jaar),
+        datasets: [
+          { label:'Max. hyp.', data:kcInc.map(r=>r.inkomen_single*4.5*1000),
+            backgroundColor:'rgba(74,222,128,.5)', stack:'a' },
+          { label:'Tekort', data:kcInc.map(r=>{
+            const p=PRIJZEN.Twenterand[r.jaar]||0; const h=r.inkomen_single*4.5*1000;
+            return Math.max(0,p-h);
+          }), backgroundColor:'rgba(248,113,113,.5)', stack:'a' },
+        ]
+      },
+      options: { ...CHART_DEFAULTS, scales:{
+        x:CHART_DEFAULTS.scales.x,
+        y:{...CHART_DEFAULTS.scales.y, stacked:true, ticks:{...CHART_DEFAULTS.scales.y.ticks, callback:v=>'€'+Math.round(v/1000)+'k'}}
+      }, plugins:{ ...CHART_DEFAULTS.plugins, legend:{
+        display:true, position:'bottom',
+        labels:{color:'#505068',font:{size:8},boxWidth:10,padding:8}
+      }}}
+    });
+  }
+
+  // ── Population chart ──────────────────────────────────────────
+  const ctxBev = document.getElementById('chart-pop')?.getContext('2d');
+  if (ctxBev) {
+    const bevData = KERNCIJFERS.filter(r=>r.vestiging!=null);
+    chartPop = new Chart(ctxBev, {
+      type: 'bar',
+      data: {
+        labels: bevData.map(r=>r.jaar),
+        datasets: [
+          { label:'Vestiging', data:bevData.map(r=>r.vestiging),
+            backgroundColor:'rgba(74,222,128,.5)', yAxisID:'y' },
+          { label:'Vertrek', data:bevData.map(r=>-r.vertrek),
+            backgroundColor:'rgba(248,113,113,.4)', yAxisID:'y' },
+          { label:'Bevolking', data:bevData.map(r=>r.bev),
+            type:'line', borderColor:'#e8c97e', borderWidth:1.5, tension:0.3,
+            yAxisID:'y2', pointRadius:0 },
+        ]
+      },
+      options: { ...CHART_DEFAULTS, scales:{
+        x: CHART_DEFAULTS.scales.x,
+        y: { ...CHART_DEFAULTS.scales.y, stacked:false, position:'left',
+             ticks:{color:'#505068',font:{size:8}} },
+        y2: { ...CHART_DEFAULTS.scales.y, position:'right',
+              ticks:{color:'#505068',font:{size:8},callback:v=>Math.round(v/1000)+'k'},
+              grid:{display:false} }
+      }, plugins:{ ...CHART_DEFAULTS.plugins, legend:{
+        display:true, position:'bottom',
+        labels:{color:'#505068',font:{size:8},boxWidth:10,padding:8}
+      }}}
+    });
+  }
+
+  // ── Housing tenure chart (koop/corp/vrij) ─────────────────────
+  const ctxTen = document.getElementById('chart-tenure')?.getContext('2d');
+  if (ctxTen) {
+    const tenData = KERNCIJFERS.filter(r => r.koop != null);
+    new Chart(ctxTen, {
+      type:'line', data:{
+        labels: tenData.map(r=>r.jaar),
+        datasets:[
+          { label:'Koop', data:tenData.map(r=>r.koop),
+            borderColor:'#4ade80', borderWidth:1.5, tension:0.3, fill:false,
+            segment:{borderDash:ctx=>tenData[ctx.p1DataIndex]?.prognose?[4,3]:undefined} },
+          { label:'Corporatie', data:tenData.map(r=>r.corp),
+            borderColor:'#7c6af0', borderWidth:1.5, tension:0.3, fill:false,
+            segment:{borderDash:ctx=>tenData[ctx.p1DataIndex]?.prognose?[4,3]:undefined} },
+          { label:'Vrije huur', data:tenData.map(r=>r.vrij),
+            borderColor:'#f87171', borderWidth:1.5, tension:0.3, fill:false,
+            segment:{borderDash:ctx=>tenData[ctx.p1DataIndex]?.prognose?[4,3]:undefined} },
+        ]
+      }, options:{...CHART_DEFAULTS,
+        scales:{x:CHART_DEFAULTS.scales.x, y:{...CHART_DEFAULTS.scales.y, ticks:{...CHART_DEFAULTS.scales.y.ticks, callback:v=>v+'%'}, suggestedMin:0,suggestedMax:75}},
+        plugins:{...CHART_DEFAULTS.plugins, legend:{display:true,position:'bottom',labels:{color:'#505068',font:{size:8},boxWidth:10,padding:6}}}
+      }
+    });
+  }
+
+  // ── Household composition ──────────────────────────────────────
+  const ctxHH = document.getElementById('chart-hh-comp')?.getContext('2d');
+  if (ctxHH) {
+    const hhData = KERNCIJFERS.filter(r => r.hh_paar != null);
+    new Chart(ctxHH, {
+      type:'line', data:{
+        labels: hhData.map(r=>r.jaar),
+        datasets:[
+          { label:'Gezin', data:hhData.map(r=>r.hh_gezin),
+            borderColor:'#4ade80', borderWidth:1.5, tension:0.3, fill:false,
+            segment:{borderDash:ctx=>hhData[ctx.p1DataIndex]?.prognose?[4,3]:undefined} },
+          { label:'Paar z.k.', data:hhData.map(r=>r.hh_paar),
+            borderColor:'#e8c97e', borderWidth:1.5, tension:0.3, fill:false,
+            segment:{borderDash:ctx=>hhData[ctx.p1DataIndex]?.prognose?[4,3]:undefined} },
+          { label:'Single', data:hhData.map(r=>r.hh_single),
+            borderColor:'#7c6af0', borderWidth:1.5, tension:0.3, fill:false,
+            segment:{borderDash:ctx=>hhData[ctx.p1DataIndex]?.prognose?[4,3]:undefined} },
+        ]
+      }, options:{...CHART_DEFAULTS,
+        scales:{x:CHART_DEFAULTS.scales.x, y:{...CHART_DEFAULTS.scales.y, ticks:{...CHART_DEFAULTS.scales.y.ticks, callback:v=>v.toLocaleString('nl')}}},
+        plugins:{...CHART_DEFAULTS.plugins, legend:{display:true,position:'bottom',labels:{color:'#505068',font:{size:8},boxWidth:10,padding:6}}}
+      }
+    });
+  }
+
+  // ── Regional price comparison ──────────────────────────────────
+  const ctxReg = document.getElementById('chart-regio')?.getContext('2d');
+  if (ctxReg) {
+    const regYears = Array.from({length:31}, (_,i)=>1995+i);
+    new Chart(ctxReg, {
+      type:'line', data:{
+        labels: regYears,
+        datasets:[
+          { label:'Twenterand', data:regYears.map(y=>PRIJZEN.Twenterand[y]||PRIJZEN.Vriezenveen[y]||null),
+            borderColor:'#e8c97e', borderWidth:2, tension:0.3 },
+          { label:'Almelo', data:regYears.map(y=>PRIJZEN_BUREN.Almelo[y]||null),
+            borderColor:'#4a4a60', borderWidth:1.2, tension:0.3 },
+          { label:'Wierden', data:regYears.map(y=>PRIJZEN_BUREN.Wierden[y]||null),
+            borderColor:'#4ade80', borderWidth:1.2, tension:0.3 },
+          { label:'Tubbergen', data:regYears.map(y=>PRIJZEN_BUREN.Tubbergen[y]||null),
+            borderColor:'#7c6af0', borderWidth:1.2, tension:0.3 },
+          { label:'Hellendoorn', data:regYears.map(y=>PRIJZEN_BUREN.Hellendoorn[y]||null),
+            borderColor:'#f87171', borderWidth:1.2, tension:0.3 },
+        ]
+      }, options:{...CHART_DEFAULTS,
+        scales:{x:CHART_DEFAULTS.scales.x, y:{...CHART_DEFAULTS.scales.y, ticks:{...CHART_DEFAULTS.scales.y.ticks, callback:v=>'€'+Math.round(v/1000)+'k'}}},
+        plugins:{...CHART_DEFAULTS.plugins, legend:{display:true,position:'bottom',labels:{color:'#505068',font:{size:8},boxWidth:10,padding:6}}}
+      }
+    });
+  }
+
+  updateBldgLegend();
+}
+
+// ══════════════════════════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════════════════════════
+
+function exportCSV() {
+  const headers = ['jaar','prijs_tw','prijs_nl','prijs_almelo','prijs_wierden','woz','bev','vestiging','vertrek','immigratie','emigratie','hh_totaal','hh_single','hh_paar','hh_gezin','hh_grootte','inkomen_jaar','inkomen_single','inkomen_eigenaar','inkomen_huurder','koop','corp','vrij'];
+  const rows = KERNCIJFERS.map(r => [
+    r.jaar,
+    PRIJZEN.Twenterand[r.jaar]||PRIJZEN.Vriezenveen[r.jaar]||'',
+    PRIJZEN.Nederland[r.jaar]||'',
+    PRIJZEN_BUREN.Almelo[r.jaar]||'',
+    PRIJZEN_BUREN.Wierden[r.jaar]||'',
+    r.woz,r.bev,r.vestiging,r.vertrek,r.immigratie,r.emigratie,
+    r.hh_totaal,r.hh_single,r.hh_paar,r.hh_gezin,r.hh_grootte,
+    r.inkomen_jaar,r.inkomen_single,r.inkomen_eigenaar,r.inkomen_huurder,
+    r.koop,r.corp,r.vrij
+  ].join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'vriezenveen_woningmarkt.csv';
+  a.click();
+}
+
+// ── Mobile panel toggle ────────────────────────────────────
+let _mobilePanelOpen = true;
+function toggleMobilePanel() {
+  const panel = document.getElementById('left-panel');
+  const arrow = document.getElementById('mobile-panel-arrow');
+  if (!panel) return;
+  _mobilePanelOpen = !_mobilePanelOpen;
+  panel.classList.toggle('collapsed', !_mobilePanelOpen);
+  if (arrow) arrow.textContent = _mobilePanelOpen ? '▾' : '▸';
+}
+
+// Init
+onYear(2024);
+</script>
+</body>
+</html>

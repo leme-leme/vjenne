@@ -1,0 +1,121 @@
+{
+  "odata.metadata":"https://opendata.cbs.nl/ODataApi/OData/83625NED/$metadata#Cbs.OData.WebAPI.RegioS","value":[
+    {
+      "Key":"GM1680","Title":"Aa en Hunze","Description":"Ontstaan per 01-01-1998","CategoryGroupID":null
+    },{
+      "Key":"GM1723","Title":"Alphen-Chaam","Description":"Ontstaan per 01-01-1997","CategoryGroupID":null
+    },{
+      "Key":"GM1679","Title":"Ambt Montfort","Description":"Opgeheven per 01-01-2007\r\nNaamswijziging per 01-02-1994","CategoryGroupID":null
+    },{
+      "Key":"GM1724","Title":"Bergeijk","Description":"Naamswijziging per 25-09-1998","CategoryGroupID":null
+    },{
+      "Key":"GM1721","Title":"Bernheze","Description":"Naamswijziging per 28-01-1995","CategoryGroupID":null
+    },{
+      "Key":"GM1728","Title":"Bladel","Description":"Ontstaan per 01-01-1997","CategoryGroupID":null
+    },{
+      "Key":"GM1681","Title":"Borger-Odoorn","Description":"Ontstaan per 01-01-1998","CategoryGroupID":null
+    },{
+      "Key":"GM1706","Title":"Cranendonck","Description":"Naamswijziging per 28-01-1998","CategoryGroupID":null
+    },{
+      "Key":"GM1684","Title":"Cuijk","Description":"Ontstaan per 01-01-1994\r\nOpgeheven per 01-01-2022","CategoryGroupID":null
+    },{
+      "Key":"GM1774","Title":"Dinkelland","Description":"Naamswijziging per 01-06-2002","CategoryGroupID":null
+    },{
+      "Key":"GM1719","Title":"Drimmelen","Description":"Naamswijziging per 25-04-1998","CategoryGroupID":null
+    },{
+      "Key":"GM1711","Title":"Echt-Susteren","Description":"Ontstaan per 01-01-2003","CategoryGroupID":null
+    },{
+      "Key":"GM1651","Title":"Eemsmond","Description":"Opgeheven per 01-01-2019\r\nNaamswijziging per 01-01-1992","CategoryGroupID":null
+    },{
+      "Key":"GM1722","Title":"Ferwerderadiel","Description":"Opgeheven per 01-01-2019\r\nNaamswijziging per 01-01-1999","CategoryGroupID":null
+    },{
+      "Key":"GM1771","Title":"Geldrop-Mierlo","Description":"Ontstaan per 01-01-2004","CategoryGroupID":null
+    },{
+      "Key":"GM1652","Title":"Gemert-Bakel","Description":"Ontstaan per 01-01-1997","CategoryGroupID":null
+    },{
+      "Key":"GM1729","Title":"Gulpen-Wittem","Description":"Ontstaan per 01-01-1999","CategoryGroupID":null
+    },{
+      "Key":"GM1655","Title":"Halderberge","Description":"Ontstaan per 01-01-1997","CategoryGroupID":null
+    },{
+      "Key":"GM1658","Title":"Heeze-Leende","Description":"Ontstaan per 01-01-1997","CategoryGroupID":null
+    },{
+      "Key":"GM1735","Title":"Hof van Twente","Description":"Ontstaan per 01-01-2001","CategoryGroupID":null
+    },{
+      "Key":"GM1659","Title":"Laarbeek","Description":"Ontstaan per 01-01-1997","CategoryGroupID":null
+    },{
+      "Key":"GM1685","Title":"Landerd","Description":"Ontstaan per 01-01-1994\r\nOpgeheven per 01-01-2022","CategoryGroupID":null
+    },{
+      "Key":"GM1621","Title":"Lansingerland","Description":"Ontstaan per 01-01-2007","CategoryGroupID":null
+    },{
+      "Key":"GM1640","Title":"Leudal","Description":"Ontstaan per 01-01-2007","CategoryGroupID":null
+    },{
+      "Key":"GM1673","Title":"Liemeer","Description":"Opgeheven per 01-01-2007\r\nNaamswijziging per 01-01-1994","CategoryGroupID":null
+    },{
+      "Key":"GM1705","Title":"Lingewaard","Description":"Naamswijziging per 01-01-2003","CategoryGroupID":null
+    },{
+      "Key":"GM1671","Title":"Maasdonk","Description":"Opgeheven per 01-01-2015\r\nOntstaan per 01-01-1993","CategoryGroupID":null
+    },{
+      "Key":"GM1641","Title":"Maasgouw","Description":"Ontstaan per 01-01-2007","CategoryGroupID":null
+    },{
+      "Key":"GM1665","Title":"Made","Description":"Naamswijziging per 25-04-1998\r\nOntstaan per 01-01-1997","CategoryGroupID":null
+    },{
+      "Key":"GM1663","Title":"De Marne","Description":"Opgeheven per 01-01-2019\r\nNaamswijziging per 01-01-1992","CategoryGroupID":null
+    },{
+      "Key":"GM1731","Title":"Midden-Drenthe","Description":"Naamswijziging per 01-01-2000","CategoryGroupID":null
+    },{
+      "Key":"GM1697","Title":"Middenveld","Description":"Naamswijziging per 01-01-2000\r\nOntstaan per 01-01-1998","CategoryGroupID":null
+    },{
+      "Key":"GM1709","Title":"Moerdijk","Description":"Naamswijziging per 04-04-1998","CategoryGroupID":null
+    },{
+      "Key":"GM1740","Title":"Neder-Betuwe","Description":"Naamswijziging per 01-04-2003","CategoryGroupID":null
+    },{
+      "Key":"GM1695","Title":"Noord-Beveland","Description":"Ontstaan per 01-01-1995","CategoryGroupID":null
+    },{
+      "Key":"GM1699","Title":"Noordenveld","Description":"Ontstaan per 01-01-1998","CategoryGroupID":null
+    },{
+      "Key":"GM1773","Title":"Olst-Wijhe","Description":"Naamswijziging per 26-03-2002","CategoryGroupID":null
+    },{
+      "Key":"GM1734","Title":"Overbetuwe","Description":"Ontstaan per 01-01-2001","CategoryGroupID":null
+    },{
+      "Key":"GM1661","Title":"Reiderland","Description":"Opgeheven per 01-01-2010\r\nNaamswijziging per 01-07-1991","CategoryGroupID":null
+    },{
+      "Key":"GM1667","Title":"Reusel-De Mierden","Description":"Ontstaan per 01-01-1997","CategoryGroupID":null
+    },{
+      "Key":"GM1672","Title":"Rijnwoude","Description":"Opgeheven per 01-01-2014\r\nNaamswijziging per 01-01-1993","CategoryGroupID":null
+    },{
+      "Key":"GM1742","Title":"Rijssen-Holten","Description":"Naamswijziging per 15-03-2003","CategoryGroupID":null
+    },{
+      "Key":"GM1669","Title":"Roerdalen","Description":"Gemeentelijke herindeling per 01-01-2007\r\nNaamswijziging per 01-01-1993","CategoryGroupID":null
+    },{
+      "Key":"GM1670","Title":"Roggel en Neer","Description":"Opgeheven per 01-01-2007\r\nNaamswijziging per 01-01-1993","CategoryGroupID":null
+    },{
+      "Key":"GM1674","Title":"Roosendaal","Description":"Ontstaan per 01-01-1997","CategoryGroupID":null
+    },{
+      "Key":"GM1676","Title":"Schouwen-Duiveland","Description":"Ontstaan per 01-01-1997","CategoryGroupID":null
+    },{
+      "Key":"GM1702","Title":"Sint Anthonis","Description":"Naamswijziging per 04-07-1995\r\nOpgeheven per 01-01-2022","CategoryGroupID":null
+    },{
+      "Key":"GM1714","Title":"Sluis","Description":"Ontstaan per 01-01-2003","CategoryGroupID":null
+    },{
+      "Key":"GM1698","Title":"Sluis-Aardenburg","Description":"Opgeheven per 01-01-2003\r\nOntstaan per 01-01-1995","CategoryGroupID":null
+    },{
+      "Key":"GM1691","Title":"St. Anthonis","Description":"Naamswijziging per 04-07-1995\r\nOntstaan per 01-01-1994\r\n","CategoryGroupID":null
+    },{
+      "Key":"GM1708","Title":"Steenwijkerland","Description":"Naamswijziging per 01-01-2003","CategoryGroupID":null
+    },{
+      "Key":"GM1700","Title":"Twenterand","Description":"Naamswijziging per 01-06-2002","CategoryGroupID":null
+    },{
+      "Key":"GM1730","Title":"Tynaarlo","Description":"Naamswijziging per 01-12-1999","CategoryGroupID":null
+    },{
+      "Key":"GM1701","Title":"Westerveld","Description":"Ontstaan per 01-01-1998","CategoryGroupID":null
+    },{
+      "Key":"GM1783","Title":"Westland","Description":"Ontstaan per 01-01-2004","CategoryGroupID":null
+    },{
+      "Key":"GM1696","Title":"Wijdemeren","Description":"Ontstaan per 01-01-2002","CategoryGroupID":null
+    },{
+      "Key":"GM1690","Title":"De Wolden","Description":"Ontstaan per 01-01-1998","CategoryGroupID":null
+    },{
+      "Key":"GM1666","Title":"Zevenhuizen-Moerkapelle","Description":"Opgeheven per 01-01-2010\r\nNaamswijziging per 01-02-1992","CategoryGroupID":null
+    }
+  ]
+}
