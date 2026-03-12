@@ -366,7 +366,7 @@ footer {
   <a href="map.html" class="nav-pill">← Kaart</a>
   <span class="nav-badge badge-cbs">CBS</span>
   <span class="nav-badge badge-pdok">PDOK/BAG</span>
-  <span class="nav-badge badge-prog">Prognose 2035</span>
+  <span class="nav-badge badge-prog">Prognose 2032</span>
   <button class="nav-pill" onclick="exportCSV()">↓ CSV</button>
 </nav>
 
@@ -424,7 +424,7 @@ footer {
     <div class="chart-card reveal" id="cc-price-ts">
       <div class="chart-head">
         <span class="chart-title">Verkoopprijs 1995–2035</span>
-        <span class="chart-sub">Nominale gemiddelde, CBS/Kadaster · prognose 2026–2035 gestippeld</span>
+        <span class="chart-sub">Nominale gemiddelde, CBS/Kadaster · prognose 2026–2032 gestippeld</span>
       </div>
       <div class="chart-body" style="height:280px"><canvas id="c-price-ts"></canvas></div>
       <div class="legend-row">
@@ -525,7 +525,7 @@ footer {
     <div class="chart-card reveal">
       <div class="chart-head">
         <span class="chart-title">Huishoudensgrootte & eenpersoonshuishoudens</span>
-        <span class="chart-sub">2003–2035 · CBS · prognose gestippeld</span>
+        <span class="chart-sub">2003–2032 · CBS · prognose gestippeld</span>
       </div>
       <div class="chart-body" style="height:200px"><canvas id="c-hh"></canvas></div>
       <div class="legend-row">
@@ -583,7 +583,7 @@ footer {
 
     <div class="chart-card reveal">
       <div class="chart-head">
-        <span class="chart-title">Huishoudensamenstelling Twenterand 2003–2035</span>
+        <span class="chart-title">Huishoudensamenstelling Twenterand 2003–2032</span>
         <span class="chart-sub">Singles / paren zonder kind / gezinnen met kinderen · CBS · prognose gestippeld</span>
       </div>
       <div class="chart-body" style="height:240px"><canvas id="c-hh-comp"></canvas></div>
@@ -673,7 +673,7 @@ footer {
     <div class="chart-card reveal">
       <div class="chart-head">
         <span class="chart-title">Betaalbaarheidskloof single starter 2011–2035</span>
-        <span class="chart-sub">Max. hypotheek vs. gemiddelde prijs · prognose gestippeld</span>
+        <span class="chart-sub">Max. hypotheek vs. gemiddelde prijs · prognose t/m 2032</span>
       </div>
       <div class="chart-body" style="height:240px"><canvas id="c-afford"></canvas></div>
       <div class="legend-row">
@@ -688,7 +688,7 @@ footer {
 
     <div class="chart-card reveal">
       <div class="chart-head">
-        <span class="chart-title">Prijs/inkomen ratio 2003–2035</span>
+        <span class="chart-title">Prijs/inkomen ratio 2003–2032</span>
         <span class="chart-sub">Huishoudinkomen en single inkomen · hogere waarde = minder betaalbaar</span>
       </div>
       <div class="chart-body" style="height:200px"><canvas id="c-ratio"></canvas></div>
@@ -713,7 +713,7 @@ footer {
     <div class="chart-card reveal">
       <div class="chart-head">
         <span class="chart-title">Besteedbaar inkomen per type huishouden 2011–2035</span>
-        <span class="chart-sub">CBS tabel 70072ned · x1.000 euro/jaar · prognose gestippeld</span>
+        <span class="chart-sub">CBS tabel 70072ned · x1.000 euro/jaar · prognose t/m 2032</span>
       </div>
       <div class="chart-body" style="height:260px"><canvas id="c-inc-groep"></canvas></div>
       <div class="legend-row">
@@ -783,7 +783,7 @@ footer {
     <div class="chart-card reveal">
       <div class="chart-head">
         <span class="chart-title">Woningvoorraad Twenterand 2012–2035</span>
-        <span class="chart-sub">CBS woningstatistieken · prognose +90/jr na 2025</span>
+        <span class="chart-sub">CBS woningstatistieken · prognose t/m 2029</span>
       </div>
       <div class="chart-body" style="height:200px"><canvas id="c-voorraad"></canvas></div>
     </div>
@@ -1488,7 +1488,7 @@ footer {
       <div class="source-card">
         <div class="src-id">PBL / CBS</div>
         <div class="src-title">Prognose-methode</div>
-        <div class="src-body">Prognose 2026–2035: prijzen +3%/jr (gematigd scenario), inkomen +3,5%/jr. Bevolking op basis van PBL Primos 2024. Woningvraag o.b.v. huishoudensontwikkeling.</div>
+        <div class="src-body">Prognose 2026–2032: prijzen +3%/jr (gematigd scenario), inkomen +3,5%/jr. Bevolking op basis van PBL Primos 2024. Woningvraag o.b.v. huishoudensontwikkeling.</div>
       </div>
       <div class="source-card">
         <div class="src-id">RTV Oost</div>
@@ -1577,10 +1577,7 @@ const KC = [
   {jaar:2029,bev:34380,woz:414,ves:null,vert:null,imm:null,emi:null,inc_jaar:74.3,inc_single:35.9,inc_eigen:89.1,inc_huur:42.4,koop:68.0,corp:24.0,vrij:8.0,hh:13970,hh_s:4065,hh_p:4400,hh_g:5505,hh_gr:2.43,prognose:true},
   {jaar:2030,bev:34420,woz:430,ves:null,vert:null,imm:null,emi:null,inc_jaar:76.9,inc_single:37.1,inc_eigen:92.2,inc_huur:43.9,koop:68.2,corp:23.8,vrij:8.0,hh:14060,hh_s:4145,hh_p:4430,hh_g:5485,hh_gr:2.42,prognose:true},
   {jaar:2031,bev:34450,woz:447,ves:null,vert:null,imm:null,emi:null,inc_jaar:79.6,inc_single:38.4,inc_eigen:95.4,inc_huur:45.4,koop:68.5,corp:23.5,vrij:8.0,hh:14150,hh_s:4225,hh_p:4455,hh_g:5470,hh_gr:2.41,prognose:true},
-  {jaar:2032,bev:34480,woz:465,ves:null,vert:null,imm:null,emi:null,inc_jaar:82.4,inc_single:39.7,inc_eigen:98.7,inc_huur:47.0,koop:68.7,corp:23.3,vrij:8.0,hh:14240,hh_s:4310,hh_p:4480,hh_g:5450,hh_gr:2.40,prognose:true},
-  {jaar:2033,bev:34500,woz:484,ves:null,vert:null,imm:null,emi:null,inc_jaar:85.3,inc_single:41.1,inc_eigen:102.2,inc_huur:48.6,koop:68.9,corp:23.1,vrij:8.0,hh:14330,hh_s:4395,hh_p:4500,hh_g:5435,hh_gr:2.39,prognose:true},
-  {jaar:2034,bev:34520,woz:503,ves:null,vert:null,imm:null,emi:null,inc_jaar:88.3,inc_single:42.5,inc_eigen:105.8,inc_huur:50.3,koop:69.1,corp:22.9,vrij:8.0,hh:14420,hh_s:4480,hh_p:4520,hh_g:5420,hh_gr:2.38,prognose:true},
-  {jaar:2035,bev:34540,woz:523,ves:null,vert:null,imm:null,emi:null,inc_jaar:91.4,inc_single:44.0,inc_eigen:109.5,inc_huur:52.1,koop:69.3,corp:22.7,vrij:8.0,hh:14510,hh_s:4570,hh_p:4540,hh_g:5400,hh_gr:2.37,prognose:true},
+  {jaar:2032,bev:34480,woz:465,ves:null,vert:null,imm:null,emi:null,inc_jaar:82.4,inc_single:39.7,inc_eigen:98.7,inc_huur:47.0,koop:68.7,corp:23.3,vrij:8.0,hh:14240,hh_s:4310,hh_p:4480,hh_g:5450,hh_gr:2.40,prognose:true}
 ];
 
 const WONINGVOORRAAD = [
@@ -1591,9 +1588,9 @@ const WONINGVOORRAAD = [
   {jaar:2024,totaal:14106},{jaar:2025,totaal:14192},
   {jaar:2026,totaal:14280,p:true},{jaar:2027,totaal:14370,p:true},
   {jaar:2028,totaal:14460,p:true},{jaar:2029,totaal:14550,p:true},
-  {jaar:2030,totaal:14640,p:true},{jaar:2031,totaal:14730,p:true},
-  {jaar:2032,totaal:14820,p:true},{jaar:2033,totaal:14910,p:true},
-  {jaar:2034,totaal:15000,p:true},{jaar:2035,totaal:15090,p:true},
+  
+  
+  
 ];
 
 const MIGRATIE_LEGACY = [
@@ -1606,7 +1603,7 @@ const MIGRATIE_LEGACY = [
   {label:'Amsterdam',    saldo:-61, type:'out'},
   {label:'Utrecht',      saldo:-28, type:'out'},
   {label:'Den Haag',     saldo:-19, type:'out'},
-  {label:'Duitsland',    saldo:-12, type:'out'},
+  {label:'Duitsland',    saldo:-12, type:'out'}
 ];
 
 // Per-year per-gemeente migration data (CBS 81734ned, 2011–2024)
@@ -1683,7 +1680,7 @@ const BOUWJAAR_ERAS = [
   { label:'1965–1985',  count:2385, color:'rgba(14,165,233,.7)' },
   { label:'1985–2005',  count:1897, color:'rgba(20,184,166,.7)' },
   { label:'2005–2015',  count:612,  color:'rgba(245,158,11,.7)' },
-  { label:'Na 2015',    count:651,  color:'rgba(249,115,22,.85)' },
+  { label:'Na 2015',    count:651,  color:'rgba(249,115,22,.85)' }
 ];
 
 // ════════════════════════════════════════════════════════════
@@ -1820,7 +1817,7 @@ function initAllCharts() {
       datasets:[
         { label:'Twenterand', data:years.map(y=>PRIJZEN_TW[y]||null),
           borderColor:'#e8c97e', borderWidth:2.5, tension:0.3, fill:false,
-          segment:{ borderDash:ctx=>ctx.p0DataIndex>=30?[5,4]:undefined },
+          segment:{ borderDash:ctx=>ctx.p0DataIndex>=22?[5,4]:undefined },
           pointHoverBackgroundColor:'#e8c97e', pointHoverRadius:5 },
         { label:'Overijssel', data:years.map(y=>PRIJZEN_OV[y]||null),
           borderColor:'#4a4a60', borderWidth:1.5, tension:0.3, fill:false },
@@ -1962,7 +1959,7 @@ function initAllCharts() {
 
   // Build full 1990–2035 timeline
   const WOZ_FULL_YEARS = [];
-  for (let y=1990; y<=2035; y++) WOZ_FULL_YEARS.push(y);
+  for (let y=1990; y<=2032; y++) WOZ_FULL_YEARS.push(y);
 
   function getWozVal(y) {
     if (WOZ_HIST[y] !== undefined) return WOZ_HIST[y];
@@ -2486,7 +2483,7 @@ const MIGRATIE_INTL = [
   {label:'Duitsland', saldo:-7, type:'out', vlag:'🇩🇪'},
   {label:'Polen',     saldo:-9, type:'out', vlag:'🇵🇱', uitstroom:true},
   {label:'België',    saldo:-5, type:'out', vlag:'🇧🇪'},
-  {label:'V.K.',      saldo:-4, type:'out', vlag:'🇬🇧'},
+  {label:'V.K.',      saldo:-4, type:'out', vlag:'🇬🇧'}
 ];
 
 function setMigFilter(f) {
@@ -2582,7 +2579,7 @@ const INTL_IMMIGRATIE = [
   {land:'Duitsland',    vlag:'🇩🇪', gem:7,  kleur:'#4ade80'},
   {land:'Marokko',      vlag:'🇲🇦', gem:5,  kleur:'#4ade80'},
   {land:'Eritrea',      vlag:'🇪🇷', gem:4,  kleur:'#4ade80'},
-  {land:'Overig',       vlag:'🌍',  gem:17, kleur:'#4ade80'},
+  {land:'Overig',       vlag:'🌍',  gem:17, kleur:'#4ade80'}
 ];
 const INTL_EMIGRATIE = [
   {land:'Duitsland',    vlag:'🇩🇪', gem:14, kleur:'#f87171'},
@@ -2590,7 +2587,7 @@ const INTL_EMIGRATIE = [
   {land:'Turkije',      vlag:'🇹🇷', gem:6,  kleur:'#f87171'},
   {land:'België',       vlag:'🇧🇪', gem:5,  kleur:'#f87171'},
   {land:'V.K.',         vlag:'🇬🇧', gem:4,  kleur:'#f87171'},
-  {land:'Overig',       vlag:'🌍',  gem:16, kleur:'#f87171'},
+  {land:'Overig',       vlag:'🌍',  gem:16, kleur:'#f87171'}
 ];
 
 function buildIntlMigrationFlows() {
@@ -2690,7 +2687,7 @@ const PARTY_DATA = [
   { partij:'PVV',            kleur:'#f87171', zetels:'4',  bouwtempo:'Middel',  focus:'Eigen inwoners eerst',          starter:'Ja — maar geen statushouders', bijzonder:'Geen azc, geen voorrang statushouders op sociale huur' },
   { partij:'PvT',            kleur:'#a78bfa', zetels:'p.m.',bouwtempo:'Laag',   focus:'Per dorp, kleinschalig',        starter:'Ja — maar bescheiden schaal',  bijzonder:'Geen grootschalige plannen; doorstroming ouderen' },
   { partij:'PvdA-GL',        kleur:'#34d399', zetels:'3',  bouwtempo:'Middel',  focus:'Betaalbaar + duurzaam',         starter:'Ja — sociaal en groen',        bijzonder:'Kanaal Almelo–De Haandrik bewoners; groene economie' },
-  { partij:'SGP',            kleur:'#94a3b8', zetels:'2–3',bouwtempo:'Middel',  focus:'Jongeren + gezinnen in kernen', starter:'Ja — betaalbaar, eigen inw.',  bijzonder:'Noaberschap; steun agrariërs; duurzaamheid zonder ideologie' },
+  { partij:'SGP',            kleur:'#94a3b8', zetels:'2–3',bouwtempo:'Middel',  focus:'Jongeren + gezinnen in kernen', starter:'Ja — betaalbaar, eigen inw.',  bijzonder:'Noaberschap; steun agrariërs; duurzaamheid zonder ideologie' }
 ];
 
 function buildPartyPositions() {
@@ -2757,7 +2754,7 @@ const NEWS_ITEMS = [
   { title: 'Na jaren vol ellende hoopt purgezin op een nieuw leven', date: 'jan 2025', url: 'data/news/purgezin-vriezenveen-nieuw-leven-2025.md', tag: 'Kanaaldrama' },
   { title: 'Huisontruiming in Vriezenveen zorgt voor verdeelde buurt', date: 'sep 2025', url: 'https://www.rtvoost.nl/nieuws/3567457/huisontruiming-in-vriezenveen-zorgt-voor-verdeelde-buurt', tag: 'Corporatie' },
   { title: 'Frustratie over sluiting basisschool in Westerhaar', date: 'mrt 2024', url: 'https://www.rtvoost.nl/nieuws/2318959/frustratie-over-sluiting-basisschool-in-westerhaar-het-leeft-ontzettend-hier', tag: 'Krimp' },
-  { title: 'Kanaaldrama: niet meer de vraag óf maar wanneer iemand zich van kant gaat maken', date: 'mrt 2023', url: 'https://www.rtvoost.nl/nieuws/2212835/kanaaldrama-niet-meer-de-vraag-of-maar-wanneer-iemand-zich-van-kant-gaat-maken', tag: 'Kanaaldrama' },
+  { title: 'Kanaaldrama: niet meer de vraag óf maar wanneer iemand zich van kant gaat maken', date: 'mrt 2023', url: 'https://www.rtvoost.nl/nieuws/2212835/kanaaldrama-niet-meer-de-vraag-of-maar-wanneer-iemand-zich-van-kant-gaat-maken', tag: 'Kanaaldrama' }
 ];
 
 const TAG_COLORS = {
