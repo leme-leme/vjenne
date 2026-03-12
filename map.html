@@ -961,7 +961,7 @@ function resetMapIncome() {
 let playing = false, playTimer = null;
 let colorMode = 'prijs';
 let currentStyle = 'dark';
-let layerOn = { prices:true, buildings:true, migration:true, newbuilds:false };
+let layerOn = { prices:true, buildings:true, choropleth:true, migration:true, newbuilds:false };
 let _prevGemeenteEra = null;
 
 // Gemeente Twenterand centre (used for distance-based WOZ proxy)
@@ -989,6 +989,7 @@ map.addControl(new maplibregl.NavigationControl({showCompass:false}), 'bottom-ri
 map.addControl(new maplibregl.ScaleControl({unit:'metric'}), 'bottom-left');
 
 map.on('load', () => {
+  addChoropleth();
   addPriceHeatmap();
   addBuildingDots();
   addNewBuildsLayer();
@@ -1000,6 +1001,133 @@ map.on('load', () => {
 });
 
 
+
+// ── Overijssel gemeente WOZ choropleth ─────────────────────────
+// Color stops anchored to real Overijssel distribution:
+//   224k (Almelo) → blue-dark … 310k (OV median) → amber … 430k (Tubbergen) → red-orange
+const WOZ_COLOR_STOPS = [
+  [224, '#1e3a5f'],
+  [265, '#1d4ed8'],
+  [295, '#0ea5e9'],
+  [320, '#f59e0b'],
+  [350, '#f97316'],
+  [390, '#ef4444'],
+  [430, '#991b1b'],
+];
+
+function wozToColor(woz) {
+  const stops = WOZ_COLOR_STOPS;
+  for (let i = 1; i < stops.length; i++) {
+    if (woz <= stops[i][0]) {
+      const t = (woz - stops[i-1][0]) / (stops[i][0] - stops[i-1][0]);
+      // Return the closer stop for simplicity (MapLibre expression handles smooth interp)
+      return t < 0.5 ? stops[i-1][1] : stops[i][1];
+    }
+  }
+  return stops[stops.length-1][1];
+}
+
+// MapLibre step expression for fill-color driven by 'woz' property
+function choroplethColorExpr(yearScale) {
+  // yearScale: ratio of current-year price index to 2024, to shift colours over time
+  // We bake the year scale into the WOZ values at source-update time instead
+  return ['interpolate', ['linear'], ['get', 'woz'],
+    224, '#1e3a5f',
+    265, '#1d4ed8',
+    295, '#0ea5e9',
+    320, '#f59e0b',
+    350, '#f97316',
+    390, '#ef4444',
+    430, '#991b1b',
+  ];
+}
+
+let _choroplethData = null; // raw GeoJSON (2024 WOZ values)
+
+function addChoropleth() {
+  fetch('data/overijssel_gemeenten_woz.json')
+    .then(r => r.json())
+    .then(geo => {
+      _choroplethData = geo;
+      map.addSource('choropleth-src', { type: 'geojson', data: geo });
+
+      // Fill layer — below building dots
+      map.addLayer({
+        id: 'gemeente-woz-fill',
+        type: 'fill',
+        source: 'choropleth-src',
+        paint: {
+          'fill-color': choroplethColorExpr(1),
+          'fill-opacity': ['interpolate', ['linear'], ['zoom'],
+            8, 0.55,
+            12, 0.30,
+            14, 0.10,
+          ],
+        },
+      }, 'bldg-layer'); // insert below building dots
+
+      // Stroke layer
+      map.addLayer({
+        id: 'gemeente-woz-stroke',
+        type: 'line',
+        source: 'choropleth-src',
+        paint: {
+          'line-color': 'rgba(255,255,255,0.18)',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 7, 0.5, 12, 1.2],
+        },
+      }, 'bldg-layer');
+
+      // Label layer — gemeente name + WOZ value
+      map.addLayer({
+        id: 'gemeente-woz-label',
+        type: 'symbol',
+        source: 'choropleth-src',
+        minzoom: 8,
+        maxzoom: 12,
+        layout: {
+          'text-field': ['concat', ['get','naam'], '\n€', ['to-string',['get','woz']],'k'],
+          'text-font': ['Noto Sans Regular'],
+          'text-size': 10,
+          'text-anchor': 'center',
+        },
+        paint: {
+          'text-color': 'rgba(255,255,255,0.75)',
+          'text-halo-color': 'rgba(0,0,0,0.6)',
+          'text-halo-width': 1,
+        },
+      });
+
+      // Apply initial visibility (prijs mode = visible)
+      _applyChoroplethVisibility();
+    })
+    .catch(e => console.warn('choropleth load failed:', e));
+}
+
+function _applyChoroplethVisibility() {
+  const show = colorMode === 'prijs';
+  ['gemeente-woz-fill','gemeente-woz-stroke','gemeente-woz-label'].forEach(id => {
+    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', show ? 'visible' : 'none');
+  });
+}
+
+function updateChoropleth(year) {
+  if (!_choroplethData || !map.getSource('choropleth-src')) return;
+  // Scale WOZ values by year using KERNCIJFERS woz trajectory (Twenterand as proxy)
+  const kc2024 = KERNCIJFERS.find(r => r.jaar === 2024);
+  const kcYear = KERNCIJFERS.find(r => r.jaar === year);
+  const scale = (kcYear?.woz && kc2024?.woz) ? kcYear.woz / kc2024.woz : 1;
+  const scaled = {
+    type: 'FeatureCollection',
+    features: _choroplethData.features.map(f => ({
+      ...f,
+      properties: {
+        ...f.properties,
+        woz: Math.round(f.properties.woz * scale),
+      },
+    })),
+  };
+  map.getSource('choropleth-src').setData(scaled);
+}
 
 // ── WOZ heatmap ────────────────────────────────────────────────
 function buildPriceGeoJSON() {
@@ -1429,6 +1557,7 @@ function createArcMarker(label, saldo, type) {
 const LAYER_MAP = {
   prices:    ['price-heat','price-dots'],
   buildings: ['bldg-layer'],
+  choropleth:['gemeente-woz-fill','gemeente-woz-stroke','gemeente-woz-label'],
   migration: ['arc-glow','arc-line','arc-dash'],
   newbuilds: ['newbuild-ring','newbuild-dot'],
 };
@@ -1456,6 +1585,7 @@ function setColorMode(mode) {
   });
   applyBldgColor(currentYear);
   updateBldgLegend();
+  _applyChoroplethVisibility();
   // Auto-enable new builds layer when in nieuw mode
   if (mode === 'nieuw' && !layerOn.newbuilds) { layerOn.newbuilds = true; applyLayerVisibility(); buildLayerList(); }
 }
@@ -1464,6 +1594,7 @@ function applyBldgColor(year) {
   if (!map.getLayer('bldg-layer')) return;
   map.setPaintProperty('bldg-layer', 'circle-color',   bldgColorExpr(colorMode, year));
   map.setPaintProperty('bldg-layer', 'circle-opacity', bldgOpacityExpr(year));
+  updateChoropleth(year);
 }
 
 function updateBldgLegend() {
@@ -1492,19 +1623,25 @@ function updateBldgLegend() {
     </div>`;
   } else {
     const kc = KERNCIJFERS.find(r => r.jaar === currentYear);
-    const wozAvg = (kc?.woz || 339) * 1000;
-    const wozLow  = Math.round(wozAvg * 0.70 / 1000);
-    const wozMid  = Math.round(wozAvg / 1000);
-    const wozHigh = Math.round(wozAvg * 1.50 / 1000);
+    const kc24 = KERNCIJFERS.find(r => r.jaar === 2024);
+    const scale = (kc?.woz && kc24?.woz) ? kc.woz / kc24.woz : 1;
     const isProg = currentYear >= 2026;
+    // Gemeente anchors (2024 WOZ, scaled by year)
+    const anchors = [
+      { naam:'Almelo', woz:224 }, { naam:'Enschede', woz:268 },
+      { naam:'Deventer', woz:310 }, { naam:'Twenterand', woz:339 },
+      { naam:'Wierden', woz:375 }, { naam:'Tubbergen', woz:430 },
+    ].map(a => ({ ...a, woz: Math.round(a.woz * scale) }));
+    const tw = anchors.find(a => a.naam==='Twenterand');
     el.innerHTML = `<div style="font-size:10px;color:var(--t2)">
-      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--t3);margin-bottom:4px">
-        <span>€${wozLow}k</span>
-        <span style="color:var(--t2);font-weight:600">gem. €${wozMid}k${isProg ? ' ⁽ᵖʳᵒᵍ⁾' : ''}</span>
-        <span>€${wozHigh}k</span>
+      <div style="height:6px;border-radius:2px;background:linear-gradient(to right,#1e3a5f,#1d4ed8,#0ea5e9,#f59e0b,#f97316,#ef4444,#991b1b);margin-bottom:5px"></div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--t3);margin-bottom:6px">
+        <span>€${anchors[0].woz}k<br><span style="font-size:8px">Almelo</span></span>
+        <span style="text-align:center">€${anchors[2].woz}k<br><span style="font-size:8px">Deventer</span></span>
+        <span style="text-align:center;color:var(--accent);font-weight:600">€${tw.woz}k<br><span style="font-size:8px">Twenterand</span></span>
+        <span style="text-align:right">€${anchors[5].woz}k<br><span style="font-size:8px">Tubbergen</span></span>
       </div>
-      <div style="height:5px;border-radius:1px;background:linear-gradient(to right,#1d4ed8,#0ea5e9,#f59e0b,#ef4444)"></div>
-      <div style="font-size:9px;color:var(--t3);margin-top:3px">Ruimtelijke WOZ-schatting — ${currentYear} · CBS gemeentelijk gemiddelde</div>
+      <div style="font-size:9px;color:var(--t3)">WOZ gem. per gemeente${isProg ? ' · prognose' : ''} · ${currentYear} · CBS</div>
     </div>`;
   }
 }
