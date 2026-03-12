@@ -237,6 +237,16 @@
     transition:color .15s;
   }
   .bc-close:hover { color:var(--t1); }
+  .bc-nav { position:absolute; top:16px; right:48px; display:flex; gap:2px; }
+  .bc-nav button {
+    background:none; border:1px solid var(--border); border-radius:2px;
+    color:var(--t3); font-size:13px; width:24px; height:24px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:color .12s, border-color .12s;
+  }
+  .bc-nav button:hover { color:var(--t1); border-color:var(--border2); }
+  .bc-nav button:disabled { opacity:.25; cursor:default; }
+  .bc-year-note { font-family:var(--mono); font-size:10px; color:var(--accent2); margin-top:2px; }
   .bc-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; background:var(--border); }
   .bc-cell { background:var(--surface); padding:14px 16px; }
   .bc-cell .val { font-family:var(--mono); font-size:18px; font-weight:500; color:var(--t1); }
@@ -406,10 +416,15 @@
 <!-- Building card overlay -->
 <div id="bldg-card" role="dialog" aria-modal="true" aria-label="Gebouwdetails" onclick="if(event.target===this)closeBldgCard()">
   <div id="bldg-card-inner" style="position:relative">
+    <div class="bc-nav">
+      <button id="bc-prev" onclick="navBldg(-1)" title="Vorige (←)">‹</button>
+      <button id="bc-next" onclick="navBldg(+1)" title="Volgende (→)">›</button>
+    </div>
     <button class="bc-close" onclick="closeBldgCard()">✕</button>
     <div class="bc-header">
       <div class="bc-address" id="bc-address">—</div>
       <div class="bc-postcode" id="bc-postcode"></div>
+      <div class="bc-year-note" id="bc-year-note"></div>
     </div>
     <div class="bc-grid">
       <div class="bc-cell"><div class="val" id="bc-bj">—</div><div class="lbl">Bouwjaar</div></div>
@@ -839,10 +854,19 @@ let currentYear = 2024;
 // ── User income override ───────────────────────────────────────
 // Monthly net income (€/month). 0 = use CBS data for selected year.
 let mapUserIncomeMonthly = 0;
+// Last clicked building — kept so card can re-render on income/year change
+let lastBldgProps = null;
 
 function getMapEffectiveIncK(cbsYearlyK) {
   if (mapUserIncomeMonthly > 0) return (mapUserIncomeMonthly * 12) / 1000;
   return cbsYearlyK;
+}
+
+function _refreshOpenCard() {
+  const card = document.getElementById('bldg-card');
+  if (lastBldgProps && card && card.classList.contains('open')) {
+    openBldgCard(lastBldgProps);
+  }
 }
 
 function onMapIncomeInput(rawVal) {
@@ -852,12 +876,8 @@ function onMapIncomeInput(rawVal) {
   if (hint) hint.textContent = mapUserIncomeMonthly > 0
     ? `Jaarinkomen: €${Math.round(mapUserIncomeMonthly*12/1000)}k (jouw invoer)`
     : 'CBS single: €2.608/mnd';
-  // Refresh KPIs and building card if open
   updateKPIs(currentYear);
-  const card = document.getElementById('bldg-card');
-  if (card && card.style.display !== 'none' && card.classList.contains('open')) {
-    // Re-open with last building if still visible — just re-run KPIs
-  }
+  _refreshOpenCard();
 }
 
 function resetMapIncome() {
@@ -867,6 +887,7 @@ function resetMapIncome() {
   const hint = document.getElementById('map-iw-hint');
   if (hint) hint.textContent = 'CBS single: €2.608/mnd';
   updateKPIs(currentYear);
+  _refreshOpenCard();
 }
 let playing = false, playTimer = null;
 let colorMode = 'prijs';
@@ -989,7 +1010,20 @@ function bldgColorExpr(mode, year) {
       2015,'#f97316', 2024,'#fb923c'];
   }
   if (mode === 'bezit') {
-    return ['case', ['==',['get','koop'],1], '#4ade80', '#f87171'];
+    // koop% from CBS for this year; newer/central buildings skew koop
+    const kc = KERNCIJFERS.find(r => r.jaar === year);
+    const koopPct = (kc?.koop || 65) / 100; // e.g. 0.668
+    // val proxy: higher val = more central/valuable = more likely koop in older era
+    // threshold: buildings with val above (1 - koopPct) are koop
+    const thresh = +(1 - koopPct).toFixed(3);
+    return ['case',
+      ['any',
+        ['all', ['>=',['get','bj'],1980], ['>=',['get','val'],thresh]],
+        ['all', ['<', ['get','bj'],1980], ['>=',['get','val'], Math.min(0.85, thresh + 0.15)]]
+      ],
+      '#4ade80',   // koop
+      '#f87171'    // huur / corporatie
+    ];
   }
   if (mode === 'nieuw') {
     return ['case', ['>=',['get','bj'],2015], '#fbbf24',
@@ -1009,11 +1043,8 @@ function bldgColorExpr(mode, year) {
 }
 
 function bldgOpacityExpr(year) {
-  if (colorMode === 'bouwjaar' || colorMode === 'nieuw') {
-    // Fade out dots not yet built when scrubbing timeline
-    return ['case', ['<=',['get','bj'],year], 0.82, 0.06];
-  }
-  return 0.82;
+  // Always hide buildings not yet built at this year — applies to all color modes
+  return ['case', ['<=',['get','bj'],year], 0.82, 0.0];
 }
 
 function bldgRadiusExpr() {
@@ -1083,7 +1114,7 @@ function addBuildingDots() {
     });
     map.on('click', 'bldg-layer', e => {
       const p = e.features?.[0]?.properties;
-      if (p) openBldgCard(p);
+      if (p) { _navList = []; _navIdx = -1; openBldgCard(p); }
     });
   }
 }
@@ -1399,7 +1430,18 @@ function _setGap(id, gap) {
 }
 
 function openBldgCard(p) {
+  lastBldgProps = p;          // persist so income/year changes can re-render
   const kc = KERNCIJFERS.find(r => r.jaar === currentYear);
+
+  // ── Year note (shows if building not yet built at currentYear) ─
+  const ynEl = document.getElementById('bc-year-note');
+  if (ynEl) {
+    if (p.bj && currentYear < p.bj) {
+      ynEl.textContent = `Gebouwd in ${p.bj} — nog niet gebouwd in ${currentYear}`;
+    } else if (p.bj) {
+      ynEl.textContent = `Waarde in ${currentYear} · gebouwd ${p.bj}`;
+    } else { ynEl.textContent = ''; }
+  }
 
   // ── Estimate building WOZ ─────────────────────────────────────
   const wozBase = (kc?.woz || 339) * 1000;
@@ -1474,14 +1516,54 @@ function openBldgCard(p) {
   document.getElementById('bc-context').textContent = contextLines.join(' ');
 
   document.getElementById('bldg-card').classList.add('open');
-  document.addEventListener('keydown', escBldgCard);
+  document.addEventListener('keydown', cardKeyHandler);
+  _updateNavButtons();
 }
 
 function closeBldgCard() {
+  lastBldgProps = null;
   document.getElementById('bldg-card').classList.remove('open');
-  document.removeEventListener('keydown', escBldgCard);
+  document.removeEventListener('keydown', cardKeyHandler);
 }
-function escBldgCard(e) { if (e.key === 'Escape') closeBldgCard(); }
+
+// ── Building navigation ─────────────────────────────────────────
+// Sorted list of all visible features at currentYear for ‹/› nav
+function _visibleBldgs() {
+  if (!map.getLayer('bldg-layer')) return [];
+  return map.queryRenderedFeatures({ layers: ['bldg-layer'] })
+    .filter(f => f.properties.bj <= currentYear)
+    .map(f => f.properties);
+}
+
+let _navList = [];
+let _navIdx  = -1;
+
+function navBldg(dir) {
+  if (!lastBldgProps) return;
+  if (!_navList.length) {
+    _navList = _visibleBldgs();
+    _navIdx  = _navList.findIndex(b => b.adres === lastBldgProps.adres);
+    if (_navIdx < 0) _navIdx = 0;
+  }
+  _navIdx = Math.max(0, Math.min(_navList.length - 1, _navIdx + dir));
+  if (_navList[_navIdx]) openBldgCard(_navList[_navIdx]);
+  _updateNavButtons();
+}
+
+function _updateNavButtons() {
+  const prev = document.getElementById('bc-prev');
+  const next = document.getElementById('bc-next');
+  if (!prev || !next) return;
+  if (!_navList.length) { prev.disabled = false; next.disabled = false; return; }
+  prev.disabled = _navIdx <= 0;
+  next.disabled = _navIdx >= _navList.length - 1;
+}
+
+function cardKeyHandler(e) {
+  if (e.key === 'Escape') { closeBldgCard(); return; }
+  if (e.key === 'ArrowRight') { e.preventDefault(); navBldg(+1); }
+  if (e.key === 'ArrowLeft')  { e.preventDefault(); navBldg(-1); }
+}
 
 // ── Tooltip ────────────────────────────────────────────────────
 function showTip(point, html) {
@@ -1627,11 +1709,13 @@ function updateStarterCard(year, kc, price) {
   document.getElementById('starter-year').textContent = year;
   if (!el) return;
 
-  const singleInc = kc?.inkomen_single;
-  if (!singleInc || !price) {
+  const cbsInc  = kc?.inkomen_single;
+  if (!cbsInc || !price) {
     el.innerHTML = `<p style="color:var(--t3);font-size:11px">Geen inkomensdata voor ${year}</p>`;
     return;
   }
+  const singleInc = getMapEffectiveIncK(cbsInc);
+  const isUser    = mapUserIncomeMonthly > 0;
 
   const maxHyp  = singleInc * 4.5 * 1000;
   const gap     = price - maxHyp;
@@ -1643,7 +1727,7 @@ function updateStarterCard(year, kc, price) {
   el.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
       <span style="font-family:var(--mono);font-size:20px;font-weight:500;color:${gapColor}">${gapSign}€${Math.round(Math.abs(gap)/1000)}k</span>
-      <span style="font-size:10px;color:var(--t3)">kloof</span>
+      <span style="font-size:10px;color:var(--t3)">kloof${isUser ? ' <span style="color:var(--accent)">✎ jouw inkomen</span>' : ''}</span>
     </div>
     <div style="height:4px;background:var(--border2);border-radius:1px;overflow:hidden;margin-bottom:6px">
       <div style="height:100%;width:${pct}%;background:${pct>80?'var(--green)':pct>50?'var(--accent)':'var(--red)'};border-radius:1px;transition:width .4s"></div>
@@ -1653,8 +1737,8 @@ function updateStarterCard(year, kc, price) {
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
       <div style="background:var(--surface2);padding:8px 10px;border-radius:1px">
-        <div style="font-family:var(--mono);font-size:12px;color:var(--t1)">€${Math.round(singleInc)}k</div>
-        <div style="font-size:9px;color:var(--t3);margin-top:1px">Single inkomen</div>
+        <div style="font-family:var(--mono);font-size:12px;color:var(--t1)">€${Math.round(singleInc)}k${isUser ? ' <span style="font-size:9px;color:var(--accent)">✎</span>' : ''}</div>
+        <div style="font-size:9px;color:var(--t3);margin-top:1px">Single inkomen${isUser ? '' : ' (CBS)'}</div>
       </div>
       <div style="background:var(--surface2);padding:8px 10px;border-radius:1px">
         <div style="font-family:var(--mono);font-size:12px;color:var(--t1)">€${Math.round(maxHyp/1000)}k</div>
@@ -1708,6 +1792,7 @@ function onYear(year) {
   updatePriceMarker(year);
   updateMigrationArcs(year);
   updateBldgLegend();
+  _refreshOpenCard();   // re-render building card with new year's WOZ/income
 }
 
 function updatePriceMarker(year) {
