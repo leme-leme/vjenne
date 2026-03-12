@@ -119,6 +119,37 @@
   .story-card.violet { border-color:var(--accent2); }
   .story-card .hed { font-weight:600; color:var(--t1); display:block; margin-bottom:3px; font-size:11.5px; }
 
+  /* ── Income input widget ── */
+  .income-widget {
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:10px 18px 12px;
+    border-bottom:1px solid var(--border);
+    background:rgba(232,201,126,.04);
+  }
+  .income-widget label {
+    font-size:9px; color:var(--t3); font-family:var(--mono);
+    text-transform:uppercase; letter-spacing:.06em; white-space:nowrap;
+  }
+  .income-widget input[type=number] {
+    width:82px; padding:4px 7px;
+    background:var(--surface2); border:1px solid var(--border2);
+    border-radius:2px; color:var(--accent); font-family:var(--mono);
+    font-size:11px; outline:none; transition:border-color .15s;
+    -moz-appearance:textfield;
+  }
+  .income-widget input[type=number]::-webkit-inner-spin-button,
+  .income-widget input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
+  .income-widget input[type=number]:focus { border-color:var(--accent); }
+  .income-widget .iw-hint {
+    font-size:9px; color:var(--t3); font-family:var(--mono); flex:1; min-width:80px;
+  }
+  .income-widget .iw-reset {
+    padding:3px 7px; border:1px solid var(--border2); border-radius:2px;
+    background:transparent; color:var(--t3); font-size:9px;
+    font-family:var(--mono); cursor:pointer; transition:all .15s; white-space:nowrap;
+  }
+  .income-widget .iw-reset:hover { border-color:var(--accent2); color:var(--accent2); }
+
   /* ── Right panel ── */
   #right-panel {
     position:absolute; right:0; top:52px; bottom:64px; z-index:30;
@@ -449,6 +480,15 @@
     </div>
   </div>
 
+  <!-- Income personalisation -->
+  <div class="income-widget">
+    <label for="map-user-income">Jouw inkomen</label>
+    <input type="number" id="map-user-income" min="0" max="20000" step="100" placeholder="€/mnd"
+      oninput="onMapIncomeInput(this.value)" />
+    <span class="iw-hint" id="map-iw-hint">CBS single: €2.608/mnd</span>
+    <button class="iw-reset" onclick="resetMapIncome()">CBS</button>
+  </div>
+
   <!-- Color mode -->
   <div class="mode-row">
     <button class="mode-btn active" id="cm-prijs" onclick="setColorMode('prijs')">Prijs</button>
@@ -726,6 +766,39 @@ function eraLabel(bj) {
 
 // ── State ──────────────────────────────────────────────────────
 let currentYear = 2024;
+
+// ── User income override ───────────────────────────────────────
+// Monthly net income (€/month). 0 = use CBS data for selected year.
+let mapUserIncomeMonthly = 0;
+
+function getMapEffectiveIncK(cbsYearlyK) {
+  if (mapUserIncomeMonthly > 0) return (mapUserIncomeMonthly * 12) / 1000;
+  return cbsYearlyK;
+}
+
+function onMapIncomeInput(rawVal) {
+  const v = parseFloat(rawVal) || 0;
+  mapUserIncomeMonthly = v > 0 ? v : 0;
+  const hint = document.getElementById('map-iw-hint');
+  if (hint) hint.textContent = mapUserIncomeMonthly > 0
+    ? `Jaarinkomen: €${Math.round(mapUserIncomeMonthly*12/1000)}k (jouw invoer)`
+    : 'CBS single: €2.608/mnd';
+  // Refresh KPIs and building card if open
+  updateKPIs(currentYear);
+  const card = document.getElementById('bldg-card');
+  if (card && card.style.display !== 'none' && card.classList.contains('open')) {
+    // Re-open with last building if still visible — just re-run KPIs
+  }
+}
+
+function resetMapIncome() {
+  mapUserIncomeMonthly = 0;
+  const inp = document.getElementById('map-user-income');
+  if (inp) inp.value = '';
+  const hint = document.getElementById('map-iw-hint');
+  if (hint) hint.textContent = 'CBS single: €2.608/mnd';
+  updateKPIs(currentYear);
+}
 let playing = false, playTimer = null;
 let colorMode = 'prijs';
 let currentStyle = 'dark';
@@ -768,20 +841,31 @@ map.on('load', () => {
 
 // ── 3D buildings ───────────────────────────────────────────────
 function add3DBuildings() {
-  const layers = map.getStyle().layers;
-  let labelLayer;
-  for (const l of layers) { if (l.type === 'symbol' && l.layout?.['text-field']) { labelLayer = l.id; break; } }
   if (map.getLayer('3d-buildings')) return;
-  map.addLayer({
-    id: '3d-buildings', source: 'openmaptiles', 'source-layer': 'building',
-    type: 'fill-extrusion', minzoom: 14,
-    paint: {
-      'fill-extrusion-color': '#1a1a2e',
-      'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 8],
-      'fill-extrusion-base':   ['coalesce', ['get', 'render_min_height'], 0],
-      'fill-extrusion-opacity': 0.65
-    }
-  }, labelLayer);
+  // Detect the vector source that carries building footprints
+  const style = map.getStyle();
+  const sources = Object.keys(style.sources || {});
+  // openmaptiles = Carto Dark / Stadia; carto = Carto Voyager/Light
+  const bldgSource = sources.find(s => s === 'openmaptiles' || s === 'carto');
+  if (!bldgSource) return; // satellite tiles — no building vector data
+  // Verify the source actually has a building source-layer
+  const hasBldg = style.layers.some(l => l['source-layer'] === 'building' && l.source === bldgSource);
+  if (!hasBldg) return;
+  // Insert below the first symbol layer so labels stay on top
+  let labelLayer;
+  for (const l of style.layers) { if (l.type === 'symbol' && l.layout?.['text-field']) { labelLayer = l.id; break; } }
+  try {
+    map.addLayer({
+      id: '3d-buildings', source: bldgSource, 'source-layer': 'building',
+      type: 'fill-extrusion', minzoom: 14,
+      paint: {
+        'fill-extrusion-color': '#1a1a2e',
+        'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 8],
+        'fill-extrusion-base':   ['coalesce', ['get', 'render_min_height'], 0],
+        'fill-extrusion-opacity': 0.65
+      }
+    }, labelLayer);
+  } catch(e) { /* source-layer may not exist in this style variant — safe to ignore */ }
 }
 
 // ── WOZ heatmap ────────────────────────────────────────────────
@@ -898,6 +982,8 @@ function bldgRadiusExpr() {
     60, 2.5, 90, 3, 120, 3.8, 160, 4.5];
 }
 
+let _bldgEventsAttached = false;
+
 function addBuildingDots() {
   if (map.getSource('bldg-src')) return;
   const geo = buildBldgGeoJSON();
@@ -913,23 +999,27 @@ function addBuildingDots() {
     }
   });
 
-  // Hover tooltip
-  map.on('mouseenter', 'bldg-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
-  map.on('mouseleave', 'bldg-layer', () => { map.getCanvas().style.cursor = ''; hideTip(); });
-  map.on('mousemove', 'bldg-layer', e => {
-    const p = e.features?.[0]?.properties;
-    if (!p) return;
-    showTip(e.point, `<strong>${p.straat || p.adres}</strong><br/><span style="color:var(--t3);font-size:10px">${p.pc} · ${p.bj} · ~${p.m2}m²</span>`);
-  });
-  map.on('click', 'bldg-layer', e => {
-    const p = e.features?.[0]?.properties;
-    if (p) openBldgCard(p);
-  });
+  // Attach hover/click events only once — they survive style reloads via delegation
+  if (!_bldgEventsAttached) {
+    _bldgEventsAttached = true;
+    map.on('mouseenter', 'bldg-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'bldg-layer', () => { map.getCanvas().style.cursor = ''; hideTip(); });
+    map.on('mousemove', 'bldg-layer', e => {
+      const p = e.features?.[0]?.properties;
+      if (!p) return;
+      showTip(e.point, `<strong>${p.straat || p.adres}</strong><br/><span style="color:var(--t3);font-size:10px">${p.pc} · ${p.bj} · ~${p.m2}m²</span>`);
+    });
+    map.on('click', 'bldg-layer', e => {
+      const p = e.features?.[0]?.properties;
+      if (p) openBldgCard(p);
+    });
+  }
 }
 
 // ── New builds dedicated layer (post-2015, pulsing) ────────────
 function addNewBuildsLayer() {
   if (map.getSource('newbuild-src')) return;
+  if (newbuildAnimFrame) { cancelAnimationFrame(newbuildAnimFrame); newbuildAnimFrame = null; }
   const geo = {
     type: 'FeatureCollection',
     features: PDOK_COORDS
@@ -976,9 +1066,9 @@ function addNewBuildsLayer() {
       map.setPaintProperty('newbuild-ring', 'circle-radius', r);
       map.setPaintProperty('newbuild-ring', 'circle-opacity', op);
     }
-    requestAnimationFrame(animateNewbuilds);
+    newbuildAnimFrame = requestAnimationFrame(animateNewbuilds);
   }
-  requestAnimationFrame(animateNewbuilds);
+  newbuildAnimFrame = requestAnimationFrame(animateNewbuilds);
 }
 
 // ── Migration arcs ─────────────────────────────────────────────
@@ -1004,9 +1094,12 @@ function buildArcGeoJSON(year) {
 let arcAnimFrame = null;
 let arcDashPhase = 0;
 let arcMarkers = []; // store markers so we can remove & recreate per year
+let newbuildAnimFrame = null;
 
 function addMigrationArcs() {
   if (map.getSource('arc-src')) return;
+  // Cancel any existing animation loop before starting a fresh one
+  if (arcAnimFrame) { cancelAnimationFrame(arcAnimFrame); arcAnimFrame = null; }
   map.addSource('arc-src', { type:'geojson', data:buildArcGeoJSON(currentYear) });
 
   // Glow
@@ -1218,7 +1311,7 @@ function updateBldgLegend() {
 function openBldgCard(p) {
   const kc = KERNCIJFERS.find(r => r.jaar === currentYear);
   const price = PRIJZEN.Twenterand[currentYear] || PRIJZEN.Vriezenveen[currentYear] || 362592;
-  const singleInc = kc?.inkomen_single || 31.3;
+  const singleInc = getMapEffectiveIncK(kc?.inkomen_single || 31.3);
   const maxHyp = singleInc * 4.5 * 1000;
 
   // Estimate this specific building's value relative to avg
@@ -1316,9 +1409,17 @@ function setStyle(s) {
   });
   map.setStyle(MAP_STYLES[s]);
   map.once('style.load', () => {
-    add3DBuildings(); addPriceHeatmap(); addBuildingDots();
-    addNewBuildsLayer(); addMigrationArcs(); applyLayerVisibility();
+    // Each add* function guards against double-add via getSource/getLayer.
+    // After setStyle all sources+layers are wiped, so the guards let them re-add.
+    try { add3DBuildings();    } catch(e) { console.warn('3d-buildings:', e); }
+    try { addPriceHeatmap();   } catch(e) { console.warn('price-heat:', e); }
+    try { addBuildingDots();   } catch(e) { console.warn('bldg-layer:', e); }
+    try { addNewBuildsLayer(); } catch(e) { console.warn('newbuilds:', e); }
+    try { addMigrationArcs();  } catch(e) { console.warn('arcs:', e); }
+    applyLayerVisibility();
     applyBldgColor(currentYear);
+    updateBldgLegend();
+    buildLayerList();
   });
 }
 
@@ -1340,12 +1441,14 @@ function fmt(n, prefix='€', suffix='') {
 function updateKPIs(year) {
   const kc = KERNCIJFERS.find(r => r.jaar === year);
   const price = PRIJZEN.Twenterand[year] || PRIJZEN.Vriezenveen[year];
-  const singleInc = kc?.inkomen_single;
+  const cbsInc = kc?.inkomen_single;
+  const singleInc = cbsInc ? getMapEffectiveIncK(cbsInc) : null;
   const maxHyp = singleInc ? singleInc * 4.5 * 1000 : null;
   const gap = (price && maxHyp) ? price - maxHyp : null;
+  const isUser = mapUserIncomeMonthly > 0;
 
   set('kv-woz',  kc?.woz ? '€'+kc.woz+'k' : '—');
-  set('kv-inc',  singleInc ? '€'+Math.round(singleInc)+'k' : '—');
+  set('kv-inc',  singleInc ? '€'+Math.round(singleInc)+'k'+(isUser?' ✎':'') : '—');
   set('kv-gap',  gap ? (gap>0?'−':'+')+fmt(Math.abs(gap)).replace('€','')+'€'.replace('€','') : '—');
   // Fix: proper formatting
   if (gap != null) {

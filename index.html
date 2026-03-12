@@ -240,6 +240,37 @@ footer {
 }
 .ctrl-val { font-family:var(--mono); font-size:11px; color:var(--accent); min-width:30px; }
 
+/* ── Income input widget ── */
+.income-widget {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 20px 12px;
+  border-bottom:1px solid var(--border);
+  background:rgba(232,201,126,.04);
+}
+.income-widget label {
+  font-size:10px; color:var(--t3); font-family:var(--mono);
+  text-transform:uppercase; letter-spacing:.06em; white-space:nowrap;
+}
+.income-widget input[type=number] {
+  width:90px; padding:4px 8px;
+  background:var(--surface2); border:1px solid var(--border2);
+  border-radius:2px; color:var(--accent); font-family:var(--mono);
+  font-size:12px; outline:none; transition:border-color .15s;
+  -moz-appearance:textfield;
+}
+.income-widget input[type=number]::-webkit-inner-spin-button,
+.income-widget input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
+.income-widget input[type=number]:focus { border-color:var(--accent); }
+.income-widget .iw-hint {
+  font-size:10px; color:var(--t3); font-family:var(--mono);
+}
+.income-widget .iw-reset {
+  padding:3px 8px; border:1px solid var(--border2); border-radius:2px;
+  background:transparent; color:var(--t3); font-size:10px;
+  font-family:var(--mono); cursor:pointer; transition:all .15s;
+}
+.income-widget .iw-reset:hover { border-color:var(--accent2); color:var(--accent2); }
+
 /* ── News link chips ── */
 .news-link {
   display:inline-flex; align-items:center; gap:4px;
@@ -579,11 +610,20 @@ footer {
     <h2 class="section-title">De muur die starters<br/><em>buiten houdt.</em></h2>
     <p class="section-deck">Een single met een modaal inkomen kan bij de huidige prijzen nog geen 40% van de gemiddelde woning financieren.</p>
 
+    <!-- Income personalisation widget -->
+    <div class="income-widget reveal">
+      <label for="user-income-s3">Jouw inkomen</label>
+      <input type="number" id="user-income-s3" min="0" max="20000" step="100" placeholder="€/mnd"
+        oninput="syncIncomeInput('s3',this.value)" />
+      <span class="iw-hint" id="iw-hint-s3">CBS single 2024: €2.608/mnd</span>
+      <button class="iw-reset" onclick="resetIncome()">CBS</button>
+    </div>
+
     <!-- Static affordability breakdown for 2024 -->
     <div class="afford-breakdown reveal">
       <div class="ab-head">
         <div class="ab-title">Betaalbaarheidscalculatie voor single starter · 2024</div>
-        <div class="ab-sub">CBS besteedbaar inkomen eenpersoonshuishouden · max hypotheek = 4,5× inkomen</div>
+        <div class="ab-sub" id="ab-sub">CBS besteedbaar inkomen eenpersoonshuishouden · max hypotheek = 4,5× inkomen</div>
       </div>
       <div class="ab-body">
         <div class="ab-row">
@@ -597,23 +637,23 @@ footer {
         <div class="ab-row">
           <span class="ab-lbl">Besteedbaar single inkomen/jr</span>
           <div class="ab-bar">
-            <div class="ab-bar-fill" style="width:8.6%;background:rgba(124,107,240,.5)"></div>
-            <span class="ab-bar-text">€31.300</span>
+            <div class="ab-bar-fill" id="ab-inc-bar" style="width:8.6%;background:rgba(124,107,240,.5)"></div>
+            <span class="ab-bar-text" id="ab-inc-txt">€31.300</span>
           </div>
         </div>
         <div class="ab-row">
           <span class="ab-lbl">Max. hypotheek (4,5×)</span>
           <div class="ab-bar">
-            <div class="ab-bar-fill" style="width:38.8%;background:rgba(74,222,128,.4)"></div>
-            <span class="ab-bar-text">€140.850</span>
+            <div class="ab-bar-fill" id="ab-hyp-bar" style="width:38.8%;background:rgba(74,222,128,.4)"></div>
+            <span class="ab-bar-text" id="ab-hyp-txt">€140.850</span>
           </div>
         </div>
         <div class="ab-connector"></div>
         <div class="ab-row">
           <span class="ab-lbl" style="color:var(--red)">Betaalbaarheidskloof</span>
           <div class="ab-bar">
-            <div class="ab-bar-fill" style="width:61.2%;background:rgba(224,82,82,.45)"></div>
-            <span class="ab-bar-text" style="color:var(--red)">−€221.742</span>
+            <div class="ab-bar-fill" id="ab-gap-bar" style="width:61.2%;background:rgba(224,82,82,.45)"></div>
+            <span class="ab-bar-text" id="ab-gap-txt" style="color:var(--red)">−€221.742</span>
           </div>
         </div>
         <div style="margin-top:16px;padding:14px 16px;background:var(--surface2);border-radius:1px">
@@ -926,6 +966,15 @@ footer {
         <span class="chart-title">Prognose prijs vs. hypotheekcapaciteit 2024–2035</span>
         <span class="chart-sub">Pas de aannames aan — de grafiek herberekent live</span>
       </div>
+      <!-- Income personalisation widget -->
+      <div class="income-widget" style="border-bottom:none;border-top:1px solid var(--border);padding:10px 20px 8px">
+        <label for="user-income-s8">Jouw inkomen</label>
+        <input type="number" id="user-income-s8" min="0" max="20000" step="100" placeholder="€/mnd"
+          oninput="syncIncomeInput('s8',this.value)" />
+        <span class="iw-hint" id="iw-hint-s8">CBS single 2024: €2.608/mnd</span>
+        <button class="iw-reset" onclick="resetIncome()">CBS</button>
+      </div>
+
       <!-- Interactive sliders -->
       <div class="ctrl-row" style="padding-bottom:12px;gap:16px">
         <div class="ctrl-group">
@@ -1428,6 +1477,89 @@ const CD = {
 function fmtEur(v) { return '€' + Math.round(v/1000) + 'k'; }
 
 // ════════════════════════════════════════════════════════════
+// USER INCOME OVERRIDE
+// ════════════════════════════════════════════════════════════
+
+// Monthly net income entered by user (€/month). 0 = use CBS data.
+let userIncomeMonthly = 0;
+
+// Returns annual income in thousands (k€), using user override when set.
+// cbsYearlyK = CBS value for that year/profile in k€/year
+function getEffectiveIncK(cbsYearlyK) {
+  if (userIncomeMonthly > 0) return (userIncomeMonthly * 12) / 1000;
+  return cbsYearlyK;
+}
+
+// Sync both income inputs to the same value and trigger refresh
+window.syncIncomeInput = function(source, rawVal) {
+  const v = parseFloat(rawVal) || 0;
+  userIncomeMonthly = v > 0 ? v : 0;
+  // Sync sibling input
+  const other = source === 's3' ? 's8' : 's3';
+  const otherEl = document.getElementById('user-income-' + other);
+  if (otherEl && otherEl.value !== rawVal) otherEl.value = rawVal || '';
+  // Update hint labels
+  const hintTxt = userIncomeMonthly > 0
+    ? `Jaarinkomen: €${Math.round(userIncomeMonthly*12/1000)}k (jouw invoer)`
+    : 'CBS single 2024: €2.608/mnd';
+  ['s3','s8'].forEach(id => {
+    const el = document.getElementById('iw-hint-' + id);
+    if (el) el.textContent = hintTxt;
+  });
+  // Re-render affected charts
+  refreshAffordBreakdown();
+  buildAffordTable();
+  if (typeof buildProgChart === 'function') buildProgChart();
+};
+
+window.resetIncome = function() {
+  userIncomeMonthly = 0;
+  ['s3','s8'].forEach(id => {
+    const inp = document.getElementById('user-income-' + id);
+    if (inp) inp.value = '';
+    const hint = document.getElementById('iw-hint-' + id);
+    if (hint) hint.textContent = 'CBS single 2024: €2.608/mnd';
+  });
+  refreshAffordBreakdown();
+  buildAffordTable();
+  if (typeof buildProgChart === 'function') buildProgChart();
+};
+
+// Update the static affordability breakdown card in s3
+function refreshAffordBreakdown() {
+  const price2024 = PRIJZEN_TW[2024] || 362592;
+  const kc2024    = KC.find(r=>r.jaar===2024);
+  const incK      = getEffectiveIncK(kc2024?.inc_single || 31.3);
+  const incYr     = Math.round(incK * 1000);
+  const maxHyp    = Math.round(incK * 1000 * 4.5);
+  const gap       = price2024 - maxHyp;
+  const isUser    = userIncomeMonthly > 0;
+
+  // Rows: income bar width relative to price (price = 100%)
+  const incPct  = Math.min(100, (incYr / price2024 * 100)).toFixed(1);
+  const hypPct  = Math.min(100, (maxHyp / price2024 * 100)).toFixed(1);
+  const gapPct  = Math.min(100, Math.max(0, (gap / price2024 * 100))).toFixed(1);
+
+  // Update income row
+  const incBar  = document.getElementById('ab-inc-bar');
+  const incTxt  = document.getElementById('ab-inc-txt');
+  const hypBar  = document.getElementById('ab-hyp-bar');
+  const hypTxt  = document.getElementById('ab-hyp-txt');
+  const gapBar  = document.getElementById('ab-gap-bar');
+  const gapTxt  = document.getElementById('ab-gap-txt');
+  const abSub   = document.getElementById('ab-sub');
+  if (incBar) incBar.style.width = incPct + '%';
+  if (incTxt) incTxt.textContent = '€' + incYr.toLocaleString('nl');
+  if (hypBar) hypBar.style.width = hypPct + '%';
+  if (hypTxt) hypTxt.textContent = '€' + maxHyp.toLocaleString('nl');
+  if (gapBar) gapBar.style.width = gapPct + '%';
+  if (gapTxt) gapTxt.textContent = (gap > 0 ? '−' : '+') + '€' + Math.abs(gap).toLocaleString('nl');
+  if (abSub) abSub.textContent = isUser
+    ? `Jouw inkomen (€${Math.round(userIncomeMonthly)}/mnd) · max hypotheek = 4,5× inkomen`
+    : 'CBS besteedbaar inkomen eenpersoonshuishouden · max hypotheek = 4,5× inkomen';
+}
+
+// ════════════════════════════════════════════════════════════
 // INIT CHARTS
 // ════════════════════════════════════════════════════════════
 
@@ -1435,6 +1567,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initAllCharts();
   buildPyramid();
   buildAffordTable();
+  refreshAffordBreakdown();
   buildMigrationBars();
   buildIntlMigrationFlows();
   buildPartyPositions();
@@ -1796,9 +1929,10 @@ function initAllCharts() {
 
   function buildProgData() {
     const prijzen = PROG_YEARS.map((y,i)=> Math.round(PROG_BASE_PRIJS * Math.pow(1+progPrijsGroei/100, i)));
-    const baseInc = progProfiel === 'single' ? PROG_BASE_INC_S
+    const cbsBase = progProfiel === 'single' ? PROG_BASE_INC_S
                   : progProfiel === 'gezin'  ? PROG_BASE_INC_J
                   :                           PROG_BASE_INC_H;
+    const baseInc = getEffectiveIncK(cbsBase);
     const hypCap = PROG_YEARS.map((_,i)=> Math.round(baseInc * 1000 * Math.pow(1+progIncGroei/100, i) * progHypFactor));
     return { prijzen, hypCap };
   }
@@ -2081,17 +2215,19 @@ function buildAffordTable() {
   const tbody = document.getElementById('afford-tbody');
   if (!tbody) return;
   const years = [2011,2013,2015,2017,2019,2021,2022,2023,2024,2026,2028,2030,2035];
+  const isUser = userIncomeMonthly > 0;
   tbody.innerHTML = years.map(y => {
     const kc = KC.find(r=>r.jaar===y);
     const price = PRIJZEN_TW[y];
     if (!kc?.inc_single || !price) return '';
-    const maxHyp = kc.inc_single * 4.5 * 1000;
-    const gap = price - maxHyp;
-    const ratio = (price/(kc.inc_single*1000)).toFixed(1);
+    const incK   = getEffectiveIncK(kc.inc_single);
+    const maxHyp = incK * 4.5 * 1000;
+    const gap    = price - maxHyp;
+    const ratio  = (price/(incK*1000)).toFixed(1);
     const isProg = kc.prognose ? '★' : '';
     return `<tr>
       <td style="color:${kc.prognose?'var(--accent2)':'var(--t2)'};font-size:11px">${y}${isProg}</td>
-      <td class="num">€${Math.round(kc.inc_single)}k</td>
+      <td class="num" style="${isUser?'color:var(--accent2)':''}">€${Math.round(incK)}k${isUser?' ✎':''}</td>
       <td class="num">€${Math.round(maxHyp/1000)}k</td>
       <td class="num">€${Math.round(price/1000)}k</td>
       <td class="num ${gap>0?'red':'green'}">${gap>0?'−':'+'}&nbsp;€${Math.round(Math.abs(gap)/1000)}k</td>
