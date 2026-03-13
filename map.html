@@ -291,6 +291,7 @@
   .scrub-ticks { display:flex; justify-content:space-between; align-items:flex-end; font-size:8px; color:var(--t3); font-family:var(--mono); padding:0 7px; position:absolute; bottom:6px; left:80px; right:160px; pointer-events:none; line-height:1; }
   .scrub-ticks .st-maj { color:var(--t3); }
   .scrub-ticks .st-maj.prog { color:var(--accent2); opacity:.7; }
+  .scrub-ticks .st-maj.pre { color:var(--t3); opacity:.5; font-size:7px; }
   .scrub-ticks .st-min { color:var(--border2); font-size:7px; }
 
   /* ── Building card (floating panel — doesn't block scrubber) ── */
@@ -812,6 +813,14 @@
     <div id="mig-flows"></div>
   </div>
 
+  <!-- Age distribution chart -->
+  <div class="rp-section">
+    <div class="rp-label">Leeftijdsopbouw (jong / werkend / 65+)</div>
+    <div class="chart-wrap" style="height:110px">
+      <canvas id="chart-age"></canvas>
+    </div>
+  </div>
+
   <!-- Population chart -->
   <div class="rp-section">
     <div class="rp-label">Bevolking &amp; migratie</div>
@@ -856,7 +865,7 @@
 <div id="scrubber">
   <div class="year-num" id="year-display">2024</div>
   <div style="flex:1;position:relative;display:flex;flex-direction:column;gap:6px">
-    <input type="range" id="year-slider" min="1995" max="2035" value="2024" step="1" oninput="onYear(+this.value)"/>
+    <input type="range" id="year-slider" min="1880" max="2035" value="2024" step="1" oninput="onYear(+this.value)"/>
     <div class="scrub-ticks" id="scrub-ticks"></div>
   </div>
   <button class="scrub-btn" id="btn-play" onclick="togglePlay()">▶ Play</button>
@@ -865,22 +874,26 @@
 </div>
 
 <script>
-// ── Timeline ticks: every year 1995–2035, majors every 5 ──────
+// ── Timeline ticks: 1880–2035, majors every 20 (pre-1995) / 5 (post-1995) ──
 (function() {
   const el = document.getElementById('scrub-ticks');
   if (!el) return;
-  for (let y = 1995; y <= 2035; y++) {
+  // Show sparse ticks pre-1995 to keep it readable
+  for (let y = 1880; y <= 2035; y++) {
+    const pre1995 = y < 1995;
+    const isMajor = pre1995 ? (y % 20 === 0) : (y % 5 === 0);
+    const isMinor = pre1995 ? (y % 10 === 0 && !isMajor) : !isMajor;
+    if (pre1995 && !isMajor && !isMinor) continue; // skip most pre-1995 ticks
     const sp = document.createElement('span');
-    const maj = y % 5 === 0;
     const prog = y >= 2026;
-    if (maj) {
-      sp.className = 'st-maj' + (prog ? ' prog' : '');
+    if (isMajor) {
+      sp.className = 'st-maj' + (prog ? ' prog' : '') + (pre1995 ? ' pre' : '');
       sp.textContent = y;
-    } else {
+    } else if (isMinor) {
       sp.className = 'st-min';
       sp.textContent = '·';
     }
-    el.appendChild(sp);
+    if (sp.className) el.appendChild(sp);
   }
 })();
 
@@ -1053,6 +1066,33 @@ function migraatieVoorJaar(year) {
   }
   return arcs;
 }
+
+// Age distribution Twenterand (CBS 70072ned) — 2003–2025
+const LEEFTIJDSOPBOUW = [
+  {jaar:2003,jong:6860,werk:21594,oud:4073},
+  {jaar:2004,jong:6902,werk:21477,oud:4114},
+  {jaar:2005,jong:6903,werk:21502,oud:4144},
+  {jaar:2006,jong:6838,werk:21384,oud:4216},
+  {jaar:2007,jong:6867,werk:21252,oud:4326},
+  {jaar:2008,jong:6853,werk:21126,oud:4482},
+  {jaar:2009,jong:6902,werk:20930,oud:4603},
+  {jaar:2010,jong:6876,werk:20730,oud:4774},
+  {jaar:2011,jong:6899,werk:20526,oud:4902},
+  {jaar:2012,jong:6937,werk:20303,oud:5178},
+  {jaar:2013,jong:6929,werk:20054,oud:5410},
+  {jaar:2014,jong:6851,werk:19818,oud:5559},
+  {jaar:2015,jong:6803,werk:19556,oud:5715},
+  {jaar:2016,jong:6574,werk:19715,oud:5857},
+  {jaar:2017,jong:6514,werk:19659,oud:5972},
+  {jaar:2018,jong:6391,werk:19637,oud:6175},
+  {jaar:2019,jong:6203,werk:19690,oud:6299},
+  {jaar:2020,jong:6068,werk:19656,oud:6419},
+  {jaar:2021,jong:5942,werk:19585,oud:6572},
+  {jaar:2022,jong:5832,werk:19557,oud:6729},
+  {jaar:2023,jong:5766,werk:19552,oud:6949},
+  {jaar:2024,jong:5735,werk:19571,oud:7067},
+  {jaar:2025,jong:5697,werk:19515,oud:7201},
+];
 
 // Estimated m² by bouwjaar era (based on Dutch housing stock research, CBS)
 function estimateM2(bj) {
@@ -1776,10 +1816,12 @@ function bldgOpacityExpr(year) {
 
   if (!isAnimating) {
     // Integer year: all buildings up to this year fully visible, future hidden
+    // Recent builds (within 3 years) glow brighter as a trail effect
     return ['case',
       ['>', ['get','bj'], y], 0.0,
-      ['==', ['get','bj'], y], 1.0,     // just built — highlight
-      0.88,                               // existing
+      ['==', ['get','bj'], y], 1.0,
+      ['>=', ['get','bj'], y - 2], 0.95,  // recent trail
+      0.82,
     ];
   }
   // Fractional year (during animation): smooth fade-in
@@ -1789,7 +1831,8 @@ function bldgOpacityExpr(year) {
     ['>', ['get','bj'], y + 1], 0.0,
     ['==', ['get','bj'], y + 1], nextGhost,
     ['==', ['get','bj'], y], birthOpacity,
-    0.88,
+    ['>=', ['get','bj'], y - 2], 0.95,  // recent trail
+    0.82,
   ];
 }
 
@@ -1808,19 +1851,59 @@ function bldgRadiusExpr(year) {
   ];
 
   if (!isAnimating) {
-    // Integer year: all existing buildings full size, future zero
+    // Recent builds (within 2 years) appear slightly larger — "freshly built" emphasis
     return ['case',
       ['>', ['get','bj'], y], ['*', 0, base],
+      ['==', ['get','bj'], y], ['*', 1.3, base],      // just built — 30% bigger
+      ['>=', ['get','bj'], y - 1], ['*', 1.15, base],  // 1 year ago — 15% bigger
       base,
     ];
   }
-  // Fractional year: birth-year buildings grow in
+  // Fractional year: birth-year buildings grow in with bounce
   const growFactor = +frac.toFixed(2);
+  // Slight overshoot at the end of the grow-in for a bounce feel
+  const bounceFactor = frac > 0.7 ? +(1.0 + (frac - 0.7) * 1.0).toFixed(2) : +Math.max(0.2, growFactor).toFixed(2);
   return ['case',
     ['>', ['get','bj'], y + 1], ['*', 0, base],
     ['==', ['get','bj'], y + 1], ['*', frac * 0.3, base],
-    ['==', ['get','bj'], y], ['*', Math.max(0.2, growFactor), base],
+    ['==', ['get','bj'], y], ['*', bounceFactor, base],
+    ['>=', ['get','bj'], y - 1], ['*', 1.15, base],
     base,
+  ];
+}
+
+// Stroke expression — pulse ring on birth-year buildings during playback
+function bldgStrokeExpr(year) {
+  const y = Math.floor(year);
+  const frac = year - y;
+  const isAnimating = frac > 0.001;
+
+  if (!isAnimating) {
+    return ['case',
+      ['==', ['get','bj'], y], 1.5,   // current year buildings get stroke
+      0,
+    ];
+  }
+  const strokeW = +(frac * 2).toFixed(1);
+  return ['case',
+    ['==', ['get','bj'], y], strokeW,
+    ['==', ['get','bj'], y + 1], +(frac * 0.5).toFixed(1),
+    0,
+  ];
+}
+
+function bldgStrokeOpacityExpr(year) {
+  const y = Math.floor(year);
+  const frac = year - y;
+  if (frac < 0.001) {
+    return ['case', ['==', ['get','bj'], y], 0.6, 0];
+  }
+  // Pulsing stroke opacity for birth-year buildings
+  const pulse = +(0.3 + 0.5 * Math.sin(frac * Math.PI)).toFixed(2);
+  return ['case',
+    ['==', ['get','bj'], y], pulse,
+    ['==', ['get','bj'], y + 1], +(frac * 0.2).toFixed(2),
+    0,
   ];
 }
 
@@ -1845,6 +1928,8 @@ function addBuildingDots() {
       'circle-radius': 2.5,
       'circle-opacity': 0.88,
       'circle-stroke-width': 0,
+      'circle-stroke-color': '#fbbf24',
+      'circle-stroke-opacity': 0,
       'circle-pitch-alignment': 'map',
     }
   });
@@ -1853,6 +1938,8 @@ function addBuildingDots() {
   try { map.setPaintProperty('bldg-layer', 'circle-color',   bldgColorExpr(colorMode, currentYear)); } catch(e) { console.warn('bldgColorExpr:', e); }
   try { map.setPaintProperty('bldg-layer', 'circle-radius',  bldgRadiusExpr(currentYear)); } catch(e) { console.warn('bldgRadiusExpr:', e); }
   try { map.setPaintProperty('bldg-layer', 'circle-opacity', bldgOpacityExpr(currentYear)); } catch(e) { console.warn('bldgOpacityExpr:', e); }
+  try { map.setPaintProperty('bldg-layer', 'circle-stroke-width', bldgStrokeExpr(currentYear)); } catch(e) { console.warn('bldgStrokeExpr:', e); }
+  try { map.setPaintProperty('bldg-layer', 'circle-stroke-opacity', bldgStrokeOpacityExpr(currentYear)); } catch(e) { console.warn('bldgStrokeOpacityExpr:', e); }
 
   // Attach hover/click events only once — they survive style reloads via delegation
   if (!_bldgEventsAttached) {
@@ -2310,6 +2397,10 @@ function applyBldgColor(year) {
   map.setPaintProperty('bldg-layer', 'circle-color',   bldgColorExpr(colorMode, year));
   map.setPaintProperty('bldg-layer', 'circle-opacity', bldgOpacityExpr(year));
   map.setPaintProperty('bldg-layer', 'circle-radius',  bldgRadiusExpr(year));
+  try {
+    map.setPaintProperty('bldg-layer', 'circle-stroke-width',   bldgStrokeExpr(year));
+    map.setPaintProperty('bldg-layer', 'circle-stroke-opacity', bldgStrokeOpacityExpr(year));
+  } catch(e) {}
   updateChoropleth(year);
 }
 
@@ -2767,19 +2858,38 @@ function updateKPIs(year) {
   set('kv-hh',   kc?.hh_totaal ? kc.hh_totaal.toLocaleString('nl') : '—');
 
   // Main price display
+  const priceEl = document.getElementById('year-price');
   if (price) {
-    document.getElementById('year-price').textContent = price.toLocaleString('nl');
+    priceEl.textContent = price.toLocaleString('nl');
+  } else if (year < 1995) {
+    // Pre-data era: show building count instead
+    const count = BAG_COORDS.filter(r => r[2] > 0 && r[2] <= year && (currentGemeenteFilter === null || r[4] === currentGemeenteFilter)).length;
+    priceEl.textContent = count.toLocaleString('nl') + ' panden';
+  } else {
+    priceEl.textContent = '—';
   }
 
   // Starter card
   updateStarterCard(year, kc, price);
 
-  // Year badge prognose
+  // Year badge prognose / historic era
   const isProg = year >= 2026;
+  const isHistoric = year < 1995;
   document.getElementById('year-badge').classList.toggle('prog', isProg);
-  document.getElementById('price-prog-lbl').style.display = isProg ? '' : 'none';
+  const progLbl = document.getElementById('price-prog-lbl');
+  if (isHistoric) {
+    progLbl.textContent = 'historisch — alleen BAG';
+    progLbl.style.display = '';
+    progLbl.style.color = 'var(--t3)';
+  } else if (isProg) {
+    progLbl.textContent = 'prognose';
+    progLbl.style.display = '';
+    progLbl.style.color = '';
+  } else {
+    progLbl.style.display = 'none';
+  }
   document.getElementById('kpi-year').textContent = year;
-  document.getElementById('kpi-year').style.color = isProg ? 'var(--accent2)' : '';
+  document.getElementById('kpi-year').style.color = isProg ? 'var(--accent2)' : isHistoric ? 'var(--t3)' : '';
 }
 
 function set(id, val) {
@@ -2912,7 +3022,7 @@ function updateNewbuildsFilter(year) {
 function updatePriceMarker(year) {
   // Highlight current year on price chart
   if (!chartPrice) return;
-  const baseYears = Array.from({length:41}, (_,i)=>1995+i);
+  const baseYears = Array.from({length:156}, (_,i)=>1880+i);
   const idx = baseYears.indexOf(year);
   const ds = chartPrice.data.datasets;
   ds.forEach(d => {
@@ -2945,7 +3055,7 @@ function togglePlay() {
   playing = !playing;
   document.getElementById('btn-play').textContent = playing ? '■ Stop' : '▶ Play';
   if (playing) {
-    _playYearF = currentYear >= 2035 ? 1995 : currentYear;
+    _playYearF = currentYear >= 2035 ? 1880 : currentYear;
     _playLastTs = 0;
     playTimer = requestAnimationFrame(_playFrame);
   } else {
@@ -2963,7 +3073,9 @@ function _playFrame(ts) {
   const dt = (ts - _playLastTs) / 1000; // seconds since last frame
   _playLastTs = ts;
 
-  _playYearF += dt * PLAY_SPEED;
+  // Adaptive speed: faster through historic eras (pre-1950), normal for modern
+  const eraMultiplier = _playYearF < 1920 ? 8 : _playYearF < 1950 ? 5 : _playYearF < 1980 ? 3 : _playYearF < 1995 ? 2 : 1;
+  _playYearF += dt * PLAY_SPEED * eraMultiplier;
 
   if (_playYearF > 2035) {
     _playYearF = 2035;
@@ -2994,6 +3106,10 @@ function _applyFractionalYear(yearF) {
   if (map.getLayer('bldg-layer')) {
     map.setPaintProperty('bldg-layer', 'circle-opacity', bldgOpacityExpr(yearF));
     map.setPaintProperty('bldg-layer', 'circle-radius',  bldgRadiusExpr(yearF));
+    try {
+      map.setPaintProperty('bldg-layer', 'circle-stroke-width',   bldgStrokeExpr(yearF));
+      map.setPaintProperty('bldg-layer', 'circle-stroke-opacity', bldgStrokeOpacityExpr(yearF));
+    } catch(e) {}
   }
 
   // Update year display with fractional indicator
@@ -3002,6 +3118,10 @@ function _applyFractionalYear(yearF) {
     disp.textContent = y;
     disp.classList.toggle('prog', y >= 2026);
   }
+
+  // Update newbuild ring to match playback year
+  if (map.getLayer('newbuild-ring')) map.setFilter('newbuild-ring', ['==', ['get','bj'], y]);
+  if (map.getLayer('newbuild-dot'))  map.setFilter('newbuild-dot',  ['==', ['get','bj'], y]);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3124,6 +3244,26 @@ function initCharts() {
   }
 
   // ── Lazy-loaded charts (below fold) ────────────────────────────
+  // ── Age distribution (stacked area) ────────────────────────────
+  _lazyChart('chart-age', function(ctxAge) {
+    new Chart(ctxAge, {
+      type:'line', data:{
+        labels: LEEFTIJDSOPBOUW.map(r=>r.jaar),
+        datasets:[
+          { label:'0–24 (jong)', data:LEEFTIJDSOPBOUW.map(r=>r.jong),
+            borderColor:'#38bdf8', backgroundColor:'rgba(56,189,248,.15)', borderWidth:1.5, tension:0.3, fill:true },
+          { label:'25–64 (werkend)', data:LEEFTIJDSOPBOUW.map(r=>r.werk),
+            borderColor:'#4ade80', backgroundColor:'rgba(74,222,128,.10)', borderWidth:1.5, tension:0.3, fill:true },
+          { label:'65+ (oud)', data:LEEFTIJDSOPBOUW.map(r=>r.oud),
+            borderColor:'#f87171', backgroundColor:'rgba(248,113,113,.15)', borderWidth:1.5, tension:0.3, fill:true },
+        ]
+      }, options:{...CHART_DEFAULTS,
+        scales:{x:CHART_DEFAULTS.scales.x, y:{...CHART_DEFAULTS.scales.y, ticks:{...CHART_DEFAULTS.scales.y.ticks, callback:v=>Math.round(v/1000)+'k'}}},
+        plugins:{...CHART_DEFAULTS.plugins, legend:{display:true,position:'bottom',labels:{color:'#505068',font:{size:8},boxWidth:10,padding:6}}}
+      }
+    });
+  });
+
   _lazyChart('chart-pop', function(ctxBev) {
     const bevData = KERNCIJFERS.filter(r=>r.vestiging!=null);
     chartPop = new Chart(ctxBev, {
