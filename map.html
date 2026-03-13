@@ -97,6 +97,35 @@
     color:var(--t3); font-weight:600; margin-bottom:6px;
   }
 
+  /* ── Right-panel compact gemeente row ── */
+  .rp-gemeente-row {
+    display:flex; gap:6px; padding:10px 18px;
+    border-bottom:1px solid var(--border);
+  }
+  .rp-gemeente-dd {
+    flex:1; min-width:0;
+    background:var(--surface2); border:1px solid var(--border2);
+    border-radius:3px; color:var(--t1); font-size:11px; font-weight:600;
+    font-family:var(--sans); letter-spacing:.02em;
+    padding:6px 24px 6px 10px; cursor:pointer; outline:none;
+    -webkit-appearance:none; appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23e8c97e'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 8px center;
+    transition:border-color .15s, color .15s;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .rp-gemeente-dd:hover, .rp-gemeente-dd:focus {
+    border-color:var(--accent); color:var(--accent);
+  }
+  .rp-gemeente-dd.compare {
+    color:var(--t3); font-weight:500;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23505068'/%3E%3C/svg%3E");
+  }
+  .rp-gemeente-dd.compare:hover, .rp-gemeente-dd.compare:focus {
+    border-color:var(--accent2); color:var(--accent2);
+  }
+  .rp-gemeente-dd option { background:#0e0e1a; color:var(--t1); }
+
   /* ── Left panel ── */
   #left-panel {
     position:absolute; left:0; top:52px; bottom:64px; z-index:30;
@@ -264,68 +293,70 @@
   .scrub-ticks .st-maj.prog { color:var(--accent2); opacity:.7; }
   .scrub-ticks .st-min { color:var(--border2); font-size:7px; }
 
-  /* ── Building card (full-screen slide-in) ── */
+  /* ── Building card (floating panel — doesn't block scrubber) ── */
   #bldg-card {
-    position:absolute; inset:0; z-index:60;
-    background:rgba(8,8,14,.92); backdrop-filter:blur(16px);
-    display:flex; align-items:center; justify-content:center;
-    opacity:0; pointer-events:none; transition:opacity .25s;
+    position:absolute; left:50%; bottom:76px; z-index:55;
+    transform:translateX(-50%) translateY(16px);
+    opacity:0; pointer-events:none;
+    transition:opacity .2s, transform .2s ease;
   }
-  #bldg-card.open { opacity:1; pointer-events:auto; }
+  #bldg-card.open { opacity:1; pointer-events:auto; transform:translateX(-50%) translateY(0); }
   #bldg-card-inner {
-    width:540px; max-width:calc(100vw - 40px);
-    background:var(--surface); border:1px solid var(--border2);
-    border-radius:2px; overflow:hidden;
-    transform:translateY(24px); transition:transform .25s ease;
+    width:460px; max-width:calc(100vw - 320px);
+    max-height:calc(100vh - 140px);
+    overflow-y:auto;
+    scrollbar-width:thin; scrollbar-color:var(--border2) transparent;
+    background:rgba(15,15,26,.96); backdrop-filter:blur(12px);
+    border:1px solid var(--border2);
+    border-radius:4px; box-shadow:0 8px 32px rgba(0,0,0,.5);
   }
-  #bldg-card.open #bldg-card-inner { transform:translateY(0); }
-  .bc-header { padding:22px 24px 18px; border-bottom:1px solid var(--border); }
-  .bc-address { font-family:var(--serif); font-size:22px; font-weight:700; color:var(--t1); line-height:1.2; }
-  .bc-postcode { font-family:var(--mono); font-size:11px; color:var(--t3); margin-top:4px; }
+  .bc-header { padding:14px 18px 10px; border-bottom:1px solid var(--border); }
+  .bc-address { font-family:var(--serif); font-size:18px; font-weight:700; color:var(--t1); line-height:1.2; }
+  .bc-postcode { font-family:var(--mono); font-size:10px; color:var(--t3); margin-top:3px; }
   .bc-close {
-    position:absolute; top:16px; right:18px;
-    font-size:18px; color:var(--t3); cursor:pointer; background:none; border:none;
+    position:absolute; top:10px; right:12px;
+    font-size:16px; color:var(--t3); cursor:pointer; background:none; border:none;
     transition:color .15s;
   }
   .bc-close:hover { color:var(--t1); }
-  .bc-nav { position:absolute; top:16px; right:48px; display:flex; gap:2px; }
+  .bc-nav { position:absolute; top:10px; right:36px; display:flex; gap:2px; }
   .bc-nav button {
     background:none; border:1px solid var(--border); border-radius:2px;
-    color:var(--t3); font-size:13px; width:24px; height:24px;
+    color:var(--t3); font-size:12px; width:22px; height:22px;
     cursor:pointer; display:flex; align-items:center; justify-content:center;
     transition:color .12s, border-color .12s;
   }
   .bc-nav button:hover { color:var(--t1); border-color:var(--border2); }
   .bc-nav button:disabled { opacity:.25; cursor:default; }
-  .bc-year-note { font-family:var(--mono); font-size:10px; color:var(--accent2); margin-top:2px; }
+  .bc-year-note { font-family:var(--mono); font-size:9px; color:var(--accent2); margin-top:2px; }
   .bc-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; background:var(--border); }
-  .bc-cell { background:var(--surface); padding:14px 16px; }
-  .bc-cell .val { font-family:var(--mono); font-size:18px; font-weight:500; color:var(--t1); }
-  .bc-cell .lbl { font-size:9px; text-transform:uppercase; letter-spacing:.08em; color:var(--t3); margin-top:3px; }
-  .bc-body { padding:18px 24px; }
-  .bc-afford { margin-bottom:14px; display:flex; flex-direction:column; gap:8px; }
-  .bc-afford-title { font-size:10px; font-weight:700; color:var(--t3); text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px; }
-  .bc-persona { background:var(--surface2); border:1px solid var(--border); border-radius:2px; padding:11px 14px; }
-  .bc-persona-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:7px; }
-  .bc-persona-label { font-size:10px; font-weight:700; color:var(--t2); text-transform:uppercase; letter-spacing:.07em; }
-  .bc-persona-badge { font-family:var(--mono); font-size:10px; font-weight:700; padding:2px 6px; border-radius:10px; }
+  .bc-cell { background:rgba(15,15,26,.96); padding:10px 14px; }
+  .bc-cell .val { font-family:var(--mono); font-size:15px; font-weight:500; color:var(--t1); }
+  .bc-cell .lbl { font-size:8px; text-transform:uppercase; letter-spacing:.08em; color:var(--t3); margin-top:2px; }
+  .bc-body { padding:12px 18px; }
+  .bc-afford { margin-bottom:10px; display:flex; flex-direction:column; gap:6px; }
+  .bc-afford-title { font-size:9px; font-weight:700; color:var(--t3); text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px; }
+  .bc-persona { background:var(--surface2); border:1px solid var(--border); border-radius:2px; padding:8px 12px; }
+  .bc-persona-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+  .bc-persona-label { font-size:9px; font-weight:700; color:var(--t2); text-transform:uppercase; letter-spacing:.07em; }
+  .bc-persona-badge { font-family:var(--mono); font-size:9px; font-weight:700; padding:2px 6px; border-radius:10px; }
   .badge-ok   { background:rgba(74,200,120,.18); color:#4ac878; }
   .badge-warn { background:rgba(245,158,11,.18);  color:#f59e0b; }
   .badge-bad  { background:rgba(220,60,60,.18);   color:#dc3c3c; }
-  .bc-meter { margin-bottom:6px; }
-  .bc-meter .row { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:3px; }
-  .bc-meter .row span:first-child { font-size:10px; color:var(--t2); }
-  .bc-meter .row span:last-child  { font-family:var(--mono); font-size:11px; color:var(--t1); }
-  .bc-bar { height:4px; background:var(--border2); border-radius:1px; overflow:hidden; margin-top:5px; }
+  .bc-meter { margin-bottom:4px; }
+  .bc-meter .row { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px; }
+  .bc-meter .row span:first-child { font-size:9px; color:var(--t2); }
+  .bc-meter .row span:last-child  { font-family:var(--mono); font-size:10px; color:var(--t1); }
+  .bc-bar { height:3px; background:var(--border2); border-radius:1px; overflow:hidden; margin-top:4px; }
   .bc-bar-fill { height:100%; border-radius:1px; transition:width .4s ease; }
-  .bc-era-badge { display:inline-block; padding:3px 8px; border-radius:2px; font-size:10px; font-weight:500; margin-right:6px; }
+  .bc-era-badge { display:inline-block; padding:2px 6px; border-radius:2px; font-size:9px; font-weight:500; margin-right:5px; }
   .era-pre45   { background:rgba(124,58,237,.25); color:#c4b5fd; }
   .era-45-65   { background:rgba(37,99,235,.25);  color:#93c5fd; }
   .era-65-85   { background:rgba(14,165,233,.25); color:#7dd3fc; }
   .era-85-05   { background:rgba(20,184,166,.25); color:#5eead4; }
   .era-05-15   { background:rgba(245,158,11,.25); color:#fcd34d; }
   .era-post15  { background:rgba(249,115,22,.25); color:#fdba74; }
-  .bc-context  { font-size:11px; color:var(--t2); line-height:1.6; }
+  .bc-context  { font-size:10px; color:var(--t2); line-height:1.5; }
 
   /* ── Tooltip ── */
   #maptip {
@@ -343,6 +374,32 @@
     white-space:nowrap; pointer-events:none; opacity:0; transition:opacity .3s;
   }
   #gemeente-notice.show { opacity:1; }
+
+  /* ── Fusie badge ── */
+  #fusie-badge {
+    display:none; /* hidden unless a fusie gemeente is active in pre-merger era */
+    margin:0 18px 10px 18px;
+    padding:8px 12px;
+    background:rgba(124,106,240,.10);
+    border:1px solid rgba(124,106,240,.28);
+    border-radius:3px;
+    font-size:10px; line-height:1.5;
+  }
+  #fusie-badge .fb-era {
+    font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--accent2); font-family:var(--mono); margin-bottom:4px;
+  }
+  #fusie-badge .fb-names {
+    color:var(--t1); font-weight:600; font-size:11px; margin-bottom:2px;
+  }
+  #fusie-badge .fb-sub {
+    color:var(--t3); font-size:9px;
+  }
+  #fusie-badge.post-merger {
+    background:rgba(74,222,128,.06);
+    border-color:rgba(74,222,128,.20);
+  }
+  #fusie-badge.post-merger .fb-era { color:#4ade80; }
 
   /* Pulsing new-build dots */
   @keyframes pulse-ring {
@@ -423,12 +480,10 @@
     .scrub-ticks { display:none; }
     .scrub-btn { padding:5px 10px; font-size:10px; }
 
-    /* Building card — full screen on mobile */
-    #bldg-card-inner { width:calc(100vw - 24px); }
-    .bc-address { font-size:17px; }
-    .bc-grid { grid-template-columns:1fr 1fr 1fr; }
-    .bc-cell { padding:10px 12px; }
-    .bc-cell .val { font-size:15px; }
+    /* Building card — compact on mobile */
+    #bldg-card { left:12px; right:12px; transform:translateX(0) translateY(16px); }
+    #bldg-card.open { transform:translateX(0) translateY(0); }
+    #bldg-card-inner { width:100%; max-width:100%; }
 
     /* Toggle button for left panel on mobile */
     #mobile-panel-toggle {
@@ -465,7 +520,7 @@
 <div id="maptip"></div>
 
 <!-- Building card overlay -->
-<div id="bldg-card" role="dialog" aria-modal="true" aria-label="Gebouwdetails" onclick="if(event.target===this)closeBldgCard()">
+<div id="bldg-card" role="dialog" aria-label="Gebouwdetails">
   <div id="bldg-card-inner" style="position:relative">
     <div class="bc-nav">
       <button id="bc-prev" onclick="navBldg(-1)" title="Vorige (←)">‹</button>
@@ -483,49 +538,6 @@
       <div class="bc-cell"><div class="val" id="bc-woz">—</div><div class="lbl">Gesch. WOZ <span id="bc-woz-year" style="font-size:9px"></span></div></div>
     </div>
     <div class="bc-body">
-      <div class="bc-afford">
-        <div class="bc-afford-title">Betaalbaarheid</div>
-        <!-- Starter -->
-        <div class="bc-persona" id="bc-persona-starter">
-          <div class="bc-persona-head">
-            <span class="bc-persona-label">Starter (single)</span>
-            <span class="bc-persona-badge" id="bc-badge-starter">—</span>
-          </div>
-          <div class="bc-meter">
-            <div class="row"><span>Inkomen (CBS)</span><span id="bc-s-inc">—</span></div>
-            <div class="row"><span>Max. hypotheek (4,5×)</span><span id="bc-s-hyp">—</span></div>
-            <div class="row"><span>Tekort / overschot</span><span id="bc-s-gap">—</span></div>
-            <div class="bc-bar"><div class="bc-bar-fill" id="bc-s-bar" style="width:0%"></div></div>
-          </div>
-        </div>
-        <!-- Huurder -->
-        <div class="bc-persona" id="bc-persona-huurder">
-          <div class="bc-persona-head">
-            <span class="bc-persona-label">Huurder</span>
-            <span class="bc-persona-badge" id="bc-badge-huurder">—</span>
-          </div>
-          <div class="bc-meter">
-            <div class="row"><span>Inkomen (CBS)</span><span id="bc-h-inc">—</span></div>
-            <div class="row"><span>Max. huur (30% netto)</span><span id="bc-h-maxhuur">—</span></div>
-            <div class="row"><span>Gesch. vrije-sector huur</span><span id="bc-h-huur">—</span></div>
-            <div class="row"><span>Sociale huurgrens 2024</span><span id="bc-h-sociaal">€879/mnd</span></div>
-            <div class="bc-bar"><div class="bc-bar-fill" id="bc-h-bar" style="width:0%"></div></div>
-          </div>
-        </div>
-        <!-- Eigenaar -->
-        <div class="bc-persona" id="bc-persona-eigenaar">
-          <div class="bc-persona-head">
-            <span class="bc-persona-label">Doorstromer (eigenaar)</span>
-            <span class="bc-persona-badge" id="bc-badge-eigenaar">—</span>
-          </div>
-          <div class="bc-meter">
-            <div class="row"><span>Inkomen (CBS)</span><span id="bc-e-inc">—</span></div>
-            <div class="row"><span>Max. hypotheek (4,5×)</span><span id="bc-e-hyp">—</span></div>
-            <div class="row"><span>Tekort / overschot</span><span id="bc-e-gap">—</span></div>
-            <div class="bc-bar"><div class="bc-bar-fill" id="bc-e-bar" style="width:0%"></div></div>
-          </div>
-        </div>
-      </div>
       <div style="margin-bottom:10px" id="bc-era-wrap"></div>
       <p class="bc-context" id="bc-context"></p>
     </div>
@@ -554,39 +566,6 @@
 
 <!-- ── LEFT PANEL ── -->
 <aside id="left-panel">
-
-  <!-- Gemeente selector -->
-  <div class="gemeente-select-wrap">
-    <div class="gemeente-select-label">Gemeente</div>
-    <select class="gemeente-select" id="gemeente-select-left" onchange="flyToGemeente(this.value)">
-      <option value="">Geheel Overijssel</option>
-      <option value="0">Almelo</option>
-      <option value="1">Borne</option>
-      <option value="2">Dalfsen</option>
-      <option value="3">Deventer</option>
-      <option value="4">Dinkelland</option>
-      <option value="5">Enschede</option>
-      <option value="6">Haaksbergen</option>
-      <option value="7">Hardenberg</option>
-      <option value="8">Hellendoorn</option>
-      <option value="9">Hengelo</option>
-      <option value="10">Kampen</option>
-      <option value="11">Losser</option>
-      <option value="12">Noordoostpolder</option>
-      <option value="13">Oldenzaal</option>
-      <option value="14">Twenterand</option>
-      <option value="15">Tubbergen</option>
-      <option value="16">Urk</option>
-      <option value="17">Wierden</option>
-      <option value="18">Zwolle</option>
-      <option value="19">Olst-Wijhe</option>
-      <option value="20">Steenwijkerland</option>
-      <option value="21">Staphorst</option>
-      <option value="22">Zwartewaterland</option>
-      <option value="23">Rijssen-Holten</option>
-      <option value="24">Ommen</option>
-    </select>
-  </div>
 
   <!-- Headline KPI -->
   <div class="kpi-hero">
@@ -625,36 +604,38 @@
     </div>
   </div>
 
+  <!-- Fusie / gemeente-era badge -->
+  <div id="fusie-badge"></div>
+
   <!-- Income personalisation -->
   <div class="income-widget">
     <div class="iw-label">Bereken betaalbaarheid voor jouw situatie</div>
     <div class="iw-pills">
       <button class="iw-pill active" id="pill-minimumloon" onclick="selectPersona('minimumloon')">
         <span class="pill-name">Minimumloon</span>
-        <span class="pill-income">€1.780/mnd</span>
+        <span class="pill-income">€958/mnd</span>
         <span class="pill-desc">WML alleenstaand</span>
       </button>
       <button class="iw-pill" id="pill-modaal" onclick="selectPersona('modaal')">
         <span class="pill-name">Modaal</span>
-        <span class="pill-income">€2.608/mnd</span>
+        <span class="pill-income">€1.408/mnd</span>
         <span class="pill-desc">Alleenstaand, ~€44k/jr</span>
       </button>
       <button class="iw-pill" id="pill-anderhalfmodaal" onclick="selectPersona('anderhalfmodaal')">
         <span class="pill-name">1,5× modaal</span>
-        <span class="pill-income">€3.900/mnd</span>
+        <span class="pill-income">€2.112/mnd</span>
         <span class="pill-desc">Alleenstaand, ~€66k/jr</span>
       </button>
       <button class="iw-pill" id="pill-dubbelmodaal" onclick="selectPersona('dubbelmodaal')">
         <span class="pill-name">Dubbelmodaal</span>
-        <span class="pill-income">€5.200/mnd</span>
+        <span class="pill-income">€2.817/mnd</span>
         <span class="pill-desc">Huishouden, 2× modaal</span>
       </button>
     </div>
     <div class="iw-custom-row">
-      <span class="iw-custom-label">Of voer zelf in:</span>
-      <input type="number" id="map-user-income" min="0" max="20000" step="100" placeholder="€/mnd"
+      <span class="iw-custom-label">€/mnd</span>
+      <input type="number" id="map-user-income" min="0" max="20000" step="50" value="958"
         oninput="onMapIncomeInput(this.value)" />
-      <span class="iw-hint" id="map-iw-hint"></span>
     </div>
   </div>
 
@@ -663,6 +644,9 @@
     <button class="mode-btn active" id="cm-prijs" onclick="setColorMode('prijs')">Betaalbaarheid</button>
     <button class="mode-btn" id="cm-bouwjaar" onclick="setColorMode('bouwjaar')">Bouwjaar</button>
     <button class="mode-btn" id="cm-bezit" onclick="setColorMode('bezit')">Koop/huur</button>
+  </div>
+  <div class="mode-row" style="padding-top:0">
+    <button class="mode-btn" id="btn-woz-overlay" onclick="toggleWozOverlay()">WOZ gem. gemeente</button>
   </div>
   <div id="bldg-legend"></div>
 
@@ -691,11 +675,38 @@
 <!-- ── RIGHT PANEL ── -->
 <aside id="right-panel">
 
-  <!-- Gemeente selector -->
-  <div class="gemeente-select-wrap">
-    <div class="gemeente-select-label">Gemeente</div>
-    <select class="gemeente-select" id="gemeente-select-right" onchange="flyToGemeente(this.value)">
-      <option value="">Geheel Overijssel</option>
+  <!-- Compact gemeente selector row -->
+  <div class="rp-gemeente-row">
+    <select class="rp-gemeente-dd" id="gemeente-select-right" onchange="flyToGemeente(this.value)">
+      <option value="">Overijssel</option>
+      <option value="0">Almelo</option>
+      <option value="1">Borne</option>
+      <option value="2">Dalfsen</option>
+      <option value="3">Deventer</option>
+      <option value="4">Dinkelland</option>
+      <option value="5">Enschede</option>
+      <option value="6">Haaksbergen</option>
+      <option value="7">Hardenberg</option>
+      <option value="8">Hellendoorn</option>
+      <option value="9">Hengelo</option>
+      <option value="10">Kampen</option>
+      <option value="11">Losser</option>
+      <option value="12">Noordoostpolder</option>
+      <option value="13">Oldenzaal</option>
+      <option value="14">Twenterand</option>
+      <option value="15">Tubbergen</option>
+      <option value="16">Urk</option>
+      <option value="17">Wierden</option>
+      <option value="18">Zwolle</option>
+      <option value="19">Olst-Wijhe</option>
+      <option value="20">Steenwijkerland</option>
+      <option value="21">Staphorst</option>
+      <option value="22">Zwartewaterland</option>
+      <option value="23">Rijssen-Holten</option>
+      <option value="24">Ommen</option>
+    </select>
+    <select class="rp-gemeente-dd compare" id="gemeente-compare" onchange="onCompareGemeente(this.value)">
+      <option value="">+ vergelijk</option>
       <option value="0">Almelo</option>
       <option value="1">Borne</option>
       <option value="2">Dalfsen</option>
@@ -809,6 +820,7 @@
     <div class="scrub-ticks" id="scrub-ticks"></div>
   </div>
   <button class="scrub-btn" id="btn-play" onclick="togglePlay()">▶ Play</button>
+  <button class="scrub-btn" id="btn-speed" onclick="cycleSpeed()" title="Afspeelsnelheid">1×</button>
   <button class="scrub-btn" onclick="resetYear()">↺</button>
 </div>
 
@@ -1045,14 +1057,15 @@ const PERSONA_RATIOS = {
 };
 
 // Return the net monthly income (€) for the active persona at a given year.
-// If user has typed a custom value, return that instead.
+// Base values (PERSONAS.monthly) are 2024 figures; scale by CBS income growth for other years.
 function getPersonaIncomeMonthly(year) {
-  if (mapCustomIncomeMonthly !== null) return mapCustomIncomeMonthly;
-  const kc = KERNCIJFERS.find(r => r.jaar === year)
-           || [...KERNCIJFERS].filter(r => r.inkomen_single).slice(-1)[0];
-  const modaalYearlyK = kc?.inkomen_single || 31.3; // k€/jr net
-  const ratio = PERSONA_RATIOS[activePersona] ?? 1.0;
-  return Math.round((modaalYearlyK * ratio * 1000) / 12);
+  const base = PERSONAS[activePersona]?.monthly || 1408;
+  const kc2024 = KERNCIJFERS.find(r => r.jaar === 2024);
+  const kcYear = KERNCIJFERS.find(r => r.jaar === year)
+               || [...KERNCIJFERS].filter(r => r.inkomen_single).slice(-1)[0];
+  const scale = (kcYear?.inkomen_single && kc2024?.inkomen_single)
+    ? kcYear.inkomen_single / kc2024.inkomen_single : 1;
+  return Math.round(base * scale);
 }
 
 function getMapEffectiveIncK(year) {
@@ -1070,26 +1083,25 @@ function _refreshOpenCard() {
 // Standard Dutch income classes (CBS 2024, monthly net, €)
 // Modaal bruto = €44.000/jr → net ≈ €2.608/mnd
 const PERSONAS = {
-  minimumloon:     { monthly: 1780, label: 'Minimumloon (WML alleenstaand)' },
-  modaal:          { monthly: 2608, label: 'Modaal alleenstaand (~€44k/jr)' },
-  anderhalfmodaal: { monthly: 3900, label: '1,5× modaal (~€66k/jr)' },
-  dubbelmodaal:    { monthly: 5200, label: 'Dubbelmodaal, huishouden (~€88k/jr)' },
+  minimumloon:     { monthly: 958,  label: 'Minimumloon (WML alleenstaand)' },
+  modaal:          { monthly: 1408, label: 'Modaal alleenstaand (~€44k/jr)' },
+  anderhalfmodaal: { monthly: 2112, label: '1,5× modaal (~€66k/jr)' },
+  dubbelmodaal:    { monthly: 2817, label: 'Dubbelmodaal, huishouden (~€88k/jr)' },
 };
 const PERSONA_KEYS = ['minimumloon','modaal','anderhalfmodaal','dubbelmodaal'];
 let activePersona = 'minimumloon'; // default
 
 function selectPersona(key) {
   activePersona = key;
-  mapCustomIncomeMonthly = null; // clear any custom override
+  mapCustomIncomeMonthly = null;
   PERSONA_KEYS.forEach(k => {
     const el = document.getElementById('pill-' + k);
     if (el) el.classList.toggle('active', k === key);
   });
+  // Sync input to the selected persona's current-year value
   const inp = document.getElementById('map-user-income');
-  if (inp) inp.value = '';
-  const hint = document.getElementById('map-iw-hint');
-  if (hint) hint.textContent = '';
-  _updatePillIncomes(currentYear); // update displayed €/mnd on pills
+  if (inp) inp.value = getPersonaIncomeMonthly(currentYear);
+  _updatePillIncomes(currentYear);
   updateKPIs(currentYear);
   _refreshOpenCard();
   if (colorMode === 'prijs') { applyBldgColor(currentYear); updateBldgLegend(); }
@@ -1103,10 +1115,6 @@ function onMapIncomeInput(rawVal) {
     const el = document.getElementById('pill-' + k);
     if (el) el.classList.remove('active');
   });
-  const hint = document.getElementById('map-iw-hint');
-  if (hint) hint.textContent = v > 0
-    ? `= €${Math.round(v*12/1000)}k/jr`
-    : '';
   updateKPIs(currentYear);
   _refreshOpenCard();
   if (colorMode === 'prijs') { applyBldgColor(currentYear); updateBldgLegend(); }
@@ -1114,14 +1122,20 @@ function onMapIncomeInput(rawVal) {
 
 // Update the €/mnd displayed on each pill to reflect the given year's CBS income
 function _updatePillIncomes(year) {
-  const kc = KERNCIJFERS.find(r => r.jaar === year)
-           || [...KERNCIJFERS].filter(r => r.inkomen_single).slice(-1)[0];
-  const modaalYearlyK = kc?.inkomen_single || 31.3;
+  const kc2024 = KERNCIJFERS.find(r => r.jaar === 2024);
+  const kcYear = KERNCIJFERS.find(r => r.jaar === year)
+               || [...KERNCIJFERS].filter(r => r.inkomen_single).slice(-1)[0];
+  const scale = (kcYear?.inkomen_single && kc2024?.inkomen_single)
+    ? kcYear.inkomen_single / kc2024.inkomen_single : 1;
   for (const k of PERSONA_KEYS) {
-    const ratio = PERSONA_RATIOS[k] ?? 1.0;
-    const monthly = Math.round((modaalYearlyK * ratio * 1000) / 12);
+    const monthly = Math.round(PERSONAS[k].monthly * scale);
     const incEl = document.querySelector(`#pill-${k} .pill-income`);
     if (incEl) incEl.textContent = `€${monthly.toLocaleString('nl')}/mnd`;
+  }
+  // Sync input field when a persona is selected
+  if (activePersona) {
+    const inp = document.getElementById('map-user-income');
+    if (inp) inp.value = Math.round(PERSONAS[activePersona].monthly * scale);
   }
 }
 
@@ -1159,6 +1173,7 @@ const MAP_STYLES = {
 // MAP INIT
 // ══════════════════════════════════════════════════════════════
 
+window._map = null;
 const map = new maplibregl.Map({
   container: 'map',
   style: MAP_STYLES.dark,
@@ -1166,6 +1181,7 @@ const map = new maplibregl.Map({
   zoom: 9.5, pitch: 0, bearing: 0, antialias: true,
 });
 
+window._map = map;
 map.addControl(new maplibregl.NavigationControl({showCompass:false}), 'bottom-right');
 map.addControl(new maplibregl.ScaleControl({unit:'metric'}), 'bottom-left');
 
@@ -1174,7 +1190,8 @@ map.on('load', () => {
   const DEFAULT_GI = 14; // Twenterand (gi=14)
   currentGemeenteFilter = DEFAULT_GI;
 
-  addBuildingDots();     // synchronous — must be first so bldg-layer exists for choropleth beforeId
+  try { addBuildingDots(); } catch(e) { console.error('addBuildingDots failed:', e); }
+  // ^ must be first so bldg-layer exists for choropleth beforeId
   addNewBuildsLayer();
   addBouwjaarHeatmap();
   addChoropleth();       // async fetch — called last so bldg-layer already exists when it resolves
@@ -1182,14 +1199,21 @@ map.on('load', () => {
   applyLayerVisibility();
   initCharts();
   buildLayerList();
-  onYear(currentYear);
 
-  // Sync UI to default gemeente
-  _syncGemeenteSelects(String(DEFAULT_GI));
-  const h1label = document.getElementById('nav-kern');
-  if (h1label) h1label.textContent = BAG_GEMEENTEN[DEFAULT_GI]?.naam || 'Twenterand';
-  const nav = GEMEENTE_NAV[DEFAULT_GI];
-  if (nav) map.flyTo({ center: [nav.lng, nav.lat], zoom: nav.zoom, speed: 1.2, curve: 1.3 });
+  // If hash present, readHash will override defaults; otherwise set Twenterand
+  if (window.location.hash) {
+    _skipHashPush = true;
+    onYear(currentYear);
+    readHash();
+    _skipHashPush = false;
+  } else {
+    onYear(currentYear);
+    _syncGemeenteSelects(String(DEFAULT_GI));
+    const h1label = document.getElementById('nav-kern');
+    if (h1label) h1label.textContent = BAG_GEMEENTEN[DEFAULT_GI]?.naam || 'Twenterand';
+    const nav = GEMEENTE_NAV[DEFAULT_GI];
+    if (nav) map.flyTo({ center: [nav.lng, nav.lat], zoom: nav.zoom, speed: 1.2, curve: 1.3 });
+  }
 });
 
 
@@ -1377,9 +1401,18 @@ function addChoropleth() {
     .catch(e => console.warn('choropleth load failed:', e));
 }
 
+let wozOverlayOn = false;
+
+function toggleWozOverlay() {
+  wozOverlayOn = !wozOverlayOn;
+  const btn = document.getElementById('btn-woz-overlay');
+  if (btn) btn.classList.toggle('active', wozOverlayOn);
+  _applyChoroplethVisibility();
+}
+
 function _applyChoroplethVisibility() {
-  const base = layerOn.choropleth !== false; // respect layer toggle
-  const showWoz   = base && colorMode === 'prijs';
+  const base = layerOn.choropleth !== false;
+  const showWoz   = base && wozOverlayOn;
   const showNieuw = base && colorMode === 'nieuw';
   ['gemeente-woz-fill','gemeente-woz-stroke','gemeente-woz-label'].forEach(id => {
     if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', showWoz ? 'visible' : 'none');
@@ -1562,71 +1595,137 @@ function bldgColorExpr(mode, year) {
             ['>=',['get','bj'],2010], '#fb923c',
             '#1e293b'];
   }
-  // betaalbaarheid: green = bereikbaar, red = onbereikbaar for current persona + year
-  // maxHyp = effective yearly income (k€) × 4500 (NHG factor)
+  // betaalbaarheid: colour by price-level relative to persona max mortgage.
+  // wozEst (at current year) = wozEst2024 * yearScaleB
   const kc2024b = KERNCIJFERS.find(r => r.jaar === 2024);
   const kcYearb = KERNCIJFERS.find(r => r.jaar === year);
   const yearScaleB = (kcYearb?.woz && kc2024b?.woz) ? kcYearb.woz / kc2024b.woz : 1;
-  // Effective income in €/yr from widget; fall back to CBS single for the year
-  const incK = getMapEffectiveIncK(year);
-  const maxHyp = incK * 4500; // €
-  // Colour stops anchored to maxHyp:
-  //   ≤ maxHyp             → green  (bereikbaar)
-  //   maxHyp + 30k         → lime/yellow (bijna bereikbaar)
-  //   maxHyp + 80k         → amber
-  //   maxHyp + 160k        → orange
-  //   maxHyp + 280k+       → deep red
-  // wozEst (at current year) = wozEst2024 * yearScaleB
-  const s = yearScaleB;
+  const incK   = getMapEffectiveIncK(year);
+  const maxHyp = incK * 4500; // € — persona affordability ceiling
+
+  // Province-wide WOZ range (2024 base): min ≈ 224k (Almelo), median ≈ 310k, max ≈ 430k (Tubbergen).
+  // Scale to current year so stops track price levels over time.
+  const lo  = Math.round(200000  * yearScaleB);  // very cheap
+  const med = Math.round(310000  * yearScaleB);  // OV median
+  const hi  = Math.round(430000  * yearScaleB);  // expensive
+  const top = Math.round(600000  * yearScaleB);  // luxury
+
+  // The persona threshold (maxHyp) divides affordable (green) from unaffordable (red).
+  // We clamp it to the realistic range so stops remain strictly ascending.
+  const hyp = Math.max(lo + 10000, Math.min(maxHyp, top - 10000));
+
+  // Build stops ensuring strict ascending order:
+  //   lo      → bright teal (cheap / social housing territory)
+  //   hyp×0.9 → green (comfortably within reach)
+  //   hyp     → lime (right at limit)
+  //   hyp+50k → amber (just out of reach)
+  //   med     → orange
+  //   hi      → red
+  //   top     → deep red
+  const s0 = lo;
+  const s1 = Math.round(Math.max(s0 + 5000,  hyp * 0.90));
+  const s2 = Math.round(Math.max(s1 + 5000,  hyp));
+  const s3 = Math.round(Math.max(s2 + 5000,  hyp + 50000));
+  const s4 = Math.round(Math.max(s3 + 5000,  med));
+  const s5 = Math.round(Math.max(s4 + 5000,  hi));
+  const s6 = Math.round(Math.max(s5 + 5000,  top));
+
   return ['interpolate', ['linear'],
-    ['*', s, ['get', 'wozEst2024']],
-    Math.round(maxHyp * 0.75),   '#1a9e5c',   // well within reach — deep green
-    Math.round(maxHyp * 0.95),   '#4ac878',   // bereikbaar — green
-    Math.round(maxHyp),          '#a3e635',   // exactly at limit — lime
-    Math.round(maxHyp + 30000),  '#fbbf24',   // €30k over — amber
-    Math.round(maxHyp + 80000),  '#f97316',   // €80k over — orange
-    Math.round(maxHyp + 160000), '#ef4444',   // €160k over — red
-    Math.round(maxHyp + 300000), '#7f1d1d',   // €300k+ over — dark red
+    ['*', yearScaleB, ['get', 'wozEst2024']],
+    s0, '#0ea5e9',   // very cheap — sky blue (always visible on dark map)
+    s1, '#4ac878',   // bereikbaar — green
+    s2, '#a3e635',   // at limit — lime
+    s3, '#fbbf24',   // €50k over — amber
+    s4, '#f97316',   // around median — orange
+    s5, '#ef4444',   // expensive — red
+    s6, '#991b1b',   // luxury — dark red (still legible on dark bg)
   ];
 }
 
 function bldgOpacityExpr(year) {
-  // Always hide buildings not yet built at this year — applies to all color modes
-  return ['case', ['<=',['get','bj'],year], 0.82, 0.0];
+  const y = Math.floor(year);
+  const frac = year - y;
+  const isAnimating = frac > 0.001;
+
+  if (!isAnimating) {
+    // Integer year: all buildings up to this year fully visible, future hidden
+    return ['case',
+      ['>', ['get','bj'], y], 0.0,
+      ['==', ['get','bj'], y], 1.0,     // just built — highlight
+      0.88,                               // existing
+    ];
+  }
+  // Fractional year (during animation): smooth fade-in
+  const birthOpacity = +(0.15 + 0.85 * frac).toFixed(2);
+  const nextGhost = +(frac * 0.15).toFixed(2);
+  return ['case',
+    ['>', ['get','bj'], y + 1], 0.0,
+    ['==', ['get','bj'], y + 1], nextGhost,
+    ['==', ['get','bj'], y], birthOpacity,
+    0.88,
+  ];
 }
 
-function bldgRadiusExpr() {
-  // Radius scales with zoom AND m² so dots are always visible at every zoom level.
-  // At low zoom (overview) dots are small uniform blobs; at street level they
-  // reflect floor area. BAG verblijfsobject centroids have ~10-20m inherent
-  // positional error (unit centroid vs building facade) — unfixable without pand data.
-  return ['interpolate', ['linear'], ['zoom'],
-    7,  ['interpolate', ['linear'], ['get','m2'],  60, 1.2,  160, 1.5],
-    10, ['interpolate', ['linear'], ['get','m2'],  60, 1.8,  160, 2.2],
-    12, ['interpolate', ['linear'], ['get','m2'],  60, 2.2,  160, 3.0],
-    14, ['interpolate', ['linear'], ['get','m2'],  60, 2.8,  160, 4.2],
-    16, ['interpolate', ['linear'], ['get','m2'],  60, 3.5,  160, 5.5],
+function bldgRadiusExpr(year) {
+  const y = Math.floor(year);
+  const frac = year - y;
+  const isAnimating = frac > 0.001;
+
+  const base = ['interpolate', ['linear'], ['zoom'],
+    5,  ['interpolate', ['linear'], ['get','m2'],  60, 0.5,  160, 0.7],
+    7,  ['interpolate', ['linear'], ['get','m2'],  60, 0.8,  160, 1.0],
+    9,  ['interpolate', ['linear'], ['get','m2'],  60, 1.4,  160, 1.8],
+    11, ['interpolate', ['linear'], ['get','m2'],  60, 2.0,  160, 2.8],
+    13, ['interpolate', ['linear'], ['get','m2'],  60, 3.0,  160, 4.0],
+    15, ['interpolate', ['linear'], ['get','m2'],  60, 3.5,  160, 5.0],
+  ];
+
+  if (!isAnimating) {
+    // Integer year: all existing buildings full size, future zero
+    return ['case',
+      ['>', ['get','bj'], y], ['*', 0, base],
+      base,
+    ];
+  }
+  // Fractional year: birth-year buildings grow in
+  const growFactor = +frac.toFixed(2);
+  return ['case',
+    ['>', ['get','bj'], y + 1], ['*', 0, base],
+    ['==', ['get','bj'], y + 1], ['*', frac * 0.3, base],
+    ['==', ['get','bj'], y], ['*', Math.max(0.2, growFactor), base],
+    base,
   ];
 }
 
 let _bldgEventsAttached = false;
 
 function addBuildingDots() {
-  if (map.getSource('bldg-src')) return;
-  const geo = buildBldgGeoJSON();
-  map.addSource('bldg-src', { type:'geojson', data:geo });
+  // Source may survive a failed layer add — only skip if layer already exists
+  if (map.getLayer('bldg-layer')) return;
 
+  if (!map.getSource('bldg-src')) {
+    const geo = buildBldgGeoJSON();
+    map.addSource('bldg-src', { type:'geojson', data:geo });
+  }
+
+  // Step 1: Add layer with simple static paint (avoids silent expression failures)
   map.addLayer({
     id: 'bldg-layer', type:'circle', source:'bldg-src',
-    minzoom: 7,  // don't render at province overview — too dense and invisible anyway
+    minzoom: 0,
+    filter: ['>', ['get','bj'], 0],
     paint: {
-      'circle-color': bldgColorExpr(colorMode, currentYear),
-      'circle-radius': bldgRadiusExpr(),
-      'circle-opacity': bldgOpacityExpr(currentYear),
+      'circle-color': '#e8c97e',
+      'circle-radius': 2.5,
+      'circle-opacity': 0.88,
       'circle-stroke-width': 0,
-      'circle-pitch-alignment': 'map',  // anchor dots to map plane (not viewport)
+      'circle-pitch-alignment': 'map',
     }
   });
+
+  // Step 2: Apply complex expressions via setPaintProperty
+  try { map.setPaintProperty('bldg-layer', 'circle-color',   bldgColorExpr(colorMode, currentYear)); } catch(e) { console.warn('bldgColorExpr:', e); }
+  try { map.setPaintProperty('bldg-layer', 'circle-radius',  bldgRadiusExpr(currentYear)); } catch(e) { console.warn('bldgRadiusExpr:', e); }
+  try { map.setPaintProperty('bldg-layer', 'circle-opacity', bldgOpacityExpr(currentYear)); } catch(e) { console.warn('bldgOpacityExpr:', e); }
 
   // Attach hover/click events only once — they survive style reloads via delegation
   if (!_bldgEventsAttached) {
@@ -1685,10 +1784,10 @@ function addNewBuildsLayer() {
   // Outer pulse ring — shows only buildings delivered in the current year
   map.addLayer({
     id:'newbuild-ring', type:'circle', source:'newbuild-src',
-    minzoom: 7,
+    minzoom: 0,
     filter: ['==', ['get','bj'], currentYear],
     paint:{
-      'circle-radius': ['interpolate',['linear'],['zoom'], 7,3, 10,5, 12,7, 14,10, 16,13],
+      'circle-radius': ['interpolate',['linear'],['zoom'], 7,1.5, 10,3, 12,4, 14,6, 16,8],
       'circle-color':   '#fbbf24',
       'circle-opacity': 0.18,
       'circle-stroke-width': 1,
@@ -1700,10 +1799,10 @@ function addNewBuildsLayer() {
   // Core dot — same delivery-year filter
   map.addLayer({
     id:'newbuild-dot', type:'circle', source:'newbuild-src',
-    minzoom: 7,
+    minzoom: 0,
     filter: ['==', ['get','bj'], currentYear],
     paint:{
-      'circle-radius': ['interpolate',['linear'],['zoom'], 7,1.5, 10,2.5, 12,3, 14,4, 16,5],
+      'circle-radius': ['interpolate',['linear'],['zoom'], 7,0.8, 10,1.5, 12,2, 14,3, 16,4],
       'circle-color': '#fbbf24',
       'circle-opacity': 0.9,
       'circle-pitch-alignment': 'map',
@@ -2079,8 +2178,11 @@ function rebuildBldgSource() {
 
 function applyBldgColor(year) {
   if (!map.getLayer('bldg-layer')) return;
+  // Show all buildings (bj > 0); future buildings get dimmed via opacity
+  map.setFilter('bldg-layer', ['>', ['get','bj'], 0]);
   map.setPaintProperty('bldg-layer', 'circle-color',   bldgColorExpr(colorMode, year));
   map.setPaintProperty('bldg-layer', 'circle-opacity', bldgOpacityExpr(year));
+  map.setPaintProperty('bldg-layer', 'circle-radius',  bldgRadiusExpr(year));
   updateChoropleth(year);
 }
 
@@ -2198,45 +2300,12 @@ function openBldgCard(p) {
   document.getElementById('bc-woz').textContent = '€' + Math.round(bldgWoz/1000) + 'k';
   document.getElementById('bc-woz-year').textContent = currentYear;
 
-  // ── ACTIEVE INKOMENSCATEGORIE (koopwoning) ────────────────────
-  const sInc = getMapEffectiveIncK(currentYear); // k€/yr — active persona at this year
+  // ── Affordability for context text ──────────────────────────
+  const sInc = getMapEffectiveIncK(currentYear);
   const sHyp = sInc * 4.5 * 1000;
   const sGap = bldgWoz - sHyp;
-  const sPct = Math.min(100, Math.round(sHyp / bldgWoz * 100));
-  document.getElementById('bc-s-inc').textContent = '€' + Math.round(sInc) + 'k/jr';
-  document.getElementById('bc-s-hyp').textContent = '€' + Math.round(sHyp/1000) + 'k';
-  _setGap('bc-s-gap', sGap);
-  _setBar('bc-s-bar', sPct);
-  _setBadge('bc-badge-starter', sGap);
-
-  // ── HUURDER ───────────────────────────────────────────────────
-  const hInc = getMapEffectiveIncK(currentYear); // k€/yr — same persona
-  const hMaxHuur = Math.round(hInc * 1000 / 12 * 0.30);          // 30% netto norm
-  const hHuur = Math.round(bldgWoz * 0.045 / 12);                 // ~4.5% gross yield
-  const sociaalGrens = 879; // 2024 liberalisatiegrens
-  const hGap = hHuur - hMaxHuur;
-  const hPct = Math.min(100, Math.round(hMaxHuur / hHuur * 100));
-  document.getElementById('bc-h-inc').textContent = '€' + Math.round(hInc) + 'k/jr';
-  document.getElementById('bc-h-maxhuur').textContent = '€' + hMaxHuur + '/mnd';
-  document.getElementById('bc-h-huur').textContent = '€' + hHuur + '/mnd';
-  document.getElementById('bc-h-sociaal').textContent = hHuur <= sociaalGrens ? `€${sociaalGrens}/mnd ✓ sociaal` : `€${sociaalGrens}/mnd · vrije sector`;
-  _setBar('bc-h-bar', hPct);
-  // Badge: betaalbaar if estimated rent ≤ 30%-norm; warn if within 20% over
-  const hBadge = document.getElementById('bc-badge-huurder');
-  if (hHuur <= hMaxHuur) { hBadge.textContent = 'Betaalbaar'; hBadge.className = 'bc-persona-badge badge-ok'; }
-  else if (hHuur <= hMaxHuur * 1.2) { hBadge.textContent = `+€${hGap}/mnd`; hBadge.className = 'bc-persona-badge badge-warn'; }
-  else { hBadge.textContent = `+€${hGap}/mnd`; hBadge.className = 'bc-persona-badge badge-bad'; }
-
-  // ── EIGENAAR/DOORSTROMER ──────────────────────────────────────
-  const eInc = getMapEffectiveIncK(currentYear); // k€/yr — same persona
-  const eHyp = eInc * 4.5 * 1000;
-  const eGap = bldgWoz - eHyp;
-  const ePct = Math.min(100, Math.round(eHyp / bldgWoz * 100));
-  document.getElementById('bc-e-inc').textContent = '€' + Math.round(eInc) + 'k/jr';
-  document.getElementById('bc-e-hyp').textContent = '€' + Math.round(eHyp/1000) + 'k';
-  _setGap('bc-e-gap', eGap);
-  _setBar('bc-e-bar', ePct);
-  _setBadge('bc-badge-eigenaar', eGap);
+  const hHuur = Math.round(bldgWoz * 0.045 / 12);
+  const hMaxHuur = Math.round(sInc * 1000 / 12 * 0.30);
 
   // ── Era badge + context ───────────────────────────────────────
   const era = eraLabel(p.bj);
@@ -2260,12 +2329,14 @@ function openBldgCard(p) {
   document.getElementById('bldg-card').classList.add('open');
   document.addEventListener('keydown', cardKeyHandler);
   _updateNavButtons();
+  pushHash();
 }
 
 function closeBldgCard() {
   lastBldgProps = null;
   document.getElementById('bldg-card').classList.remove('open');
   document.removeEventListener('keydown', cardKeyHandler);
+  pushHash();
 }
 
 // ── Building navigation ─────────────────────────────────────────
@@ -2321,9 +2392,10 @@ function hideTip() {
 
 // ── Layer list (right panel) ────────────────────────────────────
 const LAYERS_CFG = [
-  { id:'buildings', label:'BAG gebouwen',             color:'#38bdf8', on:true  },
-  { id:'migration', label:'Verhuisbewegingen',        color:'#4ade80', on:true  },
-  { id:'heatmap',   label:'Verduurzaming urgentie',  color:'#f97316', on:false },
+  { id:'buildings',  label:'BAG gebouwen',            color:'#38bdf8', on:true  },
+  { id:'choropleth', label:'WOZ gemeenten',            color:'#f59e0b', on:true  },
+  { id:'migration',  label:'Verhuisbewegingen',       color:'#4ade80', on:true  },
+  { id:'heatmap',    label:'Verduurzaming urgentie',  color:'#f97316', on:false },
 ];
 
 function buildLayerList() {
@@ -2406,9 +2478,7 @@ const GEMEENTE_NAV = [
 ];
 
 function _syncGemeenteSelects(val) {
-  const selL = document.getElementById('gemeente-select-left');
   const selR = document.getElementById('gemeente-select-right');
-  if (selL) selL.value = val;
   if (selR) selR.value = val;
 }
 
@@ -2421,6 +2491,7 @@ function flyToGemeente(idxStr) {
     if (h1label) h1label.textContent = 'Overijssel';
     _syncGemeenteSelects('');
     map.flyTo({ center: [TW_CENTRE.lng, TW_CENTRE.lat], zoom: 9.5, speed: 1.2, curve: 1.3 });
+    pushHash();
     return;
   }
 
@@ -2437,13 +2508,21 @@ function flyToGemeente(idxStr) {
   const h1label = document.getElementById('nav-kern');
   if (h1label) h1label.textContent = naam;
   _syncGemeenteSelects(String(idx));
+  pushHash();
 }
 
 function openKernSelect() {
-  const sel = document.getElementById('gemeente-select-left');
+  const sel = document.getElementById('gemeente-select-right');
   if (!sel) return;
   sel.focus();
   sel.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+}
+
+// Compare-gemeente dropdown (right panel)
+let compareGemeenteIdx = null;
+function onCompareGemeente(val) {
+  compareGemeenteIdx = val === '' ? null : +val;
+  pushHash();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2552,9 +2631,33 @@ function updateStarterCard(year, kc, price) {
 
 function updateGemeenteContext(year) {
   const fusie = currentGemeenteFilter !== null ? GEMEENTE_FUSIE[currentGemeenteFilter] : null;
-  const crossedFusie = fusie && (year === fusie.jaar || year === fusie.jaar - 1);
   const era = fusie ? (year < fusie.jaar ? 'pre' : 'post') : 'n/a';
 
+  // ── Persistent fusie badge ────────────────────────────────────
+  const badge = document.getElementById('fusie-badge');
+  if (badge) {
+    if (fusie) {
+      const isPre = year < fusie.jaar;
+      badge.style.display = 'block';
+      badge.className = isPre ? '' : 'post-merger';
+      if (isPre) {
+        badge.innerHTML =
+          `<div class="fb-era">Vóór fusie · ${year}</div>` +
+          `<div class="fb-names">${fusie.voor}</div>` +
+          `<div class="fb-sub">Samengevoed tot <strong>${fusie.naam}</strong> in ${fusie.jaar}</div>`;
+      } else {
+        badge.innerHTML =
+          `<div class="fb-era">Na fusie · ${year}</div>` +
+          `<div class="fb-names">${fusie.naam}</div>` +
+          `<div class="fb-sub">Gevormd uit: ${fusie.voor} (${fusie.jaar})</div>`;
+      }
+    } else {
+      badge.style.display = 'none';
+      badge.innerHTML = '';
+    }
+  }
+
+  // ── Transient toast on era crossing ──────────────────────────
   const notice = document.getElementById('gemeente-notice');
   if (notice && fusie && era !== _prevGemeenteEra && _prevGemeenteEra !== null) {
     notice.textContent = era === 'pre'
@@ -2586,6 +2689,7 @@ function onYear(year) {
   updateMigrationArcs(year);
   updateBldgLegend();
   _refreshOpenCard();   // re-render building card with new year's WOZ/income
+  pushHash();
 }
 
 function updateNewbuildsFilter(year) {
@@ -2613,18 +2717,80 @@ function resetYear() {
   onYear(2024);
 }
 
+// Smooth timeline animation — interpolates between years for fluid building appearance
+let _playYearF = 2024;      // fractional year (e.g. 2015.4)
+let _playLastTs = 0;
+let PLAY_SPEED = 0.4;       // years per second (2.5s per year)
+const SPEED_OPTS = [0.4, 1.0, 2.0, 5.0];
+const SPEED_LABELS = ['1×', '2×', '5×', '10×'];
+let _speedIdx = 0;
+
+function cycleSpeed() {
+  _speedIdx = (_speedIdx + 1) % SPEED_OPTS.length;
+  PLAY_SPEED = SPEED_OPTS[_speedIdx];
+  document.getElementById('btn-speed').textContent = SPEED_LABELS[_speedIdx];
+}
+
 function togglePlay() {
   playing = !playing;
   document.getElementById('btn-play').textContent = playing ? '■ Stop' : '▶ Play';
   if (playing) {
-    let y = currentYear >= 2035 ? 1995 : currentYear;
-    playTimer = setInterval(() => {
-      if (y > 2035) { togglePlay(); return; }
-      document.getElementById('year-slider').value = y;
-      onYear(y); y++;
-    }, 600);
+    _playYearF = currentYear >= 2035 ? 1995 : currentYear;
+    _playLastTs = 0;
+    playTimer = requestAnimationFrame(_playFrame);
   } else {
-    clearInterval(playTimer);
+    cancelAnimationFrame(playTimer);
+    // Snap to nearest integer year
+    const snapped = Math.round(_playYearF);
+    document.getElementById('year-slider').value = snapped;
+    onYear(snapped);
+  }
+}
+
+function _playFrame(ts) {
+  if (!playing) return;
+  if (!_playLastTs) _playLastTs = ts;
+  const dt = (ts - _playLastTs) / 1000; // seconds since last frame
+  _playLastTs = ts;
+
+  _playYearF += dt * PLAY_SPEED;
+
+  if (_playYearF > 2035) {
+    _playYearF = 2035;
+    document.getElementById('year-slider').value = 2035;
+    onYear(2035);
+    togglePlay();
+    return;
+  }
+
+  // Update slider position smoothly
+  document.getElementById('year-slider').value = Math.floor(_playYearF);
+
+  // Apply fractional-year rendering (smooth building pop-in)
+  _applyFractionalYear(_playYearF);
+
+  playTimer = requestAnimationFrame(_playFrame);
+}
+
+function _applyFractionalYear(yearF) {
+  const y = Math.floor(yearF);
+
+  // Only fire full onYear() when integer year changes (updates KPIs, charts, etc.)
+  if (y !== currentYear) {
+    onYear(y);
+  }
+
+  // Always update the visual paint properties for smooth sub-year interpolation
+  if (map.getLayer('bldg-layer')) {
+    map.setPaintProperty('bldg-layer', 'circle-opacity', bldgOpacityExpr(yearF));
+    map.setPaintProperty('bldg-layer', 'circle-radius',  bldgRadiusExpr(yearF));
+  }
+
+  // Update year display with fractional indicator
+  const disp = document.getElementById('year-display');
+  if (disp) {
+    disp.textContent = y;
+    disp.classList.toggle('prog', y >= 2026);
   }
 }
 
@@ -2877,7 +3043,140 @@ function toggleMobilePanel() {
   if (arrow) arrow.textContent = _mobilePanelOpen ? '▾' : '▸';
 }
 
-// Init
+// ══════════════════════════════════════════════════════════════
+// HASH ROUTING
+// ══════════════════════════════════════════════════════════════
+// Format: #/gemeente/naam            — gemeente view
+//         #/gemeente/naam/vs/naam2   — compare
+//         #/gemeente/naam/2010       — gemeente + year
+//         #/pand/adres-slug/2024     — building detail
+//         #/2010                     — year only
+
+let _skipHashPush = false;
+
+function _slugify(s) {
+  return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+function _gemeenteSlug(idx) {
+  return idx != null && BAG_GEMEENTEN[idx] ? _slugify(BAG_GEMEENTEN[idx].naam) : null;
+}
+function _gemeenteIdxBySlug(slug) {
+  if (!slug) return null;
+  const s = slug.toLowerCase();
+  const idx = BAG_GEMEENTEN.findIndex(g => _slugify(g.naam) === s);
+  return idx >= 0 ? idx : null;
+}
+
+function pushHash() {
+  if (_skipHashPush) return;
+  let h = '';
+  const card = document.getElementById('bldg-card');
+  const cardOpen = lastBldgProps && card && card.classList.contains('open');
+
+  if (cardOpen && lastBldgProps) {
+    const slug = _slugify(lastBldgProps.straat || lastBldgProps.adres || 'pand');
+    h = `/pand/${slug}/${currentYear}`;
+  } else {
+    const gSlug = _gemeenteSlug(currentGemeenteFilter);
+    const cSlug = _gemeenteSlug(compareGemeenteIdx);
+    if (gSlug) {
+      h = `/gemeente/${gSlug}`;
+      if (cSlug) h += `/vs/${cSlug}`;
+      if (currentYear !== 2024) h += `/${currentYear}`;
+    } else if (currentYear !== 2024) {
+      h = `/${currentYear}`;
+    }
+  }
+  const target = h ? `#${h}` : window.location.pathname;
+  if (window.location.hash !== `#${h}`) {
+    history.replaceState(null, '', target);
+  }
+}
+
+function readHash() {
+  const hash = decodeURIComponent(window.location.hash).replace(/^#\/?/, '');
+  if (!hash) return;
+  _skipHashPush = true;
+
+  const parts = hash.split('/').filter(Boolean);
+
+  if (parts[0] === 'pand' && parts.length >= 2) {
+    // #/pand/slug/year — restore year, try to find building
+    const year = parts[2] ? +parts[2] : 2024;
+    if (year >= 1995 && year <= 2035) {
+      onYear(year);
+      const sl = document.getElementById('year-slider');
+      if (sl) sl.value = year;
+    }
+    // Try to find building by slug match
+    const slug = parts[1];
+    const match = BAG_COORDS.find(row => {
+      const [,,,adres] = row;
+      return adres && _slugify(adres.split(',')[0]) === slug;
+    });
+    if (match) {
+      const [lng, lat, bj, adres, gemeenteIdx, m2, gdoel] = match;
+      const ctr = GEMEENTE_CENTRES[gemeenteIdx] || { lat: lat, lng: lng };
+      const dlat = (lat - ctr.lat) / 0.035;
+      const dlng = (lng - ctr.lng) / 0.055;
+      const dist = Math.sqrt(dlat * dlat + dlng * dlng);
+      const val = Math.max(0, Math.min(1, 1 - dist * 0.7 + (Math.sin(lng * 317 + lat * 211) * 0.1)));
+      const gemeenteAvgWoz2024 = (GEMEENTE_WOZ_2024[gemeenteIdx] || 310) * 1000;
+      const wozEst2024 = Math.round(gemeenteAvgWoz2024 * (0.70 + val * 0.80));
+      const pc = adres ? (adres.match(/\d{4}[A-Z]{2}/) || [''])[0] : '';
+      const straat = adres ? adres.split(',')[0] : '';
+      openBldgCard({
+        bj: bj || 1970, val: +val.toFixed(3), m2: m2 > 0 ? m2 : estimateM2(bj),
+        m2real: m2 > 0 ? 1 : 0, adres: adres || '', straat, pc,
+        gemeente: BAG_GEMEENTEN[gemeenteIdx]?.naam || '', gemeenteIdx,
+        gdoel: gdoel || 'o', wozEst2024,
+        isNew: bj >= 2015 ? 1 : 0,
+        koop: bj >= 1980 ? (val > 0.4 ? 1 : 0) : (val > 0.6 ? 1 : 0),
+      });
+      // Fly to building
+      if (gemeenteIdx != null) {
+        currentGemeenteFilter = gemeenteIdx;
+        rebuildBldgSource();
+        _syncGemeenteSelects(String(gemeenteIdx));
+      }
+      map.flyTo({ center: [lng, lat], zoom: 15, speed: 1.2 });
+    }
+  } else if (parts[0] === 'gemeente') {
+    const gIdx = _gemeenteIdxBySlug(parts[1]);
+    // Check for /vs/ compare
+    let cIdx = null;
+    let yearPart = null;
+    for (let i = 2; i < parts.length; i++) {
+      if (parts[i] === 'vs' && parts[i + 1]) {
+        cIdx = _gemeenteIdxBySlug(parts[i + 1]);
+        i++;
+      } else if (+parts[i] >= 1995 && +parts[i] <= 2035) {
+        yearPart = +parts[i];
+      }
+    }
+    if (gIdx != null) flyToGemeente(String(gIdx));
+    if (cIdx != null) {
+      compareGemeenteIdx = cIdx;
+      const cSel = document.getElementById('gemeente-compare');
+      if (cSel) cSel.value = String(cIdx);
+    }
+    if (yearPart) {
+      onYear(yearPart);
+      const sl = document.getElementById('year-slider');
+      if (sl) sl.value = yearPart;
+    }
+  } else if (+parts[0] >= 1995 && +parts[0] <= 2035) {
+    onYear(+parts[0]);
+    const sl = document.getElementById('year-slider');
+    if (sl) sl.value = +parts[0];
+  }
+
+  _skipHashPush = false;
+}
+
+window.addEventListener('hashchange', readHash);
+
+// Init — map.on('load') handles hash reading + defaults
 onYear(2024);
 </script>
 </body>
