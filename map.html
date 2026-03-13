@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Vriezenveen — Woningmarkt · Data Journalistiek</title>
+<title>Overijssel — Woningmarkt · Data Journalistiek</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet"/>
 <script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="data/kadaster/adressen_twenterand.js"></script>
+<script src="data/bag/bag_data.js"></script>
 <style>
   :root {
     --bg:       #08080e;
@@ -70,6 +70,32 @@
     transition:border-color .15s,color .15s;
   }
   .kern-select:hover, .kern-select:focus { border-color:var(--accent); color:var(--accent); }
+
+  /* Panel gemeente selector — larger, full-width variant */
+  .gemeente-select {
+    width:100%; box-sizing:border-box;
+    background:var(--surface2); border:1px solid var(--border2);
+    border-radius:3px; color:var(--t1); font-size:11px; font-weight:500;
+    font-family:'Inter',sans-serif; letter-spacing:.03em;
+    padding:7px 28px 7px 10px; cursor:pointer; outline:none;
+    -webkit-appearance:none; appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23505068'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 10px center;
+    transition:border-color .15s,color .15s,background .15s;
+  }
+  .gemeente-select:hover, .gemeente-select:focus {
+    border-color:var(--accent); color:var(--accent);
+    background-color:rgba(212,175,55,.07);
+  }
+  .gemeente-select option { background:#0e0e1a; color:var(--t1); }
+  .gemeente-select-wrap {
+    padding:12px 18px 10px 18px;
+    border-bottom:1px solid var(--border);
+  }
+  .gemeente-select-label {
+    font-size:9px; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--t3); font-weight:600; margin-bottom:6px;
+  }
 
   /* ── Left panel ── */
   #left-panel {
@@ -233,7 +259,10 @@
     transition:all .15s; background:transparent; font-family:var(--mono);
   }
   .scrub-btn:hover { border-color:var(--accent); color:var(--accent); }
-  .scrub-ticks { display:flex; justify-content:space-between; font-size:9px; color:var(--t3); font-family:var(--mono); padding:0 7px; position:absolute; bottom:8px; left:80px; right:160px; pointer-events:none; }
+  .scrub-ticks { display:flex; justify-content:space-between; align-items:flex-end; font-size:8px; color:var(--t3); font-family:var(--mono); padding:0 7px; position:absolute; bottom:6px; left:80px; right:160px; pointer-events:none; line-height:1; }
+  .scrub-ticks .st-maj { color:var(--t3); }
+  .scrub-ticks .st-maj.prog { color:var(--accent2); opacity:.7; }
+  .scrub-ticks .st-min { color:var(--border2); font-size:7px; }
 
   /* ── Building card (full-screen slide-in) ── */
   #bldg-card {
@@ -450,7 +479,7 @@
     </div>
     <div class="bc-grid">
       <div class="bc-cell"><div class="val" id="bc-bj">—</div><div class="lbl">Bouwjaar</div></div>
-      <div class="bc-cell"><div class="val" id="bc-m2">—</div><div class="lbl">Geschat m²</div></div>
+      <div class="bc-cell"><div class="val" id="bc-m2">—</div><div class="lbl" id="bc-m2-lbl">m² (BAG)</div></div>
       <div class="bc-cell"><div class="val" id="bc-woz">—</div><div class="lbl">Gesch. WOZ <span id="bc-woz-year" style="font-size:9px"></span></div></div>
     </div>
     <div class="bc-body">
@@ -506,8 +535,8 @@
 <!-- ── TOP BAR ── -->
 <header id="topbar">
   <span class="pub">Woningmarkt analyse</span>
-  <h1 onclick="openKernSelect()" title="Selecteer een kern">
-    <span id="nav-kern">Twenterand</span> <span class="h1-arrow">▾</span>
+  <h1 onclick="openKernSelect()" title="Selecteer een gemeente">
+    <span id="nav-kern">Overijssel</span> <span class="h1-arrow">▾</span>
   </h1>
 
   <div class="topbar-sep"></div>
@@ -519,18 +548,6 @@
 
   <div class="topbar-sep"></div>
 
-  <select class="kern-select" id="kern-select" onchange="flyToKern(this.value)" title="Vliegen naar kern">
-    <option value="">→ Kern</option>
-    <option value="vriezenveen">Vriezenveen</option>
-    <option value="westerhaar">Westerhaar</option>
-    <option value="denham">Den Ham</option>
-    <option value="bruinehaar">Bruinehaar</option>
-    <option value="vriezenveensewijk">Vr.veensewijk</option>
-    <option value="marienberg">Mariënberg</option>
-  </select>
-
-  <div class="topbar-sep"></div>
-
   <button class="topbar-pill" onclick="exportCSV()" title="Download data als CSV">↓ CSV</button>
   <button class="topbar-pill" onclick="window.location='index.html'" style="margin-left:4px">Analyse →</button>
 </header>
@@ -538,10 +555,42 @@
 <!-- ── LEFT PANEL ── -->
 <aside id="left-panel">
 
+  <!-- Gemeente selector -->
+  <div class="gemeente-select-wrap">
+    <div class="gemeente-select-label">Gemeente</div>
+    <select class="gemeente-select" id="gemeente-select-left" onchange="flyToGemeente(this.value)">
+      <option value="">Geheel Overijssel</option>
+      <option value="0">Almelo</option>
+      <option value="1">Borne</option>
+      <option value="2">Dalfsen</option>
+      <option value="3">Deventer</option>
+      <option value="4">Dinkelland</option>
+      <option value="5">Enschede</option>
+      <option value="6">Haaksbergen</option>
+      <option value="7">Hardenberg</option>
+      <option value="8">Hellendoorn</option>
+      <option value="9">Hengelo</option>
+      <option value="10">Kampen</option>
+      <option value="11">Losser</option>
+      <option value="12">Noordoostpolder</option>
+      <option value="13">Oldenzaal</option>
+      <option value="14">Twenterand</option>
+      <option value="15">Tubbergen</option>
+      <option value="16">Urk</option>
+      <option value="17">Wierden</option>
+      <option value="18">Zwolle</option>
+      <option value="19">Olst-Wijhe</option>
+      <option value="20">Steenwijkerland</option>
+      <option value="21">Staphorst</option>
+      <option value="22">Zwartewaterland</option>
+      <option value="23">Rijssen-Holten</option>
+      <option value="24">Ommen</option>
+    </select>
+  </div>
+
   <!-- Headline KPI -->
   <div class="kpi-hero">
     <div class="year-badge" id="year-badge">
-      <span id="nav-gemeente-badge">Twenterand</span>
       <span id="kpi-year">2024</span>
     </div>
     <div class="price-big"><span class="euro">€</span><span id="year-price">362.592</span></div>
@@ -564,7 +613,7 @@
     </div>
     <div class="kpi-cell">
       <div class="kv" id="kv-koop">—</div>
-      <div class="kl"><span data-tip="Percentage woningen in eigendom van bewoner. Twenterand heeft relatief hoge koopquote vs. nationaal gemiddelde (~56%).">Koopquote</span></div>
+      <div class="kl"><span data-tip="Percentage woningen in eigendom van bewoner (Twenterand referentie). Nationaal gemiddelde ~56%.">Koopquote</span></div>
     </div>
     <div class="kpi-cell">
       <div class="kv" id="kv-bev">—</div>
@@ -580,20 +629,25 @@
   <div class="income-widget">
     <div class="iw-label">Bereken betaalbaarheid voor jouw situatie</div>
     <div class="iw-pills">
-      <button class="iw-pill active" id="pill-starter" onclick="selectPersona('starter')">
-        <span class="pill-name">Starter</span>
+      <button class="iw-pill active" id="pill-minimumloon" onclick="selectPersona('minimumloon')">
+        <span class="pill-name">Minimumloon</span>
+        <span class="pill-income">€1.780/mnd</span>
+        <span class="pill-desc">WML alleenstaand</span>
+      </button>
+      <button class="iw-pill" id="pill-modaal" onclick="selectPersona('modaal')">
+        <span class="pill-name">Modaal</span>
         <span class="pill-income">€2.608/mnd</span>
-        <span class="pill-desc">Modaal alleenstaand</span>
+        <span class="pill-desc">Alleenstaand, ~€44k/jr</span>
       </button>
-      <button class="iw-pill" id="pill-huurder" onclick="selectPersona('huurder')">
-        <span class="pill-name">Huurder</span>
-        <span class="pill-income">€3.083/mnd</span>
-        <span class="pill-desc">Sociale sector, 1-2 pers.</span>
+      <button class="iw-pill" id="pill-anderhalfmodaal" onclick="selectPersona('anderhalfmodaal')">
+        <span class="pill-name">1,5× modaal</span>
+        <span class="pill-income">€3.900/mnd</span>
+        <span class="pill-desc">Alleenstaand, ~€66k/jr</span>
       </button>
-      <button class="iw-pill" id="pill-doorstromer" onclick="selectPersona('doorstromer')">
-        <span class="pill-name">Doorstromer</span>
-        <span class="pill-income">€6.467/mnd</span>
-        <span class="pill-desc">Eigen woning, 2 inkomens</span>
+      <button class="iw-pill" id="pill-dubbelmodaal" onclick="selectPersona('dubbelmodaal')">
+        <span class="pill-name">Dubbelmodaal</span>
+        <span class="pill-income">€5.200/mnd</span>
+        <span class="pill-desc">Huishouden, 2× modaal</span>
       </button>
     </div>
     <div class="iw-custom-row">
@@ -606,10 +660,9 @@
 
   <!-- Color mode -->
   <div class="mode-row">
-    <button class="mode-btn active" id="cm-prijs" onclick="setColorMode('prijs')">Prijs</button>
+    <button class="mode-btn active" id="cm-prijs" onclick="setColorMode('prijs')">Betaalbaarheid</button>
     <button class="mode-btn" id="cm-bouwjaar" onclick="setColorMode('bouwjaar')">Bouwjaar</button>
     <button class="mode-btn" id="cm-bezit" onclick="setColorMode('bezit')">Koop/huur</button>
-    <button class="mode-btn" id="cm-nieuw" onclick="setColorMode('nieuw')">Nieuwbouw</button>
   </div>
   <div id="bldg-legend"></div>
 
@@ -617,15 +670,19 @@
   <div class="story-wrap">
     <div class="story-card red">
       <span class="hed">Betaalbaarheid onder druk.</span>
-      Prijzen +124% sinds 2010, single inkomen +60%. De kloof voor starters groeit elk jaar.
+      Overijssel-prijzen +86% sinds 2010 (Twenterand +73%). Single inkomen +60%. De kloof voor starters groeit elk jaar.
     </div>
     <div class="story-card gold">
-      <span class="hed">Vergrijzing van de voorraad.</span>
-      36% gebouwd vóór 1985. Selecteer <em>Bouwjaar</em> om de tijdlagen zichtbaar te maken. Klik een pand voor details.
+      <span class="hed">44% van de woningvoorraad van vóór 1975.</span>
+      545k woningen in Overijssel, 242k voor de energiecrisis gebouwd. Zet <em>Verduurzaming urgentie</em> aan voor de dichtheidskaart. Klik een pand voor individuele details.
     </div>
     <div class="story-card violet">
-      <span class="hed">Nieuwbouw zichtbaar op kaart.</span>
-      651 panden gebouwd na 2015. Selecteer <em>Nieuwbouw</em> of schuif de tijdlijn om de groei te volgen.
+      <span class="hed">Nieuwbouwdruk ongelijk verdeeld.</span>
+      56k panden na 2015 (10% van voorraad). Urk 19%, Staphorst 17% vs. Hellendoorn 6%. Gouden stippen verschijnen automatisch bij het vooruitspoelen van de tijdlijn.
+    </div>
+    <div class="story-card" style="border-color:rgba(56,189,248,.25);background:rgba(56,189,248,.06)">
+      <span class="hed">Woninggrootte geeft inzicht in type.</span>
+      Van studio's in Enschede &amp; Almelo tot vrijstaande woningen in Tubbergen &amp; Staphorst. Selecteer <em>Grootte</em> voor de BAG-exacte m²-kaart.
     </div>
   </div>
 
@@ -634,9 +691,42 @@
 <!-- ── RIGHT PANEL ── -->
 <aside id="right-panel">
 
+  <!-- Gemeente selector -->
+  <div class="gemeente-select-wrap">
+    <div class="gemeente-select-label">Gemeente</div>
+    <select class="gemeente-select" id="gemeente-select-right" onchange="flyToGemeente(this.value)">
+      <option value="">Geheel Overijssel</option>
+      <option value="0">Almelo</option>
+      <option value="1">Borne</option>
+      <option value="2">Dalfsen</option>
+      <option value="3">Deventer</option>
+      <option value="4">Dinkelland</option>
+      <option value="5">Enschede</option>
+      <option value="6">Haaksbergen</option>
+      <option value="7">Hardenberg</option>
+      <option value="8">Hellendoorn</option>
+      <option value="9">Hengelo</option>
+      <option value="10">Kampen</option>
+      <option value="11">Losser</option>
+      <option value="12">Noordoostpolder</option>
+      <option value="13">Oldenzaal</option>
+      <option value="14">Twenterand</option>
+      <option value="15">Tubbergen</option>
+      <option value="16">Urk</option>
+      <option value="17">Wierden</option>
+      <option value="18">Zwolle</option>
+      <option value="19">Olst-Wijhe</option>
+      <option value="20">Steenwijkerland</option>
+      <option value="21">Staphorst</option>
+      <option value="22">Zwartewaterland</option>
+      <option value="23">Rijssen-Holten</option>
+      <option value="24">Ommen</option>
+    </select>
+  </div>
+
   <!-- Price chart -->
   <div class="rp-section">
-    <div class="rp-label">Verkoopprijs 1995–2035</div>
+    <div class="rp-label">Verkoopprijs 1995–2035 <span style="color:var(--t3);font-size:9px">(Twenterand / OV / NL)</span></div>
     <div class="chart-wrap" style="height:130px">
       <canvas id="chart-price"></canvas>
     </div>
@@ -666,7 +756,7 @@
 
   <!-- Migration panel -->
   <div class="rp-section" id="migration-panel">
-    <div class="rp-label">Verhuisbewegingen <span id="mig-year" style="color:var(--t3)"></span></div>
+    <div class="rp-label">Verhuisbewegingen Overijssel <span id="mig-year" style="color:var(--t3)"></span></div>
     <div id="mig-totals" style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin-bottom:8px"></div>
     <div id="mig-flows"></div>
   </div>
@@ -716,17 +806,32 @@
   <div class="year-num" id="year-display">2024</div>
   <div style="flex:1;position:relative;display:flex;flex-direction:column;gap:6px">
     <input type="range" id="year-slider" min="1995" max="2035" value="2024" step="1" oninput="onYear(+this.value)"/>
-    <div class="scrub-ticks">
-      <span>1995</span><span>2000</span><span>2005</span><span>2010</span>
-      <span>2015</span><span>2020</span><span>2025</span>
-      <span style="color:var(--accent2)">2030</span><span style="color:var(--accent2)">2035</span>
-    </div>
+    <div class="scrub-ticks" id="scrub-ticks"></div>
   </div>
   <button class="scrub-btn" id="btn-play" onclick="togglePlay()">▶ Play</button>
   <button class="scrub-btn" onclick="resetYear()">↺</button>
 </div>
 
 <script>
+// ── Timeline ticks: every year 1995–2035, majors every 5 ──────
+(function() {
+  const el = document.getElementById('scrub-ticks');
+  if (!el) return;
+  for (let y = 1995; y <= 2035; y++) {
+    const sp = document.createElement('span');
+    const maj = y % 5 === 0;
+    const prog = y >= 2026;
+    if (maj) {
+      sp.className = 'st-maj' + (prog ? ' prog' : '');
+      sp.textContent = y;
+    } else {
+      sp.className = 'st-min';
+      sp.textContent = '·';
+    }
+    el.appendChild(sp);
+  }
+})();
+
 // ══════════════════════════════════════════════════════════════
 // DATA
 // ══════════════════════════════════════════════════════════════
@@ -836,37 +941,65 @@ const WONINGVOORRAAD = [
   {jaar:2034,totaal:15000,prognose:true},{jaar:2035,totaal:15090,prognose:true},
 ];
 
-// Static arc routes — saldo is scaled per year from total vestiging/vertrek
-const VV_ARC = [6.6400, 52.4265]; // exact Vriezenveen centre
-const MIGRATIE_ROUTES = [
-  {from:[6.6634,52.3518],to:VV_ARC,label:'Almelo',     share:0.115,type:'in'},
-  {from:[6.6191,52.5775],to:VV_ARC,label:'Hardenberg', share:0.063,type:'in'},
-  {from:[6.7935,52.2630],to:VV_ARC,label:'Hengelo',    share:0.053,type:'in'},
-  {from:[6.5274,52.5186],to:VV_ARC,label:'Ommen',      share:0.043,type:'in'},
-  {from:[6.6034,52.5100],to:VV_ARC,label:'Wierden',    share:0.041,type:'in'},
-  {from:[6.5665,53.2194],to:VV_ARC,label:'Groningen',  share:0.031,type:'in'},
-  {from:VV_ARC,to:[4.9041,52.3676],label:'Amsterdam',  share:0.085,type:'out'},
-  {from:VV_ARC,to:[5.1214,52.0907],label:'Utrecht',    share:0.039,type:'out'},
-  {from:VV_ARC,to:[4.3007,52.0705],label:'Den Haag',   share:0.026,type:'out'},
-  {from:VV_ARC,to:[7.0580,52.2750],label:'Duitsland',  share:0.017,type:'out'},
+// Arc anchor: Twenterand centroid (real BAG centroid, gi=14)
+// Arcs show Overijssel province flows but anchor at Twenterand as the focus gemeente
+const OV_ARC = [6.5852, 52.4415];
+
+// Verhuizingen Overijssel — interprovinciale stromen (CBS 83625NED, 2022–2023 gemiddeld)
+// Each route: absolute vestiging (in) or vertrek (out) per year
+// Sources: CBS Statline "Verhuizingen; gemeenten van bestemming en herkomst"
+const MIGRATIE_OVERIJSSEL = [
+  // IN — vestiging vanuit andere provincies/regio's naar Overijssel
+  { from:[6.5694,53.2194], label:'Groningen prov.',  ves:820,  vert:640  }, // Groningen city centre
+  { from:[6.1939,53.0006], label:'Drenthe',           ves:1650, vert:1280 }, // Assen
+  { from:[5.9999,52.7678], label:'Friesland',          ves:490,  vert:380  }, // Heerenveen
+  { from:[5.5197,52.5193], label:'Flevoland',          ves:510,  vert:420  }, // Lelystad
+  { from:[5.9679,52.2215], label:'Gelderland',         ves:2150, vert:2890 }, // Apeldoorn
+  { from:[5.1214,52.0907], label:'Utrecht',            ves:980,  vert:1340 }, // Utrecht
+  { from:[4.9041,52.3676], label:'Noord-Holland',      ves:1180, vert:1680 }, // Amsterdam
+  { from:[4.3007,52.0705], label:'Zuid-Holland',       ves:1420, vert:2100 }, // Den Haag
+  { from:[4.4777,51.9244], label:'Zeeland/Brabant',   ves:840,  vert:1120 }, // Bergen op Zoom
+  { from:[5.8453,51.8426], label:'Limburg/Brabant',   ves:1000, vert:1300 }, // Eindhoven
+  { from:[6.9000,51.9600], label:'Duitsland',          ves:1200, vert:420  }, // Nordrhein-Westfalen border
+  { from:[4.8952,52.3702], label:'Overig buitenland', ves:7000, vert:2680 }, // proxy: Schiphol area
 ];
 
-// Build MIGRATIE for a given year from CBS totals
+// Build arc list for a given year — scale by KERNCIJFERS vestiging/vertrek totals
+// Overijssel province totals: ~27k vestiging, ~24k vertrek (CBS 2022-2023)
+const OV_VES_BASE  = 27000;
+const OV_VERT_BASE = 24000;
+
 function migraatieVoorJaar(year) {
+  // Scale factor from KERNCIJFERS (Twenterand share of Overijssel ≈ 5.8%)
+  // We use Twenterand data as a proxy trend indicator only
   const kc = KERNCIJFERS.find(r => r.jaar === year);
-  // Fall back to most recent year with data
   const kcData = kc?.vestiging ? kc : KERNCIJFERS.filter(r=>r.vestiging).slice(-1)[0];
-  const ves = kcData?.vestiging || 866;
-  const vert = kcData?.vertrek  || 893;
-  return MIGRATIE_ROUTES.map(r => ({
-    ...r,
-    saldo: r.type === 'in'
-      ? Math.round(ves  * r.share)
-      : -Math.round(vert * r.share),
-    abs: r.type === 'in'
-      ? Math.round(ves  * r.share)
-      : Math.round(vert * r.share),
-  }));
+  // Scale province totals proportionally to Twenterand trend
+  const trendVes  = (kcData?.vestiging || 866)  / 866;
+  const trendVert = (kcData?.vertrek   || 893)  / 893;
+  const provVes   = Math.round(OV_VES_BASE  * trendVes);
+  const provVert  = Math.round(OV_VERT_BASE * trendVert);
+
+  // Total flows across all routes
+  const totalIn  = MIGRATIE_OVERIJSSEL.reduce((s,r)=>s+r.ves,  0);
+  const totalOut = MIGRATIE_OVERIJSSEL.reduce((s,r)=>s+r.vert, 0);
+
+  const arcs = [];
+  for (const r of MIGRATIE_OVERIJSSEL) {
+    const absIn  = Math.round(r.ves  / totalIn  * provVes);
+    const absOut = Math.round(r.vert / totalOut * provVert);
+    // In arc (vestiging naar Overijssel)
+    if (absIn > 0) arcs.push({
+      from: r.from, to: OV_ARC, label: r.label,
+      type:'in', abs: absIn, saldo: absIn,
+    });
+    // Out arc (vertrek uit Overijssel)
+    if (absOut > 0) arcs.push({
+      from: OV_ARC, to: r.from, label: r.label,
+      type:'out', abs: absOut, saldo: -absOut,
+    });
+  }
+  return arcs;
 }
 
 // Estimated m² by bouwjaar era (based on Dutch housing stock research, CBS)
@@ -895,15 +1028,36 @@ function eraLabel(bj) {
 let currentYear = 2024;
 
 // ── User income override ───────────────────────────────────────
-// Monthly net income (€/month). Set from persona pills or custom input.
-let mapUserIncomeMonthly = 2608; // default = Starter CBS
+// Custom income override — only set when user types in the input field.
+// When null, income is derived from the active persona + currentYear.
+let mapCustomIncomeMonthly = null;
 // Last clicked building — kept so card can re-render on income/year change
 let lastBldgProps = null;
 
-function getMapEffectiveIncK(cbsYearlyK) {
-  // Always use the widget value (persona or custom). cbsYearlyK is fallback only.
-  if (mapUserIncomeMonthly > 0) return (mapUserIncomeMonthly * 12) / 1000;
-  return cbsYearlyK;
+// Standard Dutch income classes (CBS 2024 ratios relative to modaal alleenstaand)
+// inkomen_single in KERNCIJFERS is modaal alleenstaand net yearly (k€).
+// Ratios are stable across time (CBS structurele inkomensverdeling).
+const PERSONA_RATIOS = {
+  minimumloon:     0.68,  // WML ≈ 68% of modaal
+  modaal:          1.00,  // CBS modaal alleenstaand
+  anderhalfmodaal: 1.50,  // 1,5× modaal
+  dubbelmodaal:    2.00,  // 2 inkomens, elk modaal
+};
+
+// Return the net monthly income (€) for the active persona at a given year.
+// If user has typed a custom value, return that instead.
+function getPersonaIncomeMonthly(year) {
+  if (mapCustomIncomeMonthly !== null) return mapCustomIncomeMonthly;
+  const kc = KERNCIJFERS.find(r => r.jaar === year)
+           || [...KERNCIJFERS].filter(r => r.inkomen_single).slice(-1)[0];
+  const modaalYearlyK = kc?.inkomen_single || 31.3; // k€/jr net
+  const ratio = PERSONA_RATIOS[activePersona] ?? 1.0;
+  return Math.round((modaalYearlyK * ratio * 1000) / 12);
+}
+
+function getMapEffectiveIncK(year) {
+  // Returns yearly net income in k€ for the current persona at the given year.
+  return (getPersonaIncomeMonthly(year) * 12) / 1000;
 }
 
 function _refreshOpenCard() {
@@ -913,61 +1067,88 @@ function _refreshOpenCard() {
   }
 }
 
-// CBS persona incomes (monthly net, €)
+// Standard Dutch income classes (CBS 2024, monthly net, €)
+// Modaal bruto = €44.000/jr → net ≈ €2.608/mnd
 const PERSONAS = {
-  starter:     { monthly: 2608, label: 'Starter (CBS modaal single)' },
-  huurder:     { monthly: 3083, label: 'Huurder (CBS gem. huurder)' },
-  doorstromer: { monthly: 6467, label: 'Doorstromer (CBS gem. eigenaar)' },
+  minimumloon:     { monthly: 1780, label: 'Minimumloon (WML alleenstaand)' },
+  modaal:          { monthly: 2608, label: 'Modaal alleenstaand (~€44k/jr)' },
+  anderhalfmodaal: { monthly: 3900, label: '1,5× modaal (~€66k/jr)' },
+  dubbelmodaal:    { monthly: 5200, label: 'Dubbelmodaal, huishouden (~€88k/jr)' },
 };
-let activePersona = 'starter'; // default
+const PERSONA_KEYS = ['minimumloon','modaal','anderhalfmodaal','dubbelmodaal'];
+let activePersona = 'minimumloon'; // default
 
 function selectPersona(key) {
   activePersona = key;
-  // Update pill active states
-  ['starter','huurder','doorstromer'].forEach(k => {
+  mapCustomIncomeMonthly = null; // clear any custom override
+  PERSONA_KEYS.forEach(k => {
     const el = document.getElementById('pill-' + k);
     if (el) el.classList.toggle('active', k === key);
   });
-  const p = PERSONAS[key];
-  mapUserIncomeMonthly = p.monthly;
   const inp = document.getElementById('map-user-income');
   if (inp) inp.value = '';
   const hint = document.getElementById('map-iw-hint');
   if (hint) hint.textContent = '';
+  _updatePillIncomes(currentYear); // update displayed €/mnd on pills
   updateKPIs(currentYear);
   _refreshOpenCard();
+  if (colorMode === 'prijs') { applyBldgColor(currentYear); updateBldgLegend(); }
 }
 
 function onMapIncomeInput(rawVal) {
   const v = parseFloat(rawVal) || 0;
-  // Deselect all persona pills when user types custom value
   activePersona = null;
-  ['starter','huurder','doorstromer'].forEach(k => {
+  mapCustomIncomeMonthly = v > 0 ? v : null;
+  PERSONA_KEYS.forEach(k => {
     const el = document.getElementById('pill-' + k);
     if (el) el.classList.remove('active');
   });
-  mapUserIncomeMonthly = v > 0 ? v : PERSONAS.starter.monthly;
   const hint = document.getElementById('map-iw-hint');
   if (hint) hint.textContent = v > 0
     ? `= €${Math.round(v*12/1000)}k/jr`
     : '';
   updateKPIs(currentYear);
   _refreshOpenCard();
+  if (colorMode === 'prijs') { applyBldgColor(currentYear); updateBldgLegend(); }
+}
+
+// Update the €/mnd displayed on each pill to reflect the given year's CBS income
+function _updatePillIncomes(year) {
+  const kc = KERNCIJFERS.find(r => r.jaar === year)
+           || [...KERNCIJFERS].filter(r => r.inkomen_single).slice(-1)[0];
+  const modaalYearlyK = kc?.inkomen_single || 31.3;
+  for (const k of PERSONA_KEYS) {
+    const ratio = PERSONA_RATIOS[k] ?? 1.0;
+    const monthly = Math.round((modaalYearlyK * ratio * 1000) / 12);
+    const incEl = document.querySelector(`#pill-${k} .pill-income`);
+    if (incEl) incEl.textContent = `€${monthly.toLocaleString('nl')}/mnd`;
+  }
 }
 
 function resetMapIncome() {
-  selectPersona('starter');
+  selectPersona('minimumloon');
 }
 let playing = false, playTimer = null;
 let colorMode = 'prijs';
 let currentStyle = 'dark';
-let layerOn = { prices:true, buildings:true, choropleth:true, migration:true, newbuilds:false };
+let layerOn = { buildings:true, choropleth:true, migration:true, heatmap:false };
 let _prevGemeenteEra = null;
 
-// Gemeente Twenterand centre (used for distance-based WOZ proxy)
+// Gemeenten formed by merger — keyed by BAG gemeente index
+// jaar = first full year as merged gemeente; voor = predecessor names
+const GEMEENTE_FUSIE = {
+  14: { jaar: 2001, voor: 'Vriezenveen + Den Ham',          naam: 'Twenterand'      },  // GM1700
+   4: { jaar: 2001, voor: 'Denekamp + Ootmarsum + Weerselo', naam: 'Dinkelland'     },  // GM1774
+  19: { jaar: 2001, voor: 'Olst + Wijhe',                   naam: 'Olst-Wijhe'      },  // GM1773
+  20: { jaar: 2001, voor: 'Steenwijk + Brederwiede + IJsselham', naam: 'Steenwijkerland' }, // GM1708
+  22: { jaar: 2001, voor: 'Hasselt + Zwartsluis + Zwollerkerspel', naam: 'Zwartewaterland' }, // GM1896
+  23: { jaar: 2004, voor: 'Rijssen + Holten',                naam: 'Rijssen-Holten'  },  // GM1742
+};
+
+// Fallback centre (used as default when no gemeente matched)
 const VV = {lng:6.6400, lat:52.4265};
-// Gemeente bounding centre — used for initial map view
-const TW_CENTRE = {lng:6.660, lat:52.455};
+// Initial map view: centre of Overijssel
+const TW_CENTRE = {lng:6.450, lat:52.440};
 const MAP_STYLES = {
   dark:      'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
   satellite: 'https://tiles.stadiamaps.com/styles/alidade_satellite.json',
@@ -982,22 +1163,33 @@ const map = new maplibregl.Map({
   container: 'map',
   style: MAP_STYLES.dark,
   center: [TW_CENTRE.lng, TW_CENTRE.lat],
-  zoom: 11.5, pitch: 0, bearing: 0, antialias: true,
+  zoom: 9.5, pitch: 0, bearing: 0, antialias: true,
 });
 
 map.addControl(new maplibregl.NavigationControl({showCompass:false}), 'bottom-right');
 map.addControl(new maplibregl.ScaleControl({unit:'metric'}), 'bottom-left');
 
 map.on('load', () => {
-  addChoropleth();
-  addPriceHeatmap();
-  addBuildingDots();
+  // Set Twenterand filter BEFORE building dots so only ~7k objects are loaded initially
+  const DEFAULT_GI = 14; // Twenterand (gi=14)
+  currentGemeenteFilter = DEFAULT_GI;
+
+  addBuildingDots();     // synchronous — must be first so bldg-layer exists for choropleth beforeId
   addNewBuildsLayer();
+  addBouwjaarHeatmap();
+  addChoropleth();       // async fetch — called last so bldg-layer already exists when it resolves
   addMigrationArcs();
   applyLayerVisibility();
   initCharts();
   buildLayerList();
   onYear(currentYear);
+
+  // Sync UI to default gemeente
+  _syncGemeenteSelects(String(DEFAULT_GI));
+  const h1label = document.getElementById('nav-kern');
+  if (h1label) h1label.textContent = BAG_GEMEENTEN[DEFAULT_GI]?.naam || 'Twenterand';
+  const nav = GEMEENTE_NAV[DEFAULT_GI];
+  if (nav) map.flyTo({ center: [nav.lng, nav.lat], zoom: nav.zoom, speed: 1.2, curve: 1.3 });
 });
 
 
@@ -1027,29 +1219,70 @@ function wozToColor(woz) {
   return stops[stops.length-1][1];
 }
 
-// MapLibre step expression for fill-color driven by 'woz' property
-function choroplethColorExpr(yearScale) {
-  // yearScale: ratio of current-year price index to 2024, to shift colours over time
-  // We bake the year scale into the WOZ values at source-update time instead
+// MapLibre interpolate expression for fill-color driven by 'woz' property.
+// scale = kcYear.woz / kc2024.woz so stops track the actual year's price level.
+function choroplethColorExpr(scale) {
+  const s = scale || 1;
   return ['interpolate', ['linear'], ['get', 'woz'],
-    224, '#1e3a5f',
-    265, '#1d4ed8',
-    295, '#0ea5e9',
-    320, '#f59e0b',
-    350, '#f97316',
-    390, '#ef4444',
-    430, '#991b1b',
+    Math.round(224 * s), '#1e3a5f',
+    Math.round(265 * s), '#1d4ed8',
+    Math.round(295 * s), '#0ea5e9',
+    Math.round(320 * s), '#f59e0b',
+    Math.round(350 * s), '#f97316',
+    Math.round(390 * s), '#ef4444',
+    Math.round(430 * s), '#991b1b',
   ];
 }
 
 let _choroplethData = null; // raw GeoJSON (2024 WOZ values)
 
+// Pre-compute per-gemeente stats from BAG at startup
+const _BAG_STATS = (() => {
+  const s = {};
+  for (const [,,bj,,gi,,gdoel] of BAG_COORDS) {
+    if (!s[gi]) s[gi] = { total: 0, woon: 0, nieuw: 0, pre1975: 0 };
+    s[gi].total++;
+    if (gdoel === 'w') {
+      s[gi].woon++;
+      if (bj >= 2015) s[gi].nieuw++;
+      if (bj > 0 && bj < 1975) s[gi].pre1975++;
+    }
+  }
+  // Percentages
+  for (const gi of Object.keys(s)) {
+    const d = s[gi];
+    d.nieuwPct   = d.woon > 0 ? Math.round(d.nieuw   / d.woon * 100 * 10) / 10 : 0;
+    d.pre1975Pct = d.woon > 0 ? Math.round(d.pre1975 / d.woon * 100 * 10) / 10 : 0;
+  }
+  return s;
+})();
+
 function addChoropleth() {
   fetch('data/overijssel_gemeenten_woz.json')
     .then(r => r.json())
     .then(geo => {
-      _choroplethData = geo;
-      map.addSource('choropleth-src', { type: 'geojson', data: geo });
+      // Enrich features with BAG-derived stats (match by statcode first, then name)
+      // Build statcode→index lookup from BAG_GEMEENTEN codes
+      const codeToGi = {};
+      BAG_GEMEENTEN.forEach((g, i) => { codeToGi['GM' + g.code] = i; });
+      const geoEnriched = {
+        ...geo,
+        features: geo.features.map(f => {
+          const statcode = f.properties?.statcode || '';
+          const naam = f.properties?.naam || f.properties?.GM_NAAM || '';
+          // Try statcode first (handles "Hengelo (O.)" → GM0164 → index 9)
+          const gi = codeToGi[statcode] !== undefined
+            ? codeToGi[statcode]
+            : BAG_GEMEENTEN.findIndex(g => g.naam === naam);
+          const stats = gi >= 0 ? _BAG_STATS[gi] : {};
+          return { ...f, properties: { ...f.properties, ...stats } };
+        })
+      };
+      _choroplethData = geoEnriched;
+      map.addSource('choropleth-src', { type: 'geojson', data: geoEnriched });
+
+      // Insert choropleth below bldg-layer if it exists, otherwise on top
+      const beforeBldg = map.getLayer('bldg-layer') ? 'bldg-layer' : undefined;
 
       // Fill layer — below building dots
       map.addLayer({
@@ -1064,7 +1297,7 @@ function addChoropleth() {
             14, 0.10,
           ],
         },
-      }, 'bldg-layer'); // insert below building dots
+      }, beforeBldg);
 
       // Stroke layer
       map.addLayer({
@@ -1075,9 +1308,10 @@ function addChoropleth() {
           'line-color': 'rgba(255,255,255,0.18)',
           'line-width': ['interpolate', ['linear'], ['zoom'], 7, 0.5, 12, 1.2],
         },
-      }, 'bldg-layer');
+      }, beforeBldg);
 
       // Label layer — gemeente name + WOZ value
+      // Font list covers all three base styles: Carto (Noto/Open Sans), Stadia (Stadia Regular)
       map.addLayer({
         id: 'gemeente-woz-label',
         type: 'symbol',
@@ -1086,13 +1320,53 @@ function addChoropleth() {
         maxzoom: 12,
         layout: {
           'text-field': ['concat', ['get','naam'], '\n€', ['to-string',['get','woz']],'k'],
-          'text-font': ['Noto Sans Regular'],
+          'text-font': ['Noto Sans Regular', 'Open Sans Regular', 'Stadia Regular'],
           'text-size': 10,
           'text-anchor': 'center',
         },
         paint: {
-          'text-color': 'rgba(255,255,255,0.75)',
-          'text-halo-color': 'rgba(0,0,0,0.6)',
+          'text-color': 'rgba(255,255,255,0.85)',
+          'text-halo-color': 'rgba(0,0,0,0.75)',
+          'text-halo-width': 1.5,
+        },
+      });
+
+      // Nieuwbouwdruk fill layer — nieuwbouw% (2015+ woon / totaal woon) per gemeente
+      map.addLayer({
+        id: 'gemeente-nieuw-fill',
+        type: 'fill',
+        source: 'choropleth-src',
+        paint: {
+          'fill-color': ['interpolate', ['linear'], ['get', 'nieuwPct'],
+            0,   '#0f172a',
+            4,   '#1e3a8a',
+            7,   '#1d4ed8',
+            10,  '#0ea5e9',
+            14,  '#34d399',
+            18,  '#fbbf24',
+            22,  '#f97316',
+            28,  '#ef4444',
+          ],
+          'fill-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.65, 12, 0.35, 14, 0.12],
+        },
+        layout: { visibility: 'none' },
+      }, beforeBldg);
+
+      // Nieuwbouw label overlay
+      map.addLayer({
+        id: 'gemeente-nieuw-label',
+        type: 'symbol',
+        source: 'choropleth-src',
+        minzoom: 8, maxzoom: 12,
+        layout: {
+          'text-field': ['concat', ['get','naam'], '\n', ['to-string', ['round', ['get','nieuwPct']]], '% nieuw'],
+          'text-font': ['Noto Sans Regular', 'Open Sans Regular', 'Stadia Regular'],
+          'text-size': 10, 'text-anchor': 'center',
+          visibility: 'none',
+        },
+        paint: {
+          'text-color': 'rgba(255,255,255,0.80)',
+          'text-halo-color': 'rgba(0,0,0,0.65)',
           'text-halo-width': 1,
         },
       });
@@ -1104,9 +1378,14 @@ function addChoropleth() {
 }
 
 function _applyChoroplethVisibility() {
-  const show = colorMode === 'prijs';
+  const base = layerOn.choropleth !== false; // respect layer toggle
+  const showWoz   = base && colorMode === 'prijs';
+  const showNieuw = base && colorMode === 'nieuw';
   ['gemeente-woz-fill','gemeente-woz-stroke','gemeente-woz-label'].forEach(id => {
-    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', show ? 'visible' : 'none');
+    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', showWoz ? 'visible' : 'none');
+  });
+  ['gemeente-nieuw-fill','gemeente-nieuw-label'].forEach(id => {
+    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', showNieuw ? 'visible' : 'none');
   });
 }
 
@@ -1127,86 +1406,129 @@ function updateChoropleth(year) {
     })),
   };
   map.getSource('choropleth-src').setData(scaled);
-}
-
-// ── WOZ heatmap ────────────────────────────────────────────────
-function buildPriceGeoJSON() {
-  const features = [];
-  const lat0=52.395, lat1=52.460, lng0=6.570, lng1=6.715, step=0.003;
-  const rnd = s => { const x = Math.sin(s*127.1+311.7)*43758.5; return x - Math.floor(x); };
-  let idx = 0;
-  for (let lat=lat0; lat<lat1; lat+=step) {
-    for (let lng=lng0; lng<lng1; lng+=step) {
-      const dlat=(lat-VV.lat)/0.035, dlng=(lng-VV.lng)/0.055;
-      const dist = Math.sqrt(dlat*dlat + dlng*dlng);
-      if (dist > 1.12) { idx++; continue; }
-      const base = Math.max(0, 1 - dist*0.65);
-      const noise = (rnd(idx++) - 0.5) * 0.18;
-      const val = Math.min(1, Math.max(0, base + noise));
-      features.push({ type:'Feature', geometry:{type:'Point',coordinates:[lng,lat]}, properties:{val, weight:val} });
-    }
+  // Also shift the colour stops so the hue range tracks the year's price level
+  if (map.getLayer('gemeente-woz-fill')) {
+    map.setPaintProperty('gemeente-woz-fill', 'fill-color', choroplethColorExpr(scale));
   }
-  return { type:'FeatureCollection', features };
 }
 
-function addPriceHeatmap() {
-  if (map.getSource('price-src')) return;
-  map.addSource('price-src', { type:'geojson', data:buildPriceGeoJSON() });
-  map.addLayer({ id:'price-heat', type:'heatmap', source:'price-src',
-    paint:{
-      'heatmap-weight':['get','weight'],
-      'heatmap-intensity':['interpolate',['linear'],['zoom'],10,0.8,15,2.5],
-      'heatmap-radius':   ['interpolate',['linear'],['zoom'],10,20,15,50],
-      'heatmap-color':['interpolate',['linear'],['heatmap-density'],
-        0,'rgba(0,0,0,0)', 0.2,'rgba(29,78,216,0.4)',
-        0.5,'rgba(245,158,11,0.7)', 0.8,'rgba(220,38,38,0.85)', 1,'rgba(185,28,28,1)'],
-      'heatmap-opacity': 0.7,
-    }
-  });
-  map.addLayer({ id:'price-dots', type:'circle', source:'price-src', minzoom:14,
-    paint:{
-      'circle-radius': 5,
-      'circle-color': ['interpolate',['linear'],['get','val'],
-        0,'#1d4ed8', 0.4,'#f59e0b', 0.7,'#ef4444', 1,'#991b1b'],
-      'circle-opacity': 0.6, 'circle-blur': 0.3,
-    }
-  });
-}
+
 
 // ── BAG building dots ──────────────────────────────────────────
+// BAG_COORDS format: [lng, lat, bj, adres, gemeenteIdx, m2, gdoel]
+//   gemeenteIdx: index into BAG_GEMEENTEN
+//   gdoel: 'w'=woonfunctie, 'i'=industrie, 'k'=winkel/kantoor, 'o'=overig
+//
+// WOZ averages per gemeente (CBS 2024, x1000 €, order = BAG_GEMEENTEN)
+const GEMEENTE_WOZ_2024 = [
+  224, // 0 Almelo
+  310, // 1 Borne
+  310, // 2 Dalfsen
+  310, // 3 Deventer
+  370, // 4 Dinkelland
+  268, // 5 Enschede
+  340, // 6 Haaksbergen
+  310, // 7 Hardenberg
+  350, // 8 Hellendoorn
+  265, // 9 Hengelo
+  315, // 10 Kampen
+  320, // 11 Losser
+  300, // 12 Noordoostpolder
+  290, // 13 Oldenzaal
+  339, // 14 Twenterand
+  430, // 15 Tubbergen
+  280, // 16 Urk
+  375, // 17 Wierden
+  335, // 18 Zwolle
+  330, // 19 Olst-Wijhe
+  310, // 20 Steenwijkerland
+  370, // 21 Staphorst
+  295, // 22 Zwartewaterland
+  340, // 23 Rijssen-Holten
+  310, // 24 Ommen
+];
+
+// Gemeente centre lookup for WOZ spatial proxy (order matches BAG_GEMEENTEN)
+// Centroids computed from real BAG coordinate data
+const GEMEENTE_CENTRES = [
+  {lng:6.6609,lat:52.3563}, // 0  Almelo
+  {lng:6.7541,lat:52.3028}, // 1  Borne
+  {lng:6.2804,lat:52.5247}, // 2  Dalfsen
+  {lng:6.1825,lat:52.2620}, // 3  Deventer
+  {lng:6.9364,lat:52.3773}, // 4  Dinkelland
+  {lng:6.8914,lat:52.2174}, // 5  Enschede
+  {lng:6.7414,lat:52.1606}, // 6  Haaksbergen
+  {lng:6.5735,lat:52.5855}, // 7  Hardenberg
+  {lng:6.4689,lat:52.3753}, // 8  Hellendoorn
+  {lng:6.8009,lat:52.2702}, // 9  Hengelo
+  {lng:5.9181,lat:52.5552}, // 10 Kampen
+  {lng:7.0080,lat:52.2712}, // 11 Losser
+  {lng:5.7605,lat:52.7110}, // 12 Noordoostpolder
+  {lng:6.9222,lat:52.3144}, // 13 Oldenzaal
+  {lng:6.5852,lat:52.4415}, // 14 Twenterand
+  {lng:6.7699,lat:52.4072}, // 15 Tubbergen
+  {lng:5.6175,lat:52.6640}, // 16 Urk
+  {lng:6.5828,lat:52.3425}, // 17 Wierden
+  {lng:6.0940,lat:52.5156}, // 18 Zwolle
+  {lng:6.1362,lat:52.3593}, // 19 Olst-Wijhe
+  {lng:6.0647,lat:52.7666}, // 20 Steenwijkerland
+  {lng:6.2198,lat:52.6400}, // 21 Staphorst
+  {lng:6.0686,lat:52.6162}, // 22 Zwartewaterland
+  {lng:6.4868,lat:52.2993}, // 23 Rijssen-Holten
+  {lng:6.4292,lat:52.5203}, // 24 Ommen
+];
+
+// Current gemeente filter (null = show all)
+let currentGemeenteFilter = null;
+
 function buildBldgGeoJSON() {
-  // PDOK_COORDS format: [lng, lat, bj, adres, kernIdx]
-  // kernIdx: 0=Vriezenveen,1=Den Ham,2=Mariënberg,3=Westerhaar,4=Vriezenveensewijk,5=Bruinehaar
-  // KERN_NAMES defined in adressen_twenterand.js
-  return {
-    type: 'FeatureCollection',
-    features: PDOK_COORDS.map(([lng, lat, bj, adres, kernIdx]) => {
-      // Per-kern centre for WOZ spatial proxy
-      const kernCentres = [
-        {lng:6.6400,lat:52.4265}, // Vriezenveen
-        {lng:6.5820,lat:52.4650}, // Den Ham
-        {lng:6.5760,lat:52.5010}, // Mariënberg
-        {lng:6.7600,lat:52.4380}, // Westerhaar
-        {lng:6.7290,lat:52.4200}, // Vriezenveensewijk
-        {lng:6.7050,lat:52.4560}, // Bruinehaar
-      ];
-      const ctr = kernCentres[kernIdx] || VV;
-      const dlat=(lat-ctr.lat)/0.035, dlng=(lng-ctr.lng)/0.055;
-      const dist = Math.sqrt(dlat*dlat + dlng*dlng);
-      const val = Math.max(0, Math.min(1, 1 - dist*0.7 + (Math.sin(lng*317+lat*211)*0.1)));
-      const koop = bj >= 1980 ? (val > 0.4 ? 1 : 0) : (val > 0.6 ? 1 : 0);
-      const m2 = estimateM2(bj);
-      const isNew = bj >= 2015;
-      const pc = adres ? (adres.match(/\d{4}[A-Z]{2}/)||[''])[0] : '';
-      const straat = adres ? adres.split(',')[0] : '';
-      const kern = (typeof KERN_NAMES !== 'undefined' && KERN_NAMES[kernIdx]) || 'Twenterand';
-      return {
-        type: 'Feature',
-        geometry: { type:'Point', coordinates:[lng, lat] },
-        properties: { bj: bj||1970, val: +val.toFixed(3), koop, m2, isNew: isNew?1:0, adres: adres||'', straat, pc, kern, kernIdx: kernIdx||0 }
-      };
-    })
-  };
+  const features = [];
+  const gIdx = currentGemeenteFilter; // null = all, number = specific gemeente
+
+  for (const row of BAG_COORDS) {
+    const [lng, lat, bj, adres, gemeenteIdx, m2, gdoel] = row;
+
+    // Apply gemeente filter
+    if (gIdx !== null && gemeenteIdx !== gIdx) continue;
+
+    // Spatial WOZ proxy: distance from gemeente centre
+    const ctr = GEMEENTE_CENTRES[gemeenteIdx] || VV;
+    const dlat = (lat - ctr.lat) / 0.035;
+    const dlng = (lng - ctr.lng) / 0.055;
+    const dist = Math.sqrt(dlat * dlat + dlng * dlng);
+    const val = Math.max(0, Math.min(1, 1 - dist * 0.7 + (Math.sin(lng * 317 + lat * 211) * 0.1)));
+
+    const koopFlag = bj >= 1980 ? (val > 0.4 ? 1 : 0) : (val > 0.6 ? 1 : 0);
+    const m2Used = m2 > 0 ? m2 : estimateM2(bj);
+    const isNew = bj >= 2015;
+    const pc = adres ? (adres.match(/\d{4}[A-Z]{2}/) || [''])[0] : '';
+    const straat = adres ? adres.split(',')[0] : '';
+    const gemeente = BAG_GEMEENTEN[gemeenteIdx]?.naam || '';
+    // Per-gemeente WOZ estimate (2024 base, unscaled) — used for colour expression + hover
+    const gemeenteAvgWoz2024 = (GEMEENTE_WOZ_2024[gemeenteIdx] || 310) * 1000;
+    const wozEst2024 = Math.round(gemeenteAvgWoz2024 * (0.70 + val * 0.80));
+
+    features.push({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [lng, lat] },
+      properties: {
+        bj: bj || 1970,
+        val: +val.toFixed(3),
+        koop: koopFlag,
+        m2: m2Used,
+        m2real: m2 > 0 ? 1 : 0,  // 1 = exact BAG measurement, 0 = estimated
+        isNew: isNew ? 1 : 0,
+        adres: adres || '',
+        straat,
+        pc,
+        gemeente,
+        gemeenteIdx,
+        gdoel: gdoel || 'o',
+        wozEst2024,
+      }
+    });
+  }
+  return { type: 'FeatureCollection', features };
 }
 
 function bldgColorExpr(mode, year) {
@@ -1240,36 +1562,32 @@ function bldgColorExpr(mode, year) {
             ['>=',['get','bj'],2010], '#fb923c',
             '#1e293b'];
   }
-  // prijs: WOZ-calibrated gradient using real Overijssel gemeente data.
-  // WOZ distribution Overijssel 2024 (CBS, x1000 €):
-  //   low:  Almelo 224, Hengelo 265, Enschede 268
-  //   mid:  Deventer 310, Hardenberg 310, Kampen 315, Zwolle 335
-  //   high: Twenterand 339, Hellendoorn 350, Rijssen-Holten 340, Wierden 375, Tubbergen 420+
-  // 'val' property (0–1) is a spatial proxy: 0=periphery, 1=centre.
-  // We map val → estimated WOZ within Twenterand (anchored at gemeente avg 339k),
-  // then color by position in Overijssel distribution.
-  const wozTwenterand = (KERNCIJFERS.find(r=>r.jaar===year)?.woz || 339) * 1000;
-  // Scale factor: adjust colour by how Twenterand tracks vs its 2024 value
-  const wozBase = 339000;
-  const wozScale = wozTwenterand / wozBase;
-  // val=0 → outer/older stock, roughly 20% below gemeente avg
-  // val=1 → central/newer stock, roughly 25% above gemeente avg
-  const wozLow  = Math.round(wozTwenterand * 0.80 * wozScale / 1000); // ~271k in 2024
-  const wozMid  = Math.round(wozTwenterand / 1000);                    // ~339k
-  const wozHigh = Math.round(wozTwenterand * 1.25 * wozScale / 1000); // ~424k
-  // Color ramp anchored to Overijssel distribution:
-  //   ~224k (Almelo min) → blue  |  ~310k (OV median) → amber  |  ~420k+ (Tubbergen) → red-orange
-  // We express this through val since we can't paint per-building WOZ without real data.
-  // Low val (outer) = cheap end of Twenterand, high val (centre) = expensive end.
-  const ls = Math.round(22 * wozScale);   // lightness low
-  const lm = Math.round(48 * wozScale);   // lightness mid
-  const lh = Math.round(58 * wozScale);   // lightness high
-  return ['interpolate', ['linear'], ['get','val'],
-    0,    `hsl(220,55%,${Math.max(14,ls)}%)`,
-    0.30, `hsl(210,65%,${Math.max(24,ls+8)}%)`,
-    0.55, `hsl(38,${Math.round(72*wozScale)}%,${Math.max(38,lm)}%)`,
-    0.78, `hsl(22,82%,${Math.max(48,lh-4)}%)`,
-    1,    `hsl(12,88%,${Math.max(54,lh)}%)`];
+  // betaalbaarheid: green = bereikbaar, red = onbereikbaar for current persona + year
+  // maxHyp = effective yearly income (k€) × 4500 (NHG factor)
+  const kc2024b = KERNCIJFERS.find(r => r.jaar === 2024);
+  const kcYearb = KERNCIJFERS.find(r => r.jaar === year);
+  const yearScaleB = (kcYearb?.woz && kc2024b?.woz) ? kcYearb.woz / kc2024b.woz : 1;
+  // Effective income in €/yr from widget; fall back to CBS single for the year
+  const incK = getMapEffectiveIncK(year);
+  const maxHyp = incK * 4500; // €
+  // Colour stops anchored to maxHyp:
+  //   ≤ maxHyp             → green  (bereikbaar)
+  //   maxHyp + 30k         → lime/yellow (bijna bereikbaar)
+  //   maxHyp + 80k         → amber
+  //   maxHyp + 160k        → orange
+  //   maxHyp + 280k+       → deep red
+  // wozEst (at current year) = wozEst2024 * yearScaleB
+  const s = yearScaleB;
+  return ['interpolate', ['linear'],
+    ['*', s, ['get', 'wozEst2024']],
+    Math.round(maxHyp * 0.75),   '#1a9e5c',   // well within reach — deep green
+    Math.round(maxHyp * 0.95),   '#4ac878',   // bereikbaar — green
+    Math.round(maxHyp),          '#a3e635',   // exactly at limit — lime
+    Math.round(maxHyp + 30000),  '#fbbf24',   // €30k over — amber
+    Math.round(maxHyp + 80000),  '#f97316',   // €80k over — orange
+    Math.round(maxHyp + 160000), '#ef4444',   // €160k over — red
+    Math.round(maxHyp + 300000), '#7f1d1d',   // €300k+ over — dark red
+  ];
 }
 
 function bldgOpacityExpr(year) {
@@ -1278,9 +1596,17 @@ function bldgOpacityExpr(year) {
 }
 
 function bldgRadiusExpr() {
-  // Size dots by estimated m²
-  return ['interpolate',['linear'],['get','m2'],
-    60, 2.5, 90, 3, 120, 3.8, 160, 4.5];
+  // Radius scales with zoom AND m² so dots are always visible at every zoom level.
+  // At low zoom (overview) dots are small uniform blobs; at street level they
+  // reflect floor area. BAG verblijfsobject centroids have ~10-20m inherent
+  // positional error (unit centroid vs building facade) — unfixable without pand data.
+  return ['interpolate', ['linear'], ['zoom'],
+    7,  ['interpolate', ['linear'], ['get','m2'],  60, 1.2,  160, 1.5],
+    10, ['interpolate', ['linear'], ['get','m2'],  60, 1.8,  160, 2.2],
+    12, ['interpolate', ['linear'], ['get','m2'],  60, 2.2,  160, 3.0],
+    14, ['interpolate', ['linear'], ['get','m2'],  60, 2.8,  160, 4.2],
+    16, ['interpolate', ['linear'], ['get','m2'],  60, 3.5,  160, 5.5],
+  ];
 }
 
 let _bldgEventsAttached = false;
@@ -1292,11 +1618,13 @@ function addBuildingDots() {
 
   map.addLayer({
     id: 'bldg-layer', type:'circle', source:'bldg-src',
+    minzoom: 7,  // don't render at province overview — too dense and invisible anyway
     paint: {
       'circle-color': bldgColorExpr(colorMode, currentYear),
       'circle-radius': bldgRadiusExpr(),
       'circle-opacity': bldgOpacityExpr(currentYear),
       'circle-stroke-width': 0,
+      'circle-pitch-alignment': 'map',  // anchor dots to map plane (not viewport)
     }
   });
 
@@ -1309,36 +1637,23 @@ function addBuildingDots() {
       const p = e.features?.[0]?.properties;
       if (!p) return;
       const kc = KERNCIJFERS.find(r => r.jaar === currentYear);
-      const wozBase = (kc?.woz || 339) * 1000;
-      const bldgWoz = Math.round(wozBase * (0.7 + p.val * 0.8));
+      const kc2024h = KERNCIJFERS.find(r => r.jaar === 2024);
+      const yearScaleH = (kc?.woz && kc2024h?.woz) ? kc.woz / kc2024h.woz : 1;
+      const bldgWoz = Math.round((p.wozEst2024 || 310000) * yearScaleH);
       // Starter pill
-      const sInc = getMapEffectiveIncK(kc?.inkomen_single || 31.3);
+      const sInc = getMapEffectiveIncK(currentYear);
       const sHyp = sInc * 4.5 * 1000;
       const sGap = bldgWoz - sHyp;
       const sCol = sGap <= 0 ? '#4ac878' : sGap <= 50000 ? '#f59e0b' : '#dc3c3c';
       const sTxt = sGap <= 0 ? 'bereikbaar' : `−€${Math.round(sGap/1000)}k`;
-      // Huurder pill
-      const hInc = getMapEffectiveIncK(kc?.inkomen_huurder || 37.0);
-      const hMax = Math.round(hInc * 1000 / 12 * 0.30);
-      const hHuur = Math.round(bldgWoz * 0.045 / 12);
-      const hGap = hHuur - hMax;
-      const hCol = hGap <= 0 ? '#4ac878' : hGap <= hMax * 0.2 ? '#f59e0b' : '#dc3c3c';
-      const hTxt = hGap <= 0 ? 'betaalbaar' : `+€${hGap}/mnd`;
-      // Eigenaar pill
-      const eInc = getMapEffectiveIncK(kc?.inkomen_eigenaar || 77.6);
-      const eHyp = eInc * 4.5 * 1000;
-      const eGap = bldgWoz - eHyp;
-      const eCol = eGap <= 0 ? '#4ac878' : eGap <= 50000 ? '#f59e0b' : '#dc3c3c';
-      const eTxt = eGap <= 0 ? 'bereikbaar' : `−€${Math.round(eGap/1000)}k`;
+      const m2label = p.m2real ? `${p.m2}m²` : `~${p.m2}m²`;
+      const gdoelLabel = p.gdoel === 'w' ? '' : (p.gdoel === 'i' ? ' · industrie' : p.gdoel === 'k' ? ' · winkel/kantoor' : ' · overig');
+      const personaLabel = activePersona ? PERSONAS[activePersona]?.label.split(' ')[0] : 'Aangepast';
       showTip(e.point,
         `<strong>${p.straat || p.adres}</strong>` +
-        `<br/><span style="color:var(--t3);font-size:10px">${p.pc} · ${p.kern||''} · ${p.bj} · ~${p.m2}m² · €${Math.round(bldgWoz/1000)}k</span>` +
+        `<br/><span style="color:var(--t3);font-size:10px">${p.pc} · ${p.gemeente||''} · ${p.bj} · ${m2label}${gdoelLabel} · €${Math.round(bldgWoz/1000)}k</span>` +
         `<br/><span style="font-size:10px;margin-top:4px;display:inline-block">` +
-        `<span style="color:var(--t3)">S</span> <span style="color:${sCol}">${sTxt}</span>` +
-        `<span style="color:var(--border2)"> · </span>` +
-        `<span style="color:var(--t3)">H</span> <span style="color:${hCol}">${hTxt}</span>` +
-        `<span style="color:var(--border2)"> · </span>` +
-        `<span style="color:var(--t3)">E</span> <span style="color:${eCol}">${eTxt}</span>` +
+        `<span style="color:var(--t3)">${personaLabel}</span> <span style="color:${sCol}">${sTxt}</span>` +
         `</span>`
       );
     });
@@ -1352,50 +1667,55 @@ function addBuildingDots() {
 // ── New builds dedicated layer (post-2015, pulsing) ────────────
 function addNewBuildsLayer() {
   if (map.getSource('newbuild-src')) return;
+  // Source contains ALL buildings for the current gemeente filter (all years).
+  // Visibility is controlled via a MapLibre filter (bj === currentYear) updated in onYear().
+  const gIdx = currentGemeenteFilter;
   const geo = {
     type: 'FeatureCollection',
-    features: PDOK_COORDS
-      .filter(([,,bj]) => bj >= 2015)
-      .map(([lng,lat,bj,adres]) => ({
+    features: BAG_COORDS
+      .filter(([,,bj,,gemeenteIdx]) => bj > 0 && (gIdx === null || gemeenteIdx === gIdx))
+      .map(([lng, lat, bj, adres]) => ({
         type:'Feature',
         geometry:{type:'Point',coordinates:[lng,lat]},
         properties:{bj, adres}
       }))
   };
   map.addSource('newbuild-src', { type:'geojson', data:geo });
-  // Outer pulse ring
+
+  // Outer pulse ring — shows only buildings delivered in the current year
   map.addLayer({
     id:'newbuild-ring', type:'circle', source:'newbuild-src',
+    minzoom: 7,
+    filter: ['==', ['get','bj'], currentYear],
     paint:{
-      'circle-radius':  8,
+      'circle-radius': ['interpolate',['linear'],['zoom'], 7,3, 10,5, 12,7, 14,10, 16,13],
       'circle-color':   '#fbbf24',
       'circle-opacity': 0.18,
       'circle-stroke-width': 1,
       'circle-stroke-color': '#fbbf24',
       'circle-stroke-opacity': 0.4,
+      'circle-pitch-alignment': 'map',
     }
   });
-  // Core dot
+  // Core dot — same delivery-year filter
   map.addLayer({
     id:'newbuild-dot', type:'circle', source:'newbuild-src',
+    minzoom: 7,
+    filter: ['==', ['get','bj'], currentYear],
     paint:{
-      'circle-radius': 4,
+      'circle-radius': ['interpolate',['linear'],['zoom'], 7,1.5, 10,2.5, 12,3, 14,4, 16,5],
       'circle-color': '#fbbf24',
       'circle-opacity': 0.9,
+      'circle-pitch-alignment': 'map',
     }
   });
-  // Start hidden
-  map.setLayoutProperty('newbuild-ring', 'visibility', 'none');
-  map.setLayoutProperty('newbuild-dot',  'visibility', 'none');
 
-  // Animate the ring
+  // Animate the ring — pulse opacity only (radius is a zoom expression, not overrideable)
   let step = 0;
   function animateNewbuilds() {
     step = (step + 1) % 100;
-    const r = 8 + step * 0.12;
-    const op = Math.max(0, 0.35 - step * 0.0035);
+    const op = 0.08 + Math.abs(Math.sin(step * 0.063)) * 0.22;
     if (map.getLayer('newbuild-ring')) {
-      map.setPaintProperty('newbuild-ring', 'circle-radius', r);
       map.setPaintProperty('newbuild-ring', 'circle-opacity', op);
     }
     newbuildAnimFrame = requestAnimationFrame(animateNewbuilds);
@@ -1403,103 +1723,248 @@ function addNewBuildsLayer() {
   newbuildAnimFrame = requestAnimationFrame(animateNewbuilds);
 }
 
-// ── Migration arcs ─────────────────────────────────────────────
-function buildArcGeoJSON(year) {
-  const arcs = migraatieVoorJaar(year);
+// ── Bouwjaar density heatmap (verduurzaming urgency) ───────────
+// Shows concentration of pre-1975 woonfunctie objects — primary retrofit target
+function addBouwjaarHeatmap() {
+  if (map.getSource('bj-heat-src')) return;
+
+  const geoAll = {
+    type: 'FeatureCollection',
+    features: BAG_COORDS
+      .filter(([,,bj,,, ,gdoel]) => gdoel === 'w')
+      .map(([lng, lat, bj]) => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [lng, lat] },
+        // weight: older = higher urgency; post-1975 = 0 weight (not urgent)
+        properties: { w: bj > 0 && bj < 1975 ? Math.max(0.2, 1 - (bj - 1900) / 75) : 0 }
+      }))
+  };
+
+  map.addSource('bj-heat-src', { type: 'geojson', data: geoAll });
+
+  map.addLayer({
+    id: 'bj-heatmap',
+    type: 'heatmap',
+    source: 'bj-heat-src',
+    maxzoom: 15,
+    paint: {
+      // weight driven by urgency (older = heavier)
+      'heatmap-weight': ['get', 'w'],
+      // intensity ramps with zoom
+      'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 7, 0.4, 14, 2],
+      // colour: cool→warm = low→high density of old stock
+      'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
+        0,    'rgba(0,0,0,0)',
+        0.10, 'rgba(44,78,140,0.55)',
+        0.30, 'rgba(65,182,196,0.70)',
+        0.55, 'rgba(254,204,92,0.82)',
+        0.75, 'rgba(240,120,30,0.90)',
+        1,    'rgba(220,38,38,1)',
+      ],
+      'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 7, 8, 11, 16, 14, 28],
+      'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.85, 14, 0.45],
+    }
+  }, 'bldg-layer'); // insert below building dots (bldg-layer is guaranteed to exist at this point)
+
+  // Start hidden — user toggles via layer list
+  map.setLayoutProperty('bj-heatmap', 'visibility', 'none');
+}
+
+// ── Migration pings (canvas overlay) ───────────────────────────
+// Each route gets N staggered ping dots travelling along a bezier arc.
+// No MapLibre layers — drawn on a <canvas> overlay each rAF tick.
+
+let arcAnimFrame = null;
+let arcMarkers   = []; // label markers
+let _migArcs     = []; // current arc list from migraatieVoorJaar()
+
+// Canvas is created once and reused across style reloads
+let _migCanvas = null;
+let _migCtx    = null;
+
+function _ensureMigCanvas() {
+  if (_migCanvas) return;
+  const mapEl = document.getElementById('map');
+  _migCanvas = document.createElement('canvas');
+  _migCanvas.id = 'migration-canvas';
+  _migCanvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2';
+  mapEl.appendChild(_migCanvas);
+  _migCtx = _migCanvas.getContext('2d');
+  // Keep canvas pixel-size in sync with container
+  const ro = new ResizeObserver(() => {
+    _migCanvas.width  = mapEl.clientWidth;
+    _migCanvas.height = mapEl.clientHeight;
+  });
+  ro.observe(mapEl);
+  _migCanvas.width  = mapEl.clientWidth;
+  _migCanvas.height = mapEl.clientHeight;
+}
+
+// Each ping: { t: 0..1 progress, phase: stagger offset }
+// Pings are generated per-route and stored on the arc object
+function _initPings(arcs) {
+  // Deduplicate in/out by label — combine into single bidirectional route
+  const routes = {};
+  for (const arc of arcs) {
+    const key = arc.label;
+    if (!routes[key]) routes[key] = { label: arc.label, remote: null, inAbs: 0, outAbs: 0 };
+    const r = routes[key];
+    if (arc.type === 'in')  { r.inAbs  = arc.abs; r.remote = arc.from; }
+    else                    { r.outAbs = arc.abs; r.remote = arc.to;   }
+  }
+
+  return Object.values(routes).map(r => {
+    const totalFlow = r.inAbs + r.outAbs;
+    // Number of simultaneous pings scales with flow (2–8)
+    const nIn  = Math.max(1, Math.min(6, Math.round(r.inAbs  / 800)));
+    const nOut = Math.max(1, Math.min(6, Math.round(r.outAbs / 800)));
+    // Speed: fraction of route per second (0.08–0.22)
+    const speedIn  = 0.06 + (r.inAbs  / 3000) * 0.10;
+    const speedOut = 0.06 + (r.outAbs / 3000) * 0.10;
+    const pingsIn  = Array.from({length: nIn},  (_, i) => ({ t: i / nIn,  speed: speedIn  }));
+    const pingsOut = Array.from({length: nOut}, (_, i) => ({ t: i / nOut, speed: speedOut }));
+    return { ...r, pingsIn, pingsOut };
+  });
+}
+
+let _pingRoutes   = [];
+let _lastPingTime = null;
+
+function addMigrationArcs() {
+  _ensureMigCanvas();
+  _migArcs    = migraatieVoorJaar(currentYear);
+  _pingRoutes = _initPings(_migArcs);
+  _rebuildArcMarkers(currentYear);
+  if (!arcAnimFrame) _startPingLoop();
+}
+
+function _startPingLoop() {
+  function frame(ts) {
+    if (!_migCanvas || !_migCtx) { arcAnimFrame = null; return; }
+    const dt = _lastPingTime ? Math.min((ts - _lastPingTime) / 1000, 0.05) : 0.016;
+    _lastPingTime = ts;
+
+    const W = _migCanvas.width, H = _migCanvas.height;
+    _migCtx.clearRect(0, 0, W, H);
+
+    if (!layerOn.migration || currentStyle === 'dark') { arcAnimFrame = requestAnimationFrame(frame); return; }
+
+    for (const route of _pingRoutes) {
+      if (!route.remote) continue;
+      // Project anchor (Twenterand) and remote to screen
+      const pA = map.project(OV_ARC);
+      const pR = map.project(route.remote);
+      if (!pA || !pR) continue;
+
+      // Bezier control point: perpendicular offset for arc curvature
+      const mx = (pA.x + pR.x) / 2;
+      const my = (pA.y + pR.y) / 2;
+      const dx = pR.x - pA.x, dy = pR.y - pA.y;
+      const len = Math.sqrt(dx*dx + dy*dy);
+      const cx = mx - dy * 0.25;
+      const cy = my + dx * 0.25;
+
+      // Draw IN pings: remote → anchor
+      _drawPings(route.pingsIn,  pR, pA, cx, cy, '#4ade80', dt, W, H);
+      // Draw OUT pings: anchor → remote
+      _drawPings(route.pingsOut, pA, pR, cx, cy, '#f87171', dt, W, H);
+    }
+    arcAnimFrame = requestAnimationFrame(frame);
+  }
+  arcAnimFrame = requestAnimationFrame(frame);
+}
+
+function _bezier(p0, p1, cp, t) {
+  const mt = 1 - t;
   return {
-    type:'FeatureCollection',
-    features: arcs.map(arc => {
-      const steps=60, coords=[];
-      for (let i=0; i<=steps; i++) {
-        const t = i/steps;
-        coords.push([
-          arc.from[0] + (arc.to[0]-arc.from[0])*t,
-          arc.from[1] + (arc.to[1]-arc.from[1])*t + Math.sin(t*Math.PI)*0.07
-        ]);
-      }
-      return { type:'Feature', geometry:{type:'LineString',coordinates:coords},
-               properties:{label:arc.label, saldo:arc.saldo, type:arc.type, abs:arc.abs} };
-    })
+    x: mt*mt*p0.x + 2*mt*t*cp.x + t*t*p1.x,
+    y: mt*mt*p0.y + 2*mt*t*cp.y + t*t*p1.y,
   };
 }
 
-let arcAnimFrame = null;
-let arcDashPhase = 0;
-let arcMarkers = []; // store markers so we can remove & recreate per year
-let newbuildAnimFrame = null;
-
-function addMigrationArcs() {
-  if (map.getSource('arc-src')) return;
-  map.addSource('arc-src', { type:'geojson', data:buildArcGeoJSON(currentYear) });
-
-  // Glow
-  map.addLayer({ id:'arc-glow', type:'line', source:'arc-src', paint:{
-    'line-color': ['case',['==',['get','type'],'in'],'#4ade80','#f87171'],
-    'line-width': ['interpolate',['linear'],['get','abs'],5,1.5,120,6],
-    'line-opacity': 0.12, 'line-blur': 6,
-  }});
-  // Base
-  map.addLayer({ id:'arc-line', type:'line', source:'arc-src', paint:{
-    'line-color': ['case',['==',['get','type'],'in'],'#4ade80','#f87171'],
-    'line-width': ['interpolate',['linear'],['get','abs'],5,0.8,120,3.5],
-    'line-opacity': 0.35,
-  }});
-  // Animated dash
-  map.addLayer({ id:'arc-dash', type:'line', source:'arc-src', paint:{
-    'line-color': ['case',['==',['get','type'],'in'],'#4ade80','#f87171'],
-    'line-width': ['interpolate',['linear'],['get','abs'],5,1,120,4],
-    'line-opacity': 0.85,
-    'line-dasharray': [0, 4, 3],
-  }});
-
-  _rebuildArcMarkers(currentYear);
-
-  // Animate dasharray via rAF
-  function animateArcs() {
-    arcDashPhase = (arcDashPhase + 0.18) % 7;
-    const d = arcDashPhase;
-    if (map.getLayer('arc-dash')) {
-      map.setPaintProperty('arc-dash','line-dasharray',[d%4, 4-d%4, 3]);
-    }
-    arcAnimFrame = requestAnimationFrame(animateArcs);
+function _drawPings(pings, p0, p1, cx, cy, colour, dt, W, H) {
+  const cp = { x: cx, y: cy };
+  for (const ping of pings) {
+    ping.t = (ping.t + ping.speed * dt) % 1;
+    const pos = _bezier(p0, p1, cp, ping.t);
+    // Skip if off-canvas
+    if (pos.x < -10 || pos.x > W+10 || pos.y < -10 || pos.y > H+10) continue;
+    // Fade in first 10%, fade out last 15%
+    const fade = ping.t < 0.10 ? ping.t / 0.10
+               : ping.t > 0.85 ? (1 - ping.t) / 0.15
+               : 1;
+    const r = 2.5 + fade * 1.0;
+    _migCtx.beginPath();
+    _migCtx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+    _migCtx.fillStyle = colour;
+    _migCtx.globalAlpha = fade * 0.88;
+    _migCtx.fill();
+    // Small glow
+    _migCtx.beginPath();
+    _migCtx.arc(pos.x, pos.y, r + 2.5, 0, Math.PI * 2);
+    _migCtx.fillStyle = colour;
+    _migCtx.globalAlpha = fade * 0.12;
+    _migCtx.fill();
   }
-  animateArcs();
+  _migCtx.globalAlpha = 1;
 }
+let newbuildAnimFrame = null;
 
 function _rebuildArcMarkers(year) {
   // Remove old markers
   arcMarkers.forEach(m => m.remove());
   arcMarkers = [];
   const arcs = migraatieVoorJaar(year);
-  arcs.forEach(arc => {
-    const mid = [
-      arc.from[0]+(arc.to[0]-arc.from[0])*0.5,
-      arc.from[1]+(arc.to[1]-arc.from[1])*0.5 + 0.035
+
+  // Group by label — one marker per route showing net saldo (in − out)
+  const byLabel = {};
+  for (const arc of arcs) {
+    if (!byLabel[arc.label]) byLabel[arc.label] = { arc, in: 0, out: 0 };
+    if (arc.type === 'in')  byLabel[arc.label].in  += arc.abs;
+    else                    byLabel[arc.label].out += arc.abs;
+  }
+
+  for (const { arc, in: absIn, out: absOut } of Object.values(byLabel)) {
+    const saldo = absIn - absOut;
+    // Place label at the remote end (not OV_ARC) — 85% along the arc from anchor
+    const remote = arc.type === 'in' ? arc.from : arc.to;
+    const pos = [
+      OV_ARC[0] + (remote[0] - OV_ARC[0]) * 0.82,
+      OV_ARC[1] + (remote[1] - OV_ARC[1]) * 0.82 + 0.02,
     ];
-    const sign = arc.saldo >= 0 ? '+' : '';
-    const m = new maplibregl.Marker({ element: createArcMarker(arc.label, sign+arc.saldo, arc.type) })
-      .setLngLat(mid).addTo(map);
+    const type = saldo >= 0 ? 'in' : 'out';
+    const sign = saldo >= 0 ? '+' : '';
+    const m = new maplibregl.Marker({ element: createArcMarker(arc.label, sign + saldo, type) })
+      .setLngLat(pos).addTo(map);
     arcMarkers.push(m);
-  });
+  }
 }
 
 function updateMigrationArcs(year) {
-  if (!map.getSource('arc-src')) return;
-  map.getSource('arc-src').setData(buildArcGeoJSON(year));
+  // Refresh ping routes with new year's flow volumes (speed/count scale with abs)
+  _migArcs    = migraatieVoorJaar(year);
+  _pingRoutes = _initPings(_migArcs);
   _rebuildArcMarkers(year);
   updateMigrationPanel(year);
 }
 
 function updateMigrationPanel(year) {
   const kc  = KERNCIJFERS.find(r => r.jaar === year);
-  // For years without data, use nearest past year
+  // For years without data, use nearest past year with vestiging data
   const kcM = kc?.vestiging != null ? kc : [...KERNCIJFERS].reverse().find(r => r.vestiging != null);
-  const ves  = kcM?.vestiging  ?? 0;
-  const vert = kcM?.vertrek    ?? 0;
-  const imm  = kcM?.immigratie ?? 0;
-  const emi  = kcM?.emigratie  ?? 0;
-  const saldo = ves - vert;
   const isProg = !kc?.vestiging && year > 2024;
+
+  // Scale Overijssel province totals by the Twenterand trend factor
+  const trendVes  = (kcM?.vestiging || 866)  / 866;
+  const trendVert = (kcM?.vertrek   || 893)  / 893;
+  const provVes   = Math.round(OV_VES_BASE  * trendVes);
+  const provVert  = Math.round(OV_VERT_BASE * trendVert);
+  const provSaldo = provVes - provVert;
+
+  // International: scale from 2023 base (Overijssel: ~8.2k in / ~3.1k out buitenland)
+  const immBase = 8200, emiBase = 3100;
+  const imm = Math.round(immBase * trendVes);
+  const emi = Math.round(emiBase * trendVert);
 
   const yearEl = document.getElementById('mig-year');
   if (yearEl) yearEl.textContent = isProg ? `(geschat ~${Math.round(year/5)*5})` : year;
@@ -1507,19 +1972,19 @@ function updateMigrationPanel(year) {
   const totEl = document.getElementById('mig-totals');
   if (totEl) totEl.innerHTML = `
     <div style="background:var(--surface);padding:8px 10px">
-      <div style="font-family:var(--mono);font-size:13px;color:#4ade80">+${ves}</div>
-      <div style="font-size:9px;color:var(--t3);margin-top:1px">vestiging</div>
+      <div style="font-family:var(--mono);font-size:13px;color:#4ade80">+${provVes.toLocaleString('nl')}</div>
+      <div style="font-size:9px;color:var(--t3);margin-top:1px">vestiging OV</div>
     </div>
     <div style="background:var(--surface);padding:8px 10px">
-      <div style="font-family:var(--mono);font-size:13px;color:#f87171">−${vert}</div>
-      <div style="font-size:9px;color:var(--t3);margin-top:1px">vertrek</div>
+      <div style="font-family:var(--mono);font-size:13px;color:#f87171">−${provVert.toLocaleString('nl')}</div>
+      <div style="font-size:9px;color:var(--t3);margin-top:1px">vertrek OV</div>
     </div>
     <div style="background:var(--surface);padding:8px 10px">
-      <div style="font-family:var(--mono);font-size:13px;color:${saldo>=0?'#4ade80':'#f87171'}">${saldo>=0?'+':''}${saldo}</div>
+      <div style="font-family:var(--mono);font-size:13px;color:${provSaldo>=0?'#4ade80':'#f87171'}">${provSaldo>=0?'+':''}${provSaldo.toLocaleString('nl')}</div>
       <div style="font-size:9px;color:var(--t3);margin-top:1px">binnenlands saldo</div>
     </div>
     <div style="background:var(--surface);padding:8px 10px">
-      <div style="font-family:var(--mono);font-size:13px;color:var(--t2)">${imm>0?'+'+imm+'/−'+emi:'—'}</div>
+      <div style="font-family:var(--mono);font-size:13px;color:var(--t2)">+${imm.toLocaleString('nl')}/−${emi.toLocaleString('nl')}</div>
       <div style="font-size:9px;color:var(--t3);margin-top:1px">immigr./emigr.</div>
     </div>`;
 
@@ -1555,11 +2020,11 @@ function createArcMarker(label, saldo, type) {
 
 // ── Layer visibility ───────────────────────────────────────────
 const LAYER_MAP = {
-  prices:    ['price-heat','price-dots'],
   buildings: ['bldg-layer'],
   choropleth:['gemeente-woz-fill','gemeente-woz-stroke','gemeente-woz-label'],
-  migration: ['arc-glow','arc-line','arc-dash'],
-  newbuilds: ['newbuild-ring','newbuild-dot'],
+  heatmap:   ['bj-heatmap'],
+  // migration: canvas-based pings — visibility controlled by layerOn.migration check in _startPingLoop
+  // newbuild-ring / newbuild-dot are always-on; visibility managed by updateNewbuildsFilter(year)
 };
 
 function applyLayerVisibility() {
@@ -1567,6 +2032,8 @@ function applyLayerVisibility() {
     const vis = layerOn[key] ? 'visible' : 'none';
     ids.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis); });
   });
+  // Choropleth mode-specific layers are managed separately
+  _applyChoroplethVisibility();
 }
 
 function toggleLayer(key) {
@@ -1578,7 +2045,7 @@ function toggleLayer(key) {
 // ── Color mode ─────────────────────────────────────────────────
 function setColorMode(mode) {
   colorMode = mode;
-  ['cm-prijs','cm-bouwjaar','cm-bezit','cm-nieuw'].forEach(id => {
+  ['cm-prijs','cm-bouwjaar','cm-bezit'].forEach(id => {
     const btn = document.getElementById(id);
     if (!btn) return;
     btn.classList.toggle('active', id === `cm-${mode}`);
@@ -1586,8 +2053,28 @@ function setColorMode(mode) {
   applyBldgColor(currentYear);
   updateBldgLegend();
   _applyChoroplethVisibility();
-  // Auto-enable new builds layer when in nieuw mode
-  if (mode === 'nieuw' && !layerOn.newbuilds) { layerOn.newbuilds = true; applyLayerVisibility(); buildLayerList(); }
+}
+
+function rebuildBldgSource() {
+  // Rebuild building dots GeoJSON with current gemeente filter applied
+  const geo = buildBldgGeoJSON();
+  if (map.getSource('bldg-src')) {
+    map.getSource('bldg-src').setData(geo);
+  }
+  // Also rebuild newbuild layer
+  if (map.getSource('newbuild-src')) {
+    const gIdx = currentGemeenteFilter;
+    const nbGeo = {
+      type: 'FeatureCollection',
+      features: BAG_COORDS
+        .filter(([,,bj,,gemeenteIdx]) => bj > 0 && (gIdx === null || gemeenteIdx === gIdx))
+        .map(([lng, lat, bj, adres]) => ({
+          type:'Feature', geometry:{type:'Point',coordinates:[lng,lat]}, properties:{bj, adres}
+        }))
+    };
+    map.getSource('newbuild-src').setData(nbGeo);
+    updateNewbuildsFilter(currentYear);
+  }
 }
 
 function applyBldgColor(year) {
@@ -1615,33 +2102,39 @@ function updateBldgLegend() {
       <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#f87171;flex-shrink:0"></span>Huurwoning (schatting)</div>
     </div>`;
   } else if (colorMode === 'nieuw') {
+    // Count from BAG: buildings post-2015 and 2010-2015 in current gemeente filter
+    const gIdx = currentGemeenteFilter;
+    const post2015 = BAG_COORDS.filter(([,,bj,,gi]) => bj >= 2015 && (gIdx === null || gi === gIdx)).length;
+    const y2010_15 = BAG_COORDS.filter(([,,bj,,gi]) => bj >= 2010 && bj < 2015 && (gIdx === null || gi === gIdx)).length;
     el.innerHTML = `<div style="display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--t2)">
       <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#fbbf24;flex-shrink:0"></span>Na 2015 (nieuwbouw)</div>
       <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#fb923c;flex-shrink:0"></span>2010–2015</div>
       <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#1e293b;flex-shrink:0"></span>Ouder</div>
-      <div style="font-size:9px;color:var(--t3);margin-top:2px">651 panden na 2015 · 612 panden 2010–2015</div>
+      <div style="font-size:9px;color:var(--t3);margin-top:2px">${post2015.toLocaleString('nl')} panden na 2015 · ${y2010_15.toLocaleString('nl')} panden 2010–2015</div>
+    </div>
+    <div style="margin-top:8px;font-size:10px;color:var(--t2)">
+      <div style="font-size:9px;color:var(--t3);margin-bottom:4px">Nieuwbouwdruk per gemeente (2015+% van woonvoorraad)</div>
+      <div style="height:6px;border-radius:2px;background:linear-gradient(to right,#0f172a,#1e3a8a,#0ea5e9,#34d399,#fbbf24,#f97316,#ef4444);margin-bottom:4px"></div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--t3)">
+        <span>0%</span><span>7%</span><span>14%</span><span>22%+</span>
+      </div>
     </div>`;
   } else {
+    // prijs = betaalbaarheid mode
     const kc = KERNCIJFERS.find(r => r.jaar === currentYear);
-    const kc24 = KERNCIJFERS.find(r => r.jaar === 2024);
-    const scale = (kc?.woz && kc24?.woz) ? kc.woz / kc24.woz : 1;
-    const isProg = currentYear >= 2026;
-    // Gemeente anchors (2024 WOZ, scaled by year)
-    const anchors = [
-      { naam:'Almelo', woz:224 }, { naam:'Enschede', woz:268 },
-      { naam:'Deventer', woz:310 }, { naam:'Twenterand', woz:339 },
-      { naam:'Wierden', woz:375 }, { naam:'Tubbergen', woz:430 },
-    ].map(a => ({ ...a, woz: Math.round(a.woz * scale) }));
-    const tw = anchors.find(a => a.naam==='Twenterand');
+    const incK = getMapEffectiveIncK(currentYear);
+    const maxHyp = Math.round(incK * 4.5);  // k€
+    const personaName = activePersona
+      ? PERSONAS[activePersona]?.label.split(' ')[0]
+      : 'Aangepast';
     el.innerHTML = `<div style="font-size:10px;color:var(--t2)">
-      <div style="height:6px;border-radius:2px;background:linear-gradient(to right,#1e3a5f,#1d4ed8,#0ea5e9,#f59e0b,#f97316,#ef4444,#991b1b);margin-bottom:5px"></div>
-      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--t3);margin-bottom:6px">
-        <span>€${anchors[0].woz}k<br><span style="font-size:8px">Almelo</span></span>
-        <span style="text-align:center">€${anchors[2].woz}k<br><span style="font-size:8px">Deventer</span></span>
-        <span style="text-align:center;color:var(--accent);font-weight:600">€${tw.woz}k<br><span style="font-size:8px">Twenterand</span></span>
-        <span style="text-align:right">€${anchors[5].woz}k<br><span style="font-size:8px">Tubbergen</span></span>
+      <div style="height:6px;border-radius:2px;background:linear-gradient(to right,#1a9e5c,#4ac878,#a3e635,#fbbf24,#f97316,#ef4444,#7f1d1d);margin-bottom:5px"></div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--t3);margin-bottom:5px">
+        <span>Bereikbaar</span>
+        <span style="text-align:center">Max<br>€${maxHyp}k</span>
+        <span style="text-align:right">+€${Math.round(maxHyp*0.5)}k+</span>
       </div>
-      <div style="font-size:9px;color:var(--t3)">WOZ gem. per gemeente${isProg ? ' · prognose' : ''} · ${currentYear} · CBS</div>
+      <div style="font-size:9px;color:var(--t3)">Hypotheek 4,5× inkomen · <span style="color:var(--accent)">${personaName} €${Math.round(incK)}k/jr</span> · ${currentYear}</div>
     </div>`;
   }
 }
@@ -1682,9 +2175,10 @@ function openBldgCard(p) {
     } else { ynEl.textContent = ''; }
   }
 
-  // ── Estimate building WOZ ─────────────────────────────────────
-  const wozBase = (kc?.woz || 339) * 1000;
-  const bldgWoz = Math.round(wozBase * (0.7 + p.val * 0.8));
+  // ── Estimate building WOZ (per-gemeente, year-scaled) ─────────
+  const kc2024c = KERNCIJFERS.find(r => r.jaar === 2024);
+  const yearScaleC = (kc?.woz && kc2024c?.woz) ? kc.woz / kc2024c.woz : 1;
+  const bldgWoz = Math.round((p.wozEst2024 || 310000) * yearScaleC);
   const m2 = p.m2 || estimateM2(p.bj);
 
   // ── Address ───────────────────────────────────────────────────
@@ -1693,15 +2187,19 @@ function openBldgCard(p) {
   const pc = p.pc || (parts[1]||'').trim();
 
   document.getElementById('bc-address').textContent = street;
-  const kernLabel = p.kern ? ` · ${p.kern}` : '';
-  document.getElementById('bc-postcode').textContent = pc + (p.bj ? ` · Gebouwd ${p.bj}` : '') + kernLabel;
+  const gemeenteLabel = p.gemeente ? ` · ${p.gemeente}` : '';
+  document.getElementById('bc-postcode').textContent = pc + (p.bj ? ` · Gebouwd ${p.bj}` : '') + gemeenteLabel;
   document.getElementById('bc-bj').textContent = p.bj || '—';
-  document.getElementById('bc-m2').textContent = `~${m2} m²`;
+  // Show real m² from BAG if available, else estimated
+  const m2Label = p.m2real ? `${m2} m²` : `~${m2} m²`;
+  document.getElementById('bc-m2').textContent = m2Label;
+  const m2LblEl = document.getElementById('bc-m2-lbl');
+  if (m2LblEl) m2LblEl.textContent = p.m2real ? 'm² (BAG exact)' : 'm² (schatting)';
   document.getElementById('bc-woz').textContent = '€' + Math.round(bldgWoz/1000) + 'k';
   document.getElementById('bc-woz-year').textContent = currentYear;
 
-  // ── STARTER (single, koopwoning) ──────────────────────────────
-  const sInc = getMapEffectiveIncK(kc?.inkomen_single || 31.3); // k€/yr
+  // ── ACTIEVE INKOMENSCATEGORIE (koopwoning) ────────────────────
+  const sInc = getMapEffectiveIncK(currentYear); // k€/yr — active persona at this year
   const sHyp = sInc * 4.5 * 1000;
   const sGap = bldgWoz - sHyp;
   const sPct = Math.min(100, Math.round(sHyp / bldgWoz * 100));
@@ -1712,7 +2210,7 @@ function openBldgCard(p) {
   _setBadge('bc-badge-starter', sGap);
 
   // ── HUURDER ───────────────────────────────────────────────────
-  const hInc = getMapEffectiveIncK(kc?.inkomen_huurder || 37.0); // k€/yr
+  const hInc = getMapEffectiveIncK(currentYear); // k€/yr — same persona
   const hMaxHuur = Math.round(hInc * 1000 / 12 * 0.30);          // 30% netto norm
   const hHuur = Math.round(bldgWoz * 0.045 / 12);                 // ~4.5% gross yield
   const sociaalGrens = 879; // 2024 liberalisatiegrens
@@ -1730,7 +2228,7 @@ function openBldgCard(p) {
   else { hBadge.textContent = `+€${hGap}/mnd`; hBadge.className = 'bc-persona-badge badge-bad'; }
 
   // ── EIGENAAR/DOORSTROMER ──────────────────────────────────────
-  const eInc = getMapEffectiveIncK(kc?.inkomen_eigenaar || 77.6); // k€/yr
+  const eInc = getMapEffectiveIncK(currentYear); // k€/yr — same persona
   const eHyp = eInc * 4.5 * 1000;
   const eGap = bldgWoz - eHyp;
   const ePct = Math.min(100, Math.round(eHyp / bldgWoz * 100));
@@ -1742,9 +2240,13 @@ function openBldgCard(p) {
 
   // ── Era badge + context ───────────────────────────────────────
   const era = eraLabel(p.bj);
+  const gdoelMap = { w:'Woonfunctie', i:'Industriefunctie', k:'Winkel/kantoor', o:'Overige functie' };
+  const gdoelStr = gdoelMap[p.gdoel] || 'Overige functie';
+  const gdoelColor = p.gdoel === 'w' ? 'var(--t3)' : 'var(--accent)';
   document.getElementById('bc-era-wrap').innerHTML =
     `<span class="bc-era-badge ${era.cls}">${era.label}</span>` +
-    `<span style="font-size:10px;color:var(--t3)">Energielabel schatting: ${p.bj>=2015?'A/B':p.bj>=2000?'C/D':p.bj>=1980?'D/E':'E/F/G'}</span>`;
+    `<span style="font-size:10px;color:var(--t3)">Energielabel: ${p.bj>=2015?'A/B':p.bj>=2000?'C/D':p.bj>=1980?'D/E':'E/F/G'}</span>` +
+    `<br/><span style="font-size:10px;color:${gdoelColor};margin-top:3px;display:inline-block">Gebruiksdoel: ${gdoelStr}</span>`;
 
   const contextLines = [];
   if (sGap > 50000) contextLines.push(`Voor een starter is dit pand €${Math.round(sGap/1000)}k boven de maximale hypotheek — eigen vermogen of starterslening vereist.`);
@@ -1819,10 +2321,9 @@ function hideTip() {
 
 // ── Layer list (right panel) ────────────────────────────────────
 const LAYERS_CFG = [
-  { id:'prices',    label:'WOZ heatmap',       color:'#ef4444', on:true  },
-  { id:'buildings', label:'BAG gebouwen',       color:'#38bdf8', on:true  },
-  { id:'migration', label:'Verhuisbewegingen',  color:'#4ade80', on:true  },
-  { id:'newbuilds', label:'Nieuwbouw (post-2015)', color:'#fbbf24', on:false },
+  { id:'buildings', label:'BAG gebouwen',             color:'#38bdf8', on:true  },
+  { id:'migration', label:'Verhuisbewegingen',        color:'#4ade80', on:true  },
+  { id:'heatmap',   label:'Verduurzaming urgentie',  color:'#f97316', on:false },
 ];
 
 function buildLayerList() {
@@ -1843,22 +2344,25 @@ function setStyle(s) {
     document.getElementById(`style-${id}`)?.classList.toggle('active', id === s);
   });
 
-  // Cancel animation loops NOW — before style wipe — so they don't call
-  // setPaintProperty on layers that are about to disappear.
+  // Cancel newbuild animation loop before style wipe
   if (newbuildAnimFrame) { cancelAnimationFrame(newbuildAnimFrame); newbuildAnimFrame = null; }
-  if (arcAnimFrame)      { cancelAnimationFrame(arcAnimFrame);      arcAnimFrame = null; }
+  // Migration canvas loop survives style reload (not a MapLibre layer) — keep arcAnimFrame running
 
-  // Remove arc markers immediately so they don't dangle over the new style
+  // Remove arc label markers so they don't dangle over the new style
   arcMarkers.forEach(m => m.remove());
   arcMarkers = [];
 
-  map.setStyle(MAP_STYLES[s]);
+  map.setStyle(MAP_STYLES[s], { diff: false });
   map.once('style.load', () => {
-    // After setStyle all sources+layers are wiped; guards in add*() let them re-add.
-    try { addPriceHeatmap();   } catch(e) { console.warn('price-heat:', e); }
-    try { addBuildingDots();   } catch(e) { console.warn('bldg-layer:', e); }
-    try { addNewBuildsLayer(); } catch(e) { console.warn('newbuilds:', e); }
-    try { addMigrationArcs();  } catch(e) { console.warn('arcs:', e); }
+    // After setStyle all sources+layers are wiped; re-add in strict order.
+    // Synchronous layers FIRST — so bldg-layer exists before the async choropleth fetch resolves.
+    _choroplethData = null; // force re-fetch on style switch
+    try { addBuildingDots();     } catch(e) { console.warn('bldg-layer:', e); }
+    try { addNewBuildsLayer();   } catch(e) { console.warn('newbuilds:', e); }
+    try { addBouwjaarHeatmap();  } catch(e) { console.warn('bj-heatmap:', e); }
+    try { addChoropleth();       } catch(e) { console.warn('choropleth:', e); } // async — after sync layers
+    // Re-add label markers — canvas pings keep running uninterrupted
+    _rebuildArcMarkers(currentYear);
     applyLayerVisibility();
     applyBldgColor(currentYear);
     updateBldgLegend();
@@ -1869,37 +2373,77 @@ function setStyle(s) {
 
 
 // ══════════════════════════════════════════════════════════════
-// KERN NAVIGATION
+// GEMEENTE NAVIGATION
 // ══════════════════════════════════════════════════════════════
 
-const KERNEN = {
-  vriezenveen:       { lng:6.6400, lat:52.4265, zoom:14.0, label:'Vriezenveen' },
-  westerhaar:        { lng:6.7600, lat:52.4380, zoom:13.5, label:'Westerhaar-Vr.veensewijk' },
-  denham:            { lng:6.5820, lat:52.4650, zoom:13.8, label:'Den Ham' },
-  bruinehaar:        { lng:6.7050, lat:52.4560, zoom:14.2, label:'Bruinehaar' },
-  vriezenveensewijk: { lng:6.7290, lat:52.4200, zoom:14.0, label:'Vriezenveensewijk' },
-  marienberg:        { lng:6.5760, lat:52.5010, zoom:13.5, label:'Mariënberg' },
-};
+// Gemeente centres and zoom levels (index matches BAG_GEMEENTEN order)
+const GEMEENTE_NAV = [
+  { lng:6.6609, lat:52.3563, zoom:12.5 }, // 0  Almelo
+  { lng:6.7541, lat:52.3028, zoom:13.2 }, // 1  Borne
+  { lng:6.2804, lat:52.5247, zoom:12.2 }, // 2  Dalfsen
+  { lng:6.1825, lat:52.2620, zoom:12.0 }, // 3  Deventer
+  { lng:6.9364, lat:52.3773, zoom:11.8 }, // 4  Dinkelland
+  { lng:6.8914, lat:52.2174, zoom:12.0 }, // 5  Enschede
+  { lng:6.7414, lat:52.1606, zoom:12.5 }, // 6  Haaksbergen
+  { lng:6.5735, lat:52.5855, zoom:11.5 }, // 7  Hardenberg
+  { lng:6.4689, lat:52.3753, zoom:12.2 }, // 8  Hellendoorn
+  { lng:6.8009, lat:52.2702, zoom:12.5 }, // 9  Hengelo
+  { lng:5.9181, lat:52.5552, zoom:12.0 }, // 10 Kampen
+  { lng:7.0080, lat:52.2712, zoom:12.5 }, // 11 Losser
+  { lng:5.7605, lat:52.7110, zoom:11.5 }, // 12 Noordoostpolder
+  { lng:6.9222, lat:52.3144, zoom:13.0 }, // 13 Oldenzaal
+  { lng:6.5852, lat:52.4415, zoom:11.5 }, // 14 Twenterand
+  { lng:6.7699, lat:52.4072, zoom:12.0 }, // 15 Tubbergen
+  { lng:5.6175, lat:52.6640, zoom:13.5 }, // 16 Urk
+  { lng:6.5828, lat:52.3425, zoom:12.5 }, // 17 Wierden
+  { lng:6.0940, lat:52.5156, zoom:12.5 }, // 18 Zwolle
+  { lng:6.1362, lat:52.3593, zoom:12.8 }, // 19 Olst-Wijhe
+  { lng:6.0647, lat:52.7666, zoom:11.5 }, // 20 Steenwijkerland
+  { lng:6.2198, lat:52.6400, zoom:12.8 }, // 21 Staphorst
+  { lng:6.0686, lat:52.6162, zoom:12.5 }, // 22 Zwartewaterland
+  { lng:6.4868, lat:52.2993, zoom:12.5 }, // 23 Rijssen-Holten
+  { lng:6.4292, lat:52.5203, zoom:12.2 }, // 24 Ommen
+];
 
-function flyToKern(kern) {
-  const sel = document.getElementById('kern-select');
-  if (!kern) return;
-  const k = KERNEN[kern];
-  if (!k) return;
-  map.flyTo({ center:[k.lng, k.lat], zoom:k.zoom, speed:1.4, curve:1.3 });
-  // Update h1 to show selected kern name
+function _syncGemeenteSelects(val) {
+  const selL = document.getElementById('gemeente-select-left');
+  const selR = document.getElementById('gemeente-select-right');
+  if (selL) selL.value = val;
+  if (selR) selR.value = val;
+}
+
+function flyToGemeente(idxStr) {
+  // Empty selection = reset to all-Overijssel view
+  if (idxStr === '' || idxStr === null) {
+    currentGemeenteFilter = null;
+    rebuildBldgSource();
+    const h1label = document.getElementById('nav-kern');
+    if (h1label) h1label.textContent = 'Overijssel';
+    _syncGemeenteSelects('');
+    map.flyTo({ center: [TW_CENTRE.lng, TW_CENTRE.lat], zoom: 9.5, speed: 1.2, curve: 1.3 });
+    return;
+  }
+
+  const idx = +idxStr;
+  const nav = GEMEENTE_NAV[idx];
+  if (!nav) return;
+  const naam = BAG_GEMEENTEN[idx]?.naam || '';
+
+  // Set gemeente filter — rebuilds building dots for this gemeente only
+  currentGemeenteFilter = idx;
+  rebuildBldgSource();
+
+  map.flyTo({ center: [nav.lng, nav.lat], zoom: nav.zoom, speed: 1.4, curve: 1.3 });
   const h1label = document.getElementById('nav-kern');
-  if (h1label) h1label.textContent = k.label;
-  if (sel) setTimeout(() => { sel.value = ''; }, 800);
+  if (h1label) h1label.textContent = naam;
+  _syncGemeenteSelects(String(idx));
 }
 
 function openKernSelect() {
-  // Simulate a click on the kern-select dropdown
-  const sel = document.getElementById('kern-select');
+  const sel = document.getElementById('gemeente-select-left');
   if (!sel) return;
   sel.focus();
-  // Dispatch a mousedown to trigger the native dropdown
-  sel.dispatchEvent(new MouseEvent('mousedown', {bubbles:true}));
+  sel.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1914,8 +2458,7 @@ function fmt(n, prefix='€', suffix='') {
 function updateKPIs(year) {
   const kc = KERNCIJFERS.find(r => r.jaar === year);
   const price = PRIJZEN.Twenterand[year] || PRIJZEN.Vriezenveen[year];
-  const cbsInc = kc?.inkomen_single;
-  const singleInc = cbsInc ? getMapEffectiveIncK(cbsInc) : null;
+  const singleInc = getMapEffectiveIncK(year);
   const maxHyp = singleInc ? singleInc * 4.5 * 1000 : null;
   const gap = (price && maxHyp) ? price - maxHyp : null;
   const isUser = activePersona === null; // custom input (not a persona pill)
@@ -1960,12 +2503,11 @@ function updateStarterCard(year, kc, price) {
   document.getElementById('starter-year').textContent = year;
   if (!el) return;
 
-  const cbsInc  = kc?.inkomen_single;
-  if (!cbsInc || !price) {
-    el.innerHTML = `<p style="color:var(--t3);font-size:11px">Geen inkomensdata voor ${year}</p>`;
+  if (!price) {
+    el.innerHTML = `<p style="color:var(--t3);font-size:11px">Geen prijsdata voor ${year}</p>`;
     return;
   }
-  const singleInc = getMapEffectiveIncK(cbsInc);
+  const singleInc = getMapEffectiveIncK(year);
   const isUser    = activePersona === null; // custom input (not a persona pill)
 
   const maxHyp  = singleInc * 4.5 * 1000;
@@ -2009,18 +2551,15 @@ function updateStarterCard(year, kc, price) {
 // ══════════════════════════════════════════════════════════════
 
 function updateGemeenteContext(year) {
-  const isOld = year <= 2001;
-  const name  = isOld ? 'Vriezenveen' : 'Twenterand';
-  ['nav-kern', 'nav-gemeente', 'nav-gemeente-badge'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = name;
-  });
-  const era = isOld ? 'old' : 'new';
+  const fusie = currentGemeenteFilter !== null ? GEMEENTE_FUSIE[currentGemeenteFilter] : null;
+  const crossedFusie = fusie && (year === fusie.jaar || year === fusie.jaar - 1);
+  const era = fusie ? (year < fusie.jaar ? 'pre' : 'post') : 'n/a';
+
   const notice = document.getElementById('gemeente-notice');
-  if (notice && era !== _prevGemeenteEra && _prevGemeenteEra !== null) {
-    notice.textContent = isOld
-      ? '← Gemeente Vriezenveen (GM0186, vóór fusie 2001)'
-      : 'Fusie 2001 → gemeente Twenterand (GM1700)';
+  if (notice && fusie && era !== _prevGemeenteEra && _prevGemeenteEra !== null) {
+    notice.textContent = era === 'pre'
+      ? `← Vóór fusie: ${fusie.voor}`
+      : `Fusie ${fusie.jaar} → ${fusie.naam}`;
     notice.classList.add('show');
     clearTimeout(notice._t);
     notice._t = setTimeout(() => notice.classList.remove('show'), 3500);
@@ -2037,13 +2576,23 @@ function onYear(year) {
   const disp = document.getElementById('year-display');
   disp.textContent = year;
   disp.classList.toggle('prog', year >= 2026);
-  applyBldgColor(year);
+  _updatePillIncomes(year);   // update €/mnd shown on each income class pill
+  applyBldgColor(year);       // also calls updateChoropleth when bldg-layer exists
+  updateChoropleth(year);     // always update choropleth, even at province zoom (<7)
+  updateNewbuildsFilter(year);
   updateGemeenteContext(year);
   updateKPIs(year);
   updatePriceMarker(year);
   updateMigrationArcs(year);
   updateBldgLegend();
   _refreshOpenCard();   // re-render building card with new year's WOZ/income
+}
+
+function updateNewbuildsFilter(year) {
+  // Show only buildings delivered in exactly this year — flash on delivery, gone next year
+  const f = ['==', ['get','bj'], year];
+  if (map.getLayer('newbuild-ring')) map.setFilter('newbuild-ring', f);
+  if (map.getLayer('newbuild-dot'))  map.setFilter('newbuild-dot',  f);
 }
 
 function updatePriceMarker(year) {
