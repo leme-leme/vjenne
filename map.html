@@ -574,8 +574,11 @@
       <div class="bc-cell"><div class="val" id="bc-woz">—</div><div class="lbl">Gesch. WOZ <span id="bc-woz-year" style="font-size:9px"></span></div></div>
     </div>
     <div class="bc-body">
+      <div id="bc-thumb-wrap" style="margin-bottom:10px;border-radius:3px;overflow:hidden;position:relative;height:120px;background:var(--surface2);display:none">
+        <img id="bc-thumb" style="width:100%;height:100%;object-fit:cover" alt="" />
+        <a id="bc-streetview-link" target="_blank" rel="noopener" style="position:absolute;bottom:4px;right:6px;font-size:9px;color:var(--accent);background:rgba(0,0,0,.7);padding:2px 6px;border-radius:2px;text-decoration:none">Street View →</a>
+      </div>
       <div style="margin-bottom:10px" id="bc-era-wrap"></div>
-      <p class="bc-context" id="bc-context"></p>
     </div>
   </div>
 </div>
@@ -2518,14 +2521,7 @@ function openBldgCard(p) {
   document.getElementById('bc-woz').textContent = '€' + Math.round(bldgWoz/1000) + 'k';
   document.getElementById('bc-woz-year').textContent = currentYear;
 
-  // ── Affordability for context text ──────────────────────────
-  const sInc = getMapEffectiveIncK(currentYear);
-  const sHyp = sInc * 4.5 * 1000;
-  const sGap = bldgWoz - sHyp;
-  const hHuur = Math.round(bldgWoz * 0.045 / 12);
-  const hMaxHuur = Math.round(sInc * 1000 / 12 * 0.30);
-
-  // ── Era badge + context ───────────────────────────────────────
+  // ── Era badge ───────────────────────────────────────────────────
   const era = eraLabel(p.bj);
   const gdoelMap = { w:'Woonfunctie', i:'Industriefunctie', k:'Winkel/kantoor', o:'Overige functie' };
   const gdoelStr = gdoelMap[p.gdoel] || 'Overige functie';
@@ -2535,19 +2531,40 @@ function openBldgCard(p) {
     `<span style="font-size:10px;color:var(--t3)">Energielabel: ${p.bj>=2015?'A/B':p.bj>=2000?'C/D':p.bj>=1980?'D/E':'E/F/G'}</span>` +
     `<br/><span style="font-size:10px;color:${gdoelColor};margin-top:3px;display:inline-block">Gebruiksdoel: ${gdoelStr}</span>`;
 
-  const contextLines = [];
-  if (sGap > 50000) contextLines.push(`Voor een starter is dit pand €${Math.round(sGap/1000)}k boven de maximale hypotheek — eigen vermogen of starterslening vereist.`);
-  else if (sGap > 0) contextLines.push(`Starter kan dit pand bereiken met een SVn-starterslening van €${Math.round(sGap/1000)}k.`);
-  else contextLines.push(`Dit pand valt binnen de maximale hypotheek van een single starter (${currentYear}).`);
-  if (hHuur > hMaxHuur * 1.2) contextLines.push(`Voor een huurder is de vrije-sector huur (€${hHuur}/mnd) ruim boven de betaalbaarheidsgrens van €${hMaxHuur}/mnd.`);
-  if (p.bj < 1970) contextLines.push(`Pre-1970: verduurzaming kost typisch €25–50k extra.`);
-  if (p.bj >= 2015) contextLines.push(`Nieuwbouw: energielabel A, geen directe verduurzamingskosten.`);
-  document.getElementById('bc-context').textContent = contextLines.join(' ');
+  // ── Building thumbnail (OSM static tile) ──────────────────────
+  _loadBldgThumb(p);
 
   document.getElementById('bldg-card').classList.add('open');
   document.addEventListener('keydown', cardKeyHandler);
   _updateNavButtons();
   pushHash();
+}
+
+function _loadBldgThumb(p) {
+  const wrap = document.getElementById('bc-thumb-wrap');
+  const img = document.getElementById('bc-thumb');
+  const svLink = document.getElementById('bc-streetview-link');
+  if (!wrap || !img) return;
+
+  // Find coordinates from BAG_COORDS
+  const match = BAG_COORDS.find(r => r[3] === p.adres);
+  if (!match) { wrap.style.display = 'none'; return; }
+  const [lng, lat] = match;
+
+  // OSM static map tile (zoom 17, 600x300)
+  // Using OSM tile server to build a centered tile composite
+  const z = 17;
+  const x = Math.floor((lng + 180) / 360 * Math.pow(2, z));
+  const latRad = lat * Math.PI / 180;
+  const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * Math.pow(2, z));
+  img.src = `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+  img.alt = p.straat || p.adres || 'Locatie';
+  wrap.style.display = 'block';
+
+  // Google Maps Street View link
+  if (svLink) {
+    svLink.href = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+  }
 }
 
 function closeBldgCard() {
