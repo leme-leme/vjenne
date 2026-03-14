@@ -1,0 +1,31 @@
+{
+  "bron": "CBS 37230ned — Bevolkingsontwikkeling; regio per maand (GM1700 Twenterand)",
+  "noot": "Twenterand gevormd 2001-01-01 uit Vriezenveen (GM0186) + Den Ham. GM0186 data alleen 2002.",
+
+  "data": [
+    {"jaar":2002, "bev_begin":33367, "geboorte":478, "sterfte":301, "groei":60,  "bev_eind":33427},
+    {"jaar":2003, "bev_begin":33427, "geboorte":478, "sterfte":283, "groei":66,  "bev_eind":33493},
+    {"jaar":2004, "bev_begin":33493, "geboorte":453, "sterfte":262, "groei":56,  "bev_eind":33549},
+    {"jaar":2005, "bev_begin":33549, "geboorte":427, "sterfte":274, "groei":-111,"bev_eind":33438},
+    {"jaar":2006, "bev_begin":33438, "geboorte":448, "sterfte":271, "groei":23,  "bev_eind":33461},
+    {"jaar":2007, "bev_begin":33461, "geboorte":438, "sterfte":251, "groei":0,   "bev_eind":33461},
+    {"jaar":2008, "bev_begin":33461, "geboorte":429, "sterfte":270, "groei":144, "bev_eind":33605},
+    {"jaar":2009, "bev_begin":33605, "geboorte":396, "sterfte":295, "groei":-25, "bev_eind":33580},
+    {"jaar":2010, "bev_begin":33580, "geboorte":428, "sterfte":299, "groei":147, "bev_eind":33727},
+    {"jaar":2011, "bev_begin":33727, "geboorte":392, "sterfte":261, "groei":202, "bev_eind":33929},
+    {"jaar":2012, "bev_begin":33929, "geboorte":394, "sterfte":292, "groei":42,  "bev_eind":33971},
+    {"jaar":2013, "bev_begin":33971, "geboorte":377, "sterfte":296, "groei":-42, "bev_eind":33929},
+    {"jaar":2014, "bev_begin":33929, "geboorte":358, "sterfte":290, "groei":-55, "bev_eind":33874},
+    {"jaar":2015, "bev_begin":33874, "geboorte":376, "sterfte":283, "groei":-28, "bev_eind":33846},
+    {"jaar":2016, "bev_begin":33846, "geboorte":337, "sterfte":321, "groei":-1,  "bev_eind":33845},
+    {"jaar":2017, "bev_begin":33845, "geboorte":344, "sterfte":269, "groei":58,  "bev_eind":33903},
+    {"jaar":2018, "bev_begin":33903, "geboorte":334, "sterfte":314, "groei":-111,"bev_eind":33792},
+    {"jaar":2019, "bev_begin":33792, "geboorte":310, "sterfte":323, "groei":-49, "bev_eind":33743},
+    {"jaar":2020, "bev_begin":33743, "geboorte":298, "sterfte":325, "groei":-44, "bev_eind":33699},
+    {"jaar":2021, "bev_begin":33699, "geboorte":321, "sterfte":349, "groei":19,  "bev_eind":33718},
+    {"jaar":2022, "bev_begin":33718, "geboorte":309, "sterfte":332, "groei":149, "bev_eind":33867},
+    {"jaar":2023, "bev_begin":33867, "geboorte":330, "sterfte":330, "groei":206, "bev_eind":34073},
+    {"jaar":2024, "bev_begin":34073, "geboorte":321, "sterfte":361, "groei":40,  "bev_eind":34113},
+    {"jaar":2025, "bev_begin":34113, "geboorte":319, "sterfte":346, "groei":121, "bev_eind":34234}
+  ]
+}

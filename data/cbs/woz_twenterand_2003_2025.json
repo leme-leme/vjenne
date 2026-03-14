@@ -1,0 +1,44 @@
+{
+  "bron_2019_2025": "CBS 85036NED — Gemiddelde WOZ-waarde van woningen; eigendom, regio (x1000 EUR)",
+  "bron_2017_2025_kwb": "CBS Kerncijfers wijken en buurten (83765NED t/m 86165NED)",
+  "bron_2003_2011": "CBS 70082ned — WOZ-objecten naar waardeklasse (alleen aantallen, geen gemiddelden)",
+
+  "twenterand_GM1700_gemiddeld_woz": {
+    "noot": "2003-2016 uit kerncijfers regionale data, 2017-2025 uit kwb + 85036NED (beide kloppen)",
+    "data": [
+      {"jaar":2003, "woz_gem":124},
+      {"jaar":2004, "woz_gem":125},
+      {"jaar":2005, "woz_gem":192},
+      {"jaar":2006, "woz_gem":193},
+      {"jaar":2007, "woz_gem":208},
+      {"jaar":2008, "woz_gem":222},
+      {"jaar":2009, "woz_gem":228},
+      {"jaar":2010, "woz_gem":232},
+      {"jaar":2011, "woz_gem":227},
+      {"jaar":2012, "woz_gem":217},
+      {"jaar":2013, "woz_gem":212},
+      {"jaar":2014, "woz_gem":202},
+      {"jaar":2015, "woz_gem":197},
+      {"jaar":2016, "woz_gem":195},
+      {"jaar":2017, "woz_gem":198},
+      {"jaar":2018, "woz_gem":206},
+      {"jaar":2019, "woz_gem":222},
+      {"jaar":2020, "woz_gem":234},
+      {"jaar":2021, "woz_gem":251},
+      {"jaar":2022, "woz_gem":277},
+      {"jaar":2023, "woz_gem":326},
+      {"jaar":2024, "woz_gem":339},
+      {"jaar":2025, "woz_gem":354}
+    ]
+  },
+
+  "twenterand_GM1700_per_eigendom_2019_2025": [
+    {"jaar":2019, "totaal":222, "koopwoning":257, "corporatie":137, "overige_verhuurders":220},
+    {"jaar":2020, "totaal":234, "koopwoning":272, "corporatie":146, "overige_verhuurders":214},
+    {"jaar":2021, "totaal":251, "koopwoning":291, "corporatie":157, "overige_verhuurders":237},
+    {"jaar":2022, "totaal":277, "koopwoning":323, "corporatie":169, "overige_verhuurders":256},
+    {"jaar":2023, "totaal":326, "koopwoning":379, "corporatie":200, "overige_verhuurders":292},
+    {"jaar":2024, "totaal":339, "koopwoning":392, "corporatie":208, "overige_verhuurders":303},
+    {"jaar":2025, "totaal":354, "koopwoning":409, "corporatie":221, "overige_verhuurders":314}
+  ]
+}

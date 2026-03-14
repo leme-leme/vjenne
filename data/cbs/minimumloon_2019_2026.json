@@ -1,0 +1,25 @@
+{
+  "bron": "Rijksoverheid.nl — Wettelijk minimumloon",
+  "noot": "CBS publiceert geen minimumloonbedragen in OData. Vanaf 2024 uurloon i.p.v. maandloon.",
+
+  "maandloon_bruto_21plus": [
+    {"periode": "2019-01", "bedrag": 1615.80, "noot": "22+ leeftijd"},
+    {"periode": "2019-07", "bedrag": 1635.60, "noot": "21+ leeftijd"},
+    {"periode": "2020-01", "bedrag": 1653.60},
+    {"periode": "2020-07", "bedrag": 1680.00},
+    {"periode": "2021-01", "bedrag": 1684.80},
+    {"periode": "2021-07", "bedrag": 1701.00},
+    {"periode": "2022-01", "bedrag": 1725.00},
+    {"periode": "2022-07", "bedrag": 1756.20},
+    {"periode": "2023-01", "bedrag": 1934.40},
+    {"periode": "2023-07", "bedrag": 1995.00}
+  ],
+
+  "uurloon_bruto_21plus": [
+    {"periode": "2024-01", "bedrag": 13.27},
+    {"periode": "2024-07", "bedrag": 13.68},
+    {"periode": "2025-01", "bedrag": 14.06},
+    {"periode": "2025-07", "bedrag": 14.40},
+    {"periode": "2026-01", "bedrag": 14.71}
+  ]
+}

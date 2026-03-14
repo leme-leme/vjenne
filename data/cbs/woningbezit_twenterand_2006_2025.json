@@ -1,0 +1,28 @@
+{
+  "bron_2006_2012": "CBS 71446ned — Woningvoorraad naar eigendom; regio (WRG-telling)",
+  "bron_2012_2025": "CBS 82900NED — Voorraad woningen; eigendom, type verhuurder (BAG-telling)",
+  "noot": "2012 overlap: twee methodieken (WRG vs BAG) geven ~250 verschil in totaal",
+
+  "twenterand_GM1700": [
+    {"jaar":2006, "bron":"71446ned", "totaal":12092, "koop":7522, "koop_pct":62.2, "huur":4246, "huur_pct":35.1, "corporatie":null, "corp_pct":null, "vrij":null, "vrij_pct":null},
+    {"jaar":2007, "bron":"71446ned", "totaal":12186, "koop":7541, "koop_pct":61.9, "huur":4267, "huur_pct":35.0, "corporatie":null, "corp_pct":null, "vrij":null, "vrij_pct":null},
+    {"jaar":2008, "bron":"71446ned", "totaal":12489, "koop":7820, "koop_pct":62.6, "huur":4364, "huur_pct":34.9, "corporatie":null, "corp_pct":null, "vrij":null, "vrij_pct":null},
+    {"jaar":2009, "bron":"71446ned", "totaal":12625, "koop":7891, "koop_pct":62.5, "huur":4677, "huur_pct":37.0, "corporatie":3565, "corp_pct":28.2, "vrij":1112, "vrij_pct":8.8},
+    {"jaar":2010, "bron":"71446ned", "totaal":12642, "koop":7864, "koop_pct":62.2, "huur":4725, "huur_pct":37.4, "corporatie":3536, "corp_pct":28.0, "vrij":1189, "vrij_pct":9.4},
+    {"jaar":2011, "bron":"71446ned", "totaal":12758, "koop":7864, "koop_pct":61.6, "huur":4845, "huur_pct":38.0, "corporatie":3554, "corp_pct":27.9, "vrij":1291, "vrij_pct":10.1},
+    {"jaar":2012, "bron":"82900NED", "totaal":13097, "koop":8505, "koop_pct":64.9, "huur":4433, "huur_pct":33.8, "corporatie":3599, "corp_pct":27.5, "vrij":834, "vrij_pct":6.4},
+    {"jaar":2013, "bron":"82900NED", "totaal":13124, "koop":8564, "koop_pct":65.3, "huur":4434, "huur_pct":33.8, "corporatie":3576, "corp_pct":27.3, "vrij":858, "vrij_pct":6.5},
+    {"jaar":2014, "bron":"82900NED", "totaal":13488, "koop":8687, "koop_pct":64.4, "huur":4516, "huur_pct":33.5, "corporatie":3553, "corp_pct":26.3, "vrij":963, "vrij_pct":7.1},
+    {"jaar":2015, "bron":"82900NED", "totaal":13574, "koop":8762, "koop_pct":64.5, "huur":4507, "huur_pct":33.2, "corporatie":3584, "corp_pct":26.4, "vrij":923, "vrij_pct":6.8},
+    {"jaar":2016, "bron":"82900NED", "totaal":13609, "koop":8798, "koop_pct":64.6, "huur":4502, "huur_pct":33.1, "corporatie":3485, "corp_pct":25.6, "vrij":1017, "vrij_pct":7.5},
+    {"jaar":2017, "bron":"82900NED", "totaal":13621, "koop":8790, "koop_pct":64.5, "huur":4519, "huur_pct":33.2, "corporatie":3480, "corp_pct":25.6, "vrij":1039, "vrij_pct":7.6},
+    {"jaar":2018, "bron":"82900NED", "totaal":13664, "koop":8907, "koop_pct":65.2, "huur":4452, "huur_pct":32.6, "corporatie":3518, "corp_pct":25.7, "vrij":934, "vrij_pct":6.8},
+    {"jaar":2019, "bron":"82900NED", "totaal":13705, "koop":8944, "koop_pct":65.3, "huur":4729, "huur_pct":34.5, "corporatie":3694, "corp_pct":26.9, "vrij":1035, "vrij_pct":7.6},
+    {"jaar":2020, "bron":"82900NED", "totaal":13819, "koop":9045, "koop_pct":65.5, "huur":4752, "huur_pct":34.4, "corporatie":3651, "corp_pct":26.4, "vrij":1101, "vrij_pct":8.0},
+    {"jaar":2021, "bron":"82900NED", "totaal":13847, "koop":9105, "koop_pct":65.8, "huur":4736, "huur_pct":34.2, "corporatie":3639, "corp_pct":26.3, "vrij":1097, "vrij_pct":7.9},
+    {"jaar":2022, "bron":"82900NED", "totaal":13931, "koop":9180, "koop_pct":65.9, "huur":4733, "huur_pct":34.0, "corporatie":3617, "corp_pct":26.0, "vrij":1116, "vrij_pct":8.0},
+    {"jaar":2023, "bron":"82900NED", "totaal":14016, "koop":9265, "koop_pct":66.1, "huur":4740, "huur_pct":33.8, "corporatie":3592, "corp_pct":25.6, "vrij":1148, "vrij_pct":8.2},
+    {"jaar":2024, "bron":"82900NED", "totaal":14106, "koop":9416, "koop_pct":66.7, "huur":4685, "huur_pct":33.2, "corporatie":3545, "corp_pct":25.1, "vrij":1140, "vrij_pct":8.1},
+    {"jaar":2025, "bron":"82900NED", "totaal":14192, "koop":9465, "koop_pct":66.7, "huur":4721, "huur_pct":33.3, "corporatie":3593, "corp_pct":25.3, "vrij":1128, "vrij_pct":7.9}
+  ]
+}

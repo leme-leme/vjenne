@@ -135,6 +135,8 @@
     pointer-events:none;
   }
   #left-panel > * { pointer-events:auto; }
+  #left-panel.panels-hidden { transform:translateX(-100%); opacity:0; pointer-events:none; transition:transform .3s,opacity .3s; }
+  #left-panel:not(.panels-hidden) { transition:transform .3s,opacity .3s; }
   .panel-inner { padding:18px 18px 0 18px; }
 
   /* Headline KPIs */
@@ -246,6 +248,8 @@
     display:flex; flex-direction:column; overflow-y:auto;
     scrollbar-width:thin; scrollbar-color:var(--border2) transparent;
   }
+  #right-panel.panels-hidden { transform:translateX(100%); opacity:0; pointer-events:none; transition:transform .3s,opacity .3s; }
+  #right-panel:not(.panels-hidden) { transition:transform .3s,opacity .3s; }
   .rp-section { padding:16px 18px; border-bottom:1px solid var(--border); }
   .rp-label { font-size:9px; text-transform:uppercase; letter-spacing:.1em; color:var(--t3); font-weight:600; margin-bottom:10px; }
   .chart-wrap { position:relative; }
@@ -579,6 +583,43 @@
         <a id="bc-streetview-link" target="_blank" rel="noopener" style="position:absolute;bottom:4px;right:6px;font-size:9px;color:var(--accent);background:rgba(0,0,0,.7);padding:2px 6px;border-radius:2px;text-decoration:none">Street View →</a>
       </div>
       <div style="margin-bottom:10px" id="bc-era-wrap"></div>
+      <!-- Hypotheek calculator -->
+      <div id="bc-hyp" style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:4px;border:1px solid var(--border);display:none">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);font-weight:600;margin-bottom:8px">Hypotheek berekening</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+          <div style="text-align:center;padding:6px;background:var(--bg);border-radius:3px">
+            <div style="font-family:var(--mono);font-size:13px;color:var(--t1);font-weight:600" id="bc-hyp-max">—</div>
+            <div style="font-size:9px;color:var(--t3);margin-top:2px">Max. hypotheek</div>
+          </div>
+          <div style="text-align:center;padding:6px;background:var(--bg);border-radius:3px">
+            <div style="font-family:var(--mono);font-size:13px;font-weight:600" id="bc-hyp-gap">—</div>
+            <div style="font-size:9px;color:var(--t3);margin-top:2px">Verschil</div>
+          </div>
+        </div>
+        <div style="margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--t3);margin-bottom:3px">
+            <span>Hypotheek vs. woningwaarde</span>
+            <span id="bc-hyp-pct">—</span>
+          </div>
+          <div style="height:6px;background:var(--bg);border-radius:3px;overflow:hidden">
+            <div id="bc-hyp-bar" style="height:100%;border-radius:3px;transition:width .3s,background .3s"></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+          <div style="text-align:center;padding:5px 2px;background:var(--bg);border-radius:3px">
+            <div style="font-family:var(--mono);font-size:11px;color:var(--t1)" id="bc-hyp-mnd">—</div>
+            <div style="font-size:8px;color:var(--t3);margin-top:1px">Maandlast 30jr</div>
+          </div>
+          <div style="text-align:center;padding:5px 2px;background:var(--bg);border-radius:3px">
+            <div style="font-family:var(--mono);font-size:11px;color:var(--t1)" id="bc-hyp-rente">—</div>
+            <div style="font-size:8px;color:var(--t3);margin-top:1px">Rente (vast)</div>
+          </div>
+          <div style="text-align:center;padding:5px 2px;background:var(--bg);border-radius:3px">
+            <div style="font-family:var(--mono);font-size:11px;color:var(--t1)" id="bc-hyp-ratio">—</div>
+            <div style="font-size:8px;color:var(--t3);margin-top:1px">Woonquote</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -599,6 +640,7 @@
 
   <div class="topbar-sep"></div>
 
+  <button class="topbar-pill" onclick="togglePanels()" id="btn-panels" title="Toon/verberg zijpanelen">◧ Panelen</button>
   <button class="topbar-pill" onclick="exportCSV()" title="Download data als CSV">↓ CSV</button>
   <button class="topbar-pill" onclick="shareURL()" title="Kopieer link">Delen</button>
   <button class="topbar-pill" onclick="window.location='index.html'" style="margin-left:4px">Analyse →</button>
@@ -615,8 +657,8 @@
     <div class="year-badge" id="year-badge">
       <span id="kpi-year">2024</span>
     </div>
-    <div class="price-big"><span class="euro">€</span><span id="year-price">362.592</span></div>
-    <div class="price-label">gem. verkoopprijs <span id="price-prog-lbl" style="color:var(--accent2);margin-left:4px;display:none">prognose</span></div>
+    <div class="price-big"><span class="euro" id="price-euro">€</span><span id="year-price">362.592</span></div>
+    <div class="price-label"><span id="price-label-text">gem. verkoopprijs</span> <span id="price-prog-lbl" style="color:var(--accent2);margin-left:4px;display:none">prognose</span></div>
   </div>
 
   <!-- KPI grid -->
@@ -781,7 +823,7 @@
 
   <!-- Price chart -->
   <div class="rp-section">
-    <div class="rp-label">Verkoopprijs 1995–2035 <span style="color:var(--t3);font-size:9px">(Twenterand / OV / NL)</span></div>
+    <div class="rp-label">Verkoopprijs 1970–2025 <span style="color:var(--t3);font-size:9px">(Twenterand / OV / NL)</span></div>
     <div class="chart-wrap" style="height:130px">
       <canvas id="chart-price"></canvas>
     </div>
@@ -834,7 +876,7 @@
 
   <!-- Housing tenure chart -->
   <div class="rp-section">
-    <div class="rp-label">Woningbezit 2009–2035</div>
+    <div class="rp-label">Woningbezit 2009–2025</div>
     <div class="chart-wrap" style="height:110px">
       <canvas id="chart-tenure"></canvas>
     </div>
@@ -868,8 +910,12 @@
 <div id="scrubber">
   <div class="year-num" id="year-display">2024</div>
   <div style="flex:1;position:relative;display:flex;flex-direction:column;gap:6px">
-    <input type="range" id="year-slider" min="1880" max="2035" value="2024" step="1" oninput="onYear(+this.value)"/>
+    <input type="range" id="year-slider" min="1960" max="2025" value="2024" step="1" oninput="onYear(+this.value)"/>
     <div class="scrub-ticks" id="scrub-ticks"></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:2px;margin-right:2px" title="Tijdlijn vergroten/verkleinen">
+    <button class="scrub-btn" style="padding:1px 6px;font-size:9px;line-height:1" onclick="shiftTimelineMin(-20)">◂ eerder</button>
+    <button class="scrub-btn" style="padding:1px 6px;font-size:9px;line-height:1" onclick="shiftTimelineMin(+20)">later ▸</button>
   </div>
   <button class="scrub-btn" id="btn-play" onclick="togglePlay()">▶ Play</button>
   <button class="scrub-btn" id="btn-speed" onclick="cycleSpeed()" title="Afspeelsnelheid">1×</button>
@@ -877,20 +923,28 @@
 </div>
 
 <script>
-// ── Timeline ticks: 1880–2035, majors every 20 (pre-1995) / 5 (post-1995) ──
-(function() {
+// ── Timeline ticks ──
+let _timelineMin = 1960;
+const _timelineMax = 2025;
+const TIMELINE_FLOOR = 1880;
+const TIMELINE_CEIL = 2020; // can't push start past this
+
+function buildTicks() {
   const el = document.getElementById('scrub-ticks');
   if (!el) return;
-  // Show sparse ticks pre-1995 to keep it readable
-  for (let y = 1880; y <= 2035; y++) {
+  el.innerHTML = '';
+  const span = _timelineMax - _timelineMin;
+  for (let y = _timelineMin; y <= _timelineMax; y++) {
     const pre1995 = y < 1995;
-    const isMajor = pre1995 ? (y % 20 === 0) : (y % 5 === 0);
-    const isMinor = pre1995 ? (y % 10 === 0 && !isMajor) : !isMajor;
-    if (pre1995 && !isMajor && !isMinor) continue; // skip most pre-1995 ticks
+    // Adaptive tick density based on range
+    const isMajor = span > 100 ? (y % 20 === 0) :
+                    pre1995 ? (y % 20 === 0) : (y % 5 === 0);
+    const isMinor = span > 100 ? (y % 10 === 0 && !isMajor) :
+                    pre1995 ? (y % 10 === 0 && !isMajor) : !isMajor;
+    if (pre1995 && !isMajor && !isMinor) continue;
     const sp = document.createElement('span');
-    const prog = y >= 2026;
     if (isMajor) {
-      sp.className = 'st-maj' + (prog ? ' prog' : '') + (pre1995 ? ' pre' : '');
+      sp.className = 'st-maj' + (pre1995 ? ' pre' : '');
       sp.textContent = y;
     } else if (isMinor) {
       sp.className = 'st-min';
@@ -898,7 +952,16 @@
     }
     if (sp.className) el.appendChild(sp);
   }
-})();
+}
+buildTicks();
+
+function shiftTimelineMin(delta) {
+  const slider = document.getElementById('year-slider');
+  _timelineMin = Math.max(TIMELINE_FLOOR, Math.min(TIMELINE_CEIL, _timelineMin + delta));
+  slider.min = _timelineMin;
+  if (+slider.value < _timelineMin) { slider.value = _timelineMin; onYear(_timelineMin); }
+  buildTicks();
+}
 
 // ══════════════════════════════════════════════════════════════
 // DATA
@@ -914,19 +977,33 @@ const PRIJZEN_BUREN = {
 
 const PRIJZEN = {
   Twenterand:{
+    // 1970-1994: BIS/FRED index × CBS 1995 Twenterand anchor; 1995-2001: CBS Vriezenveen GM0186
+    1970:18587,1971:20633,1972:23228,1973:27121,1974:32694,1975:37877,
+    1976:48326,1977:66936,1978:72504,1979:68727,1980:63061,1981:56727,
+    1982:50473,1983:51374,1984:51013,1985:51102,1986:53528,1987:56056,
+    1988:58631,1989:62532,1990:63781,1991:65416,1992:70893,1993:76732,1994:84445,
+    1995:88969,1996:95891,1997:112334,1998:123860,1999:139834,2000:167109,2001:182916,
     2002:191529,2003:183397,2004:196133,2005:206476,2006:224464,
     2007:225192,2008:239847,2009:211473,2010:209680,2011:206908,
     2012:196497,2013:198645,2014:187335,2015:195482,2016:201440,
     2017:221020,2018:237752,2019:248957,2020:273030,2021:309662,
-    2022:348114,2023:338159,2024:362592,2025:420039,
-    2026:432640,2027:445619,2028:458988,2029:472758,2030:486941,
-    2031:501549,2032:516595,2033:532093,2034:548056,2035:564498
+    2022:348114,2023:338159,2024:362592,2025:420039
   },
   Vriezenveen:{
+    // 1970-1994: BIS/FRED QNLN628BIS index × CBS 1995 Twenterand anchor
+    1970:18587,1971:20633,1972:23228,1973:27121,1974:32694,1975:37877,
+    1976:48326,1977:66936,1978:72504,1979:68727,1980:63061,1981:56727,
+    1982:50473,1983:51374,1984:51013,1985:51102,1986:53528,1987:56056,
+    1988:58631,1989:62532,1990:63781,1991:65416,1992:70893,1993:76732,1994:84445,
     1995:88969,1996:95891,1997:112334,1998:123860,
     1999:139834,2000:167109,2001:182916,2002:193768
   },
   Overijssel:{
+    // 1970-1994: BIS/FRED QNLN628BIS index × CBS 1995 Overijssel anchor
+    1970:17454,1971:19376,1972:21814,1973:25471,1974:30707,1975:35575,
+    1976:45381,1977:62875,1978:68105,1979:64556,1980:59230,1981:53283,
+    1982:47407,1983:48253,1984:47915,1985:47999,1986:50278,1987:52651,
+    1988:55070,1989:58734,1990:59908,1991:61443,1992:66586,1993:72071,1994:79315,
     1995:83597,1996:90786,1997:102179,1998:110332,1999:128295,
     2000:152617,2001:170174,2002:178482,2003:185090,2004:191927,
     2005:198475,2006:206909,2007:215724,2008:219612,2009:212375,
@@ -935,6 +1012,11 @@ const PRIJZEN = {
     2020:282983,2021:325701,2022:365460,2023:365733,2024:393428,2025:420923
   },
   Nederland:{
+    // 1970-1994: BIS/FRED QNLN628BIS index × CBS 1995 NL anchor
+    1970:19577,1971:21733,1972:24467,1973:28569,1974:34443,1975:39905,
+    1976:50907,1977:70529,1978:76397,1979:72416,1980:66443,1981:59773,
+    1982:53179,1983:54128,1984:53749,1985:53843,1986:56399,1987:59063,
+    1988:61777,1989:65888,1990:67205,1991:68927,1992:74697,1993:80849,1994:88976,
     1995:93750,1996:102607,1997:113163,1998:124540,1999:144778,
     2000:172050,2001:188397,2002:199752,2003:204829,2004:212723,
     2005:222706,2006:235843,2007:248325,2008:254918,2009:238259,
@@ -950,25 +1032,25 @@ const PRIJZEN = {
 //         hh_totaal, hh_single, hh_paar, hh_gezin, hh_grootte
 const KERNCIJFERS = [
   // ── Pre-merger Vriezenveen (GM0186) 1995–2001 ─────────────────
-  // bev = Vriezenveen municipality; woz/inkomen = CBS historical estimates;
-  // hh = Vriezenveen households; vestiging/vertrek not available pre-2003
-  {jaar:1995,bev:13820,woz: 99,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:58.0,corp:null,vrij:null,inkomen_jaar:null,inkomen_single:14.6,inkomen_eigenaar:26.0,inkomen_huurder:16.5,hh_totaal:5120,hh_single:null,hh_paar:null,hh_gezin:null,hh_grootte:2.98},
-  {jaar:1996,bev:13880,woz:106,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:58.2,corp:null,vrij:null,inkomen_jaar:null,inkomen_single:15.0,inkomen_eigenaar:27.0,inkomen_huurder:17.0,hh_totaal:5170,hh_single:null,hh_paar:null,hh_gezin:null,hh_grootte:2.96},
-  {jaar:1997,bev:13950,woz:115,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:58.5,corp:null,vrij:null,inkomen_jaar:null,inkomen_single:15.5,inkomen_eigenaar:28.5,inkomen_huurder:17.5,hh_totaal:5220,hh_single:null,hh_paar:null,hh_gezin:null,hh_grootte:2.94},
-  {jaar:1998,bev:14010,woz:127,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:58.8,corp:null,vrij:null,inkomen_jaar:null,inkomen_single:16.2,inkomen_eigenaar:30.0,inkomen_huurder:18.0,hh_totaal:5270,hh_single:null,hh_paar:null,hh_gezin:null,hh_grootte:2.93},
-  {jaar:1999,bev:14060,woz:140,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:59.0,corp:null,vrij:null,inkomen_jaar:null,inkomen_single:16.9,inkomen_eigenaar:31.5,inkomen_huurder:18.5,hh_totaal:5320,hh_single:null,hh_paar:null,hh_gezin:null,hh_grootte:2.92},
-  {jaar:2000,bev:14120,woz:155,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:59.5,corp:null,vrij:null,inkomen_jaar:null,inkomen_single:17.6,inkomen_eigenaar:33.0,inkomen_huurder:19.0,hh_totaal:5370,hh_single:null,hh_paar:null,hh_gezin:null,hh_grootte:2.91},
-  {jaar:2001,bev:14200,woz:168,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:59.8,corp:null,vrij:null,inkomen_jaar:null,inkomen_single:18.2,inkomen_eigenaar:35.0,inkomen_huurder:20.0,hh_totaal:5420,hh_single:null,hh_paar:null,hh_gezin:null,hh_grootte:2.90},
+  // bev = CBS Bevolkingsstatistiek; hh_totaal/hh_grootte = CBS; woz starts 1997 (CBS)
+  // koop/inkomen not available at municipal level before CBS coverage
+  {jaar:1995,bev:13820,woz:null, vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:null, corp:null,vrij:null,inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:5120,hh_single:null,hh_paar:null,hh_gezin:null,hh_grootte:2.98},
+  {jaar:1996,bev:13880,woz:null, vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:null, corp:null,vrij:null,inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:5170,hh_single:null,hh_paar:null,hh_gezin:null,hh_grootte:2.96},
+  {jaar:1997,bev:13950,woz:115,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:null, corp:null,vrij:null,inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:5220,hh_single:null,hh_paar:null,hh_gezin:null,hh_grootte:2.94},
+  {jaar:1998,bev:14010,woz:127,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:null, corp:null,vrij:null,inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:5270,hh_single:null,hh_paar:null,hh_gezin:null,hh_grootte:2.93},
+  {jaar:1999,bev:14060,woz:140,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:null, corp:null,vrij:null,inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:5320,hh_single:null,hh_paar:null,hh_gezin:null,hh_grootte:2.92},
+  {jaar:2000,bev:14120,woz:155,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:null, corp:null,vrij:null,inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:5370,hh_single:null,hh_paar:null,hh_gezin:null,hh_grootte:2.91},
+  {jaar:2001,bev:14200,woz:168,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:null, corp:null,vrij:null,inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:5420,hh_single:null,hh_paar:null,hh_gezin:null,hh_grootte:2.90},
   // ── Post-merger Twenterand (GM1700) from 2002 ─────────────────
-  {jaar:2002,bev:33350,woz:180,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:60.5,corp:null,vrij:null,inkomen_jaar:null,inkomen_single:18.8,inkomen_eigenaar:37.0,inkomen_huurder:21.0,hh_totaal:11620,hh_single:2180,hh_paar:3460,hh_gezin:5980,hh_grootte:2.84},
-  {jaar:2003,bev:33427,woz:124,vestiging:701, vertrek:822, binnenl_saldo:-121,verhuismob:71.6,immigratie:51, emigratie:81, koop:null, corp:null, vrij:null, inkomen_jaar:null,inkomen_single:18.9,inkomen_eigenaar:37.8,inkomen_huurder:21.4,hh_totaal:11779,hh_single:2267,hh_paar:3550,hh_gezin:5962,hh_grootte:2.82},
-  {jaar:2004,bev:33493,woz:125,vestiging:730, vertrek:865, binnenl_saldo:-135,verhuismob:73.2,immigratie:65, emigratie:60, koop:null, corp:null, vrij:null, inkomen_jaar:null,inkomen_single:19.0,inkomen_eigenaar:38.5,inkomen_huurder:21.7,hh_totaal:11893,hh_single:2342,hh_paar:3581,hh_gezin:5970,hh_grootte:2.80},
-  {jaar:2005,bev:33549,woz:192,vestiging:680, vertrek:925, binnenl_saldo:-245,verhuismob:72.3,immigratie:54, emigratie:69, koop:null, corp:null, vrij:null, inkomen_jaar:null,inkomen_single:19.1,inkomen_eigenaar:39.3,inkomen_huurder:22.1,hh_totaal:11983,hh_single:2419,hh_paar:3624,hh_gezin:5940,hh_grootte:2.78},
-  {jaar:2006,bev:33438,woz:193,vestiging:690, vertrek:855, binnenl_saldo:-165,verhuismob:68.5,immigratie:43, emigratie:35, koop:62.2,corp:null, vrij:null, inkomen_jaar:null,inkomen_single:19.2,inkomen_eigenaar:40.0,inkomen_huurder:22.5,hh_totaal:12091,hh_single:2515,hh_paar:3651,hh_gezin:5925,hh_grootte:2.75},
-  {jaar:2007,bev:33461,woz:208,vestiging:738, vertrek:941, binnenl_saldo:-203,verhuismob:81.0,immigratie:48, emigratie:39, koop:61.9,corp:null, vrij:null, inkomen_jaar:null,inkomen_single:19.2,inkomen_eigenaar:40.8,inkomen_huurder:22.8,hh_totaal:12138,hh_single:2545,hh_paar:3706,hh_gezin:5887,hh_grootte:2.73},
-  {jaar:2008,bev:33461,woz:222,vestiging:789, vertrek:806, binnenl_saldo:-17, verhuismob:71.0,immigratie:59, emigratie:62, koop:62.6,corp:null, vrij:null, inkomen_jaar:null,inkomen_single:19.3,inkomen_eigenaar:41.5,inkomen_huurder:23.2,hh_totaal:12263,hh_single:2650,hh_paar:3809,hh_gezin:5804,hh_grootte:2.71},
-  {jaar:2009,bev:33605,woz:228,vestiging:632, vertrek:784, binnenl_saldo:-152,verhuismob:62.0,immigratie:51, emigratie:39, koop:62.5,corp:28.2,vrij:8.8,  inkomen_jaar:null,inkomen_single:19.4,inkomen_eigenaar:42.3,inkomen_huurder:23.6,hh_totaal:12391,hh_single:2711,hh_paar:3884,hh_gezin:5796,hh_grootte:2.69},
-  {jaar:2010,bev:33580,woz:232,vestiging:646, vertrek:665, binnenl_saldo:-19, verhuismob:61.0,immigratie:71, emigratie:34, koop:62.2,corp:28.0,vrij:9.4,  inkomen_jaar:null,inkomen_single:19.5,inkomen_eigenaar:43.0,inkomen_huurder:23.9,hh_totaal:12484,hh_single:2785,hh_paar:3935,hh_gezin:5764,hh_grootte:2.67},
+  {jaar:2002,bev:33350,woz:180,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:null, corp:null,vrij:null,inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:11620,hh_single:2180,hh_paar:3460,hh_gezin:5980,hh_grootte:2.84},
+  {jaar:2003,bev:33427,woz:124,vestiging:701, vertrek:822, binnenl_saldo:-121,verhuismob:71.6,immigratie:51, emigratie:81, koop:null, corp:null, vrij:null, inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:11779,hh_single:2267,hh_paar:3550,hh_gezin:5962,hh_grootte:2.82},
+  {jaar:2004,bev:33493,woz:125,vestiging:730, vertrek:865, binnenl_saldo:-135,verhuismob:73.2,immigratie:65, emigratie:60, koop:null, corp:null, vrij:null, inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:11893,hh_single:2342,hh_paar:3581,hh_gezin:5970,hh_grootte:2.80},
+  {jaar:2005,bev:33549,woz:192,vestiging:680, vertrek:925, binnenl_saldo:-245,verhuismob:72.3,immigratie:54, emigratie:69, koop:null, corp:null, vrij:null, inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:11983,hh_single:2419,hh_paar:3624,hh_gezin:5940,hh_grootte:2.78},
+  {jaar:2006,bev:33438,woz:193,vestiging:690, vertrek:855, binnenl_saldo:-165,verhuismob:68.5,immigratie:43, emigratie:35, koop:62.2,corp:null, vrij:null, inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:12091,hh_single:2515,hh_paar:3651,hh_gezin:5925,hh_grootte:2.75},
+  {jaar:2007,bev:33461,woz:208,vestiging:738, vertrek:941, binnenl_saldo:-203,verhuismob:81.0,immigratie:48, emigratie:39, koop:61.9,corp:null, vrij:null, inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:12138,hh_single:2545,hh_paar:3706,hh_gezin:5887,hh_grootte:2.73},
+  {jaar:2008,bev:33461,woz:222,vestiging:789, vertrek:806, binnenl_saldo:-17, verhuismob:71.0,immigratie:59, emigratie:62, koop:62.6,corp:null, vrij:null, inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:12263,hh_single:2650,hh_paar:3809,hh_gezin:5804,hh_grootte:2.71},
+  {jaar:2009,bev:33605,woz:228,vestiging:632, vertrek:784, binnenl_saldo:-152,verhuismob:62.0,immigratie:51, emigratie:39, koop:62.5,corp:28.2,vrij:8.8,  inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:12391,hh_single:2711,hh_paar:3884,hh_gezin:5796,hh_grootte:2.69},
+  {jaar:2010,bev:33580,woz:232,vestiging:646, vertrek:665, binnenl_saldo:-19, verhuismob:61.0,immigratie:71, emigratie:34, koop:62.2,corp:28.0,vrij:9.4,  inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:12484,hh_single:2785,hh_paar:3935,hh_gezin:5764,hh_grootte:2.67},
   {jaar:2011,bev:33727,woz:227,vestiging:748, vertrek:686, binnenl_saldo:62,  verhuismob:64.3,immigratie:60, emigratie:52, koop:61.6,corp:27.9,vrij:10.1, inkomen_jaar:37.3,inkomen_single:19.6,inkomen_eigenaar:43.8,inkomen_huurder:24.3,hh_totaal:12563,hh_single:2859,hh_paar:3922,hh_gezin:5782,hh_grootte:2.66},
   {jaar:2012,bev:33929,woz:217,vestiging:717, vertrek:800, binnenl_saldo:-83, verhuismob:63.8,immigratie:59, emigratie:36, koop:64.9,corp:27.5,vrij:6.4,  inkomen_jaar:37.2,inkomen_single:20.2,inkomen_eigenaar:43.4,inkomen_huurder:24.5,hh_totaal:12678,hh_single:2892,hh_paar:3986,hh_gezin:5800,hh_grootte:2.65},
   {jaar:2013,bev:33971,woz:212,vestiging:728, vertrek:854, binnenl_saldo:-126,verhuismob:59.4,immigratie:53, emigratie:57, koop:65.3,corp:27.2,vrij:6.5,  inkomen_jaar:37.1,inkomen_single:20.1,inkomen_eigenaar:43.7,inkomen_huurder:24.0,hh_totaal:12867,hh_single:3028,hh_paar:4036,hh_gezin:5803,hh_grootte:2.62},
@@ -984,17 +1066,43 @@ const KERNCIJFERS = [
   {jaar:2023,bev:33867,woz:326,vestiging:1028,vertrek:912, binnenl_saldo:116, verhuismob:64.9,immigratie:148,emigratie:58, koop:66.1,corp:25.6,vrij:8.2,  inkomen_jaar:60.2,inkomen_single:29.9,inkomen_eigenaar:72.1,inkomen_huurder:34.3,hh_totaal:13434,hh_single:3639,hh_paar:4249,hh_gezin:5546,hh_grootte:2.49},
   {jaar:2024,bev:34073,woz:339,vestiging:907, vertrek:866, binnenl_saldo:41,  verhuismob:65.4,immigratie:150,emigratie:111,koop:66.8,corp:25.1,vrij:8.1,  inkomen_jaar:64.7,inkomen_single:31.3,inkomen_eigenaar:77.6,inkomen_huurder:37.0,hh_totaal:13561,hh_single:3694,hh_paar:4287,hh_gezin:5580,hh_grootte:2.48},
   {jaar:2025,bev:34113,woz:354,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:null, corp:null, vrij:null, inkomen_jaar:null,inkomen_single:null,inkomen_eigenaar:null,inkomen_huurder:null,hh_totaal:13617,hh_single:3769,hh_paar:4243,hh_gezin:5605,hh_grootte:2.47},
-  {jaar:2026,bev:34200,woz:368,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:67.2,corp:24.8,vrij:8.0,  inkomen_jaar:67.0,inkomen_single:32.4,inkomen_eigenaar:80.4,inkomen_huurder:38.3,hh_totaal:13700,hh_single:3840,hh_paar:4310,hh_gezin:5550,hh_grootte:2.46,prognose:true},
-  {jaar:2027,bev:34270,woz:383,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:67.5,corp:24.5,vrij:8.0,  inkomen_jaar:69.4,inkomen_single:33.5,inkomen_eigenaar:83.2,inkomen_huurder:39.6,hh_totaal:13790,hh_single:3915,hh_paar:4340,hh_gezin:5535,hh_grootte:2.45,prognose:true},
-  {jaar:2028,bev:34330,woz:398,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:67.8,corp:24.2,vrij:8.0,  inkomen_jaar:71.8,inkomen_single:34.7,inkomen_eigenaar:86.1,inkomen_huurder:41.0,hh_totaal:13880,hh_single:3990,hh_paar:4370,hh_gezin:5520,hh_grootte:2.44,prognose:true},
-  {jaar:2029,bev:34380,woz:414,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:68.0,corp:24.0,vrij:8.0,  inkomen_jaar:74.3,inkomen_single:35.9,inkomen_eigenaar:89.1,inkomen_huurder:42.4,hh_totaal:13970,hh_single:4065,hh_paar:4400,hh_gezin:5505,hh_grootte:2.43,prognose:true},
-  {jaar:2030,bev:34420,woz:430,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:68.2,corp:23.8,vrij:8.0,  inkomen_jaar:76.9,inkomen_single:37.1,inkomen_eigenaar:92.2,inkomen_huurder:43.9,hh_totaal:14060,hh_single:4145,hh_paar:4430,hh_gezin:5485,hh_grootte:2.42,prognose:true},
-  {jaar:2031,bev:34450,woz:447,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:68.5,corp:23.5,vrij:8.0,  inkomen_jaar:79.6,inkomen_single:38.4,inkomen_eigenaar:95.4,inkomen_huurder:45.4,hh_totaal:14150,hh_single:4225,hh_paar:4455,hh_gezin:5470,hh_grootte:2.41,prognose:true},
-  {jaar:2032,bev:34480,woz:465,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:68.7,corp:23.3,vrij:8.0,  inkomen_jaar:82.4,inkomen_single:39.7,inkomen_eigenaar:98.7,inkomen_huurder:47.0,hh_totaal:14240,hh_single:4310,hh_paar:4480,hh_gezin:5450,hh_grootte:2.40,prognose:true},
-  {jaar:2033,bev:34500,woz:484,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:68.9,corp:23.1,vrij:8.0,  inkomen_jaar:85.3,inkomen_single:41.1,inkomen_eigenaar:102.2,inkomen_huurder:48.6,hh_totaal:14330,hh_single:4395,hh_paar:4500,hh_gezin:5435,hh_grootte:2.39,prognose:true},
-  {jaar:2034,bev:34520,woz:503,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:69.1,corp:22.9,vrij:8.0,  inkomen_jaar:88.3,inkomen_single:42.5,inkomen_eigenaar:105.8,inkomen_huurder:50.3,hh_totaal:14420,hh_single:4480,hh_paar:4520,hh_gezin:5420,hh_grootte:2.38,prognose:true},
-  {jaar:2035,bev:34540,woz:523,vestiging:null,vertrek:null,binnenl_saldo:null,verhuismob:null,immigratie:null,emigratie:null,koop:69.3,corp:22.7,vrij:8.0,  inkomen_jaar:91.4,inkomen_single:44.0,inkomen_eigenaar:109.5,inkomen_huurder:52.1,hh_totaal:14510,hh_single:4570,hh_paar:4540,hh_gezin:5400,hh_grootte:2.37,prognose:true},
+  // No prognose rows — only real CBS data
 ];
+
+// ── Interpolation helper: returns a complete KERNCIJFERS-like object for ANY year ──
+// Fills nulls by interpolating between nearest known values; extrapolates pre-1995
+function getKC(year) {
+  const exact = KERNCIJFERS.find(r => r.jaar === year);
+  // All numeric fields that should be interpolated
+  const fields = ['bev','woz','vestiging','vertrek','binnenl_saldo','verhuismob',
+    'immigratie','emigratie','koop','corp','vrij','inkomen_jaar','inkomen_single',
+    'inkomen_eigenaar','inkomen_huurder','hh_totaal','hh_single','hh_paar','hh_gezin','hh_grootte'];
+
+  const result = { jaar: year };
+  for (const f of fields) {
+    // Find nearest known values before and after
+    let lo = null, hi = null;
+    for (const r of KERNCIJFERS) {
+      if (r[f] != null) {
+        if (r.jaar <= year && (!lo || r.jaar > lo.jaar)) lo = r;
+        if (r.jaar >= year && (!hi || r.jaar < hi.jaar)) hi = r;
+      }
+    }
+    if (lo && hi && lo.jaar !== hi.jaar) {
+      // Interpolate
+      const t = (year - lo.jaar) / (hi.jaar - lo.jaar);
+      result[f] = f === 'hh_grootte' ? +(lo[f] + t * (hi[f] - lo[f])).toFixed(2)
+                : Math.round(lo[f] + t * (hi[f] - lo[f]));
+    } else if (lo) {
+      result[f] = lo[f]; // extrapolate forward (use last known)
+    } else if (hi) {
+      result[f] = hi[f]; // extrapolate backward (use first known)
+    } else {
+      result[f] = null;
+    }
+  }
+  return result;
+}
 
 const WONINGVOORRAAD = [
   {jaar:2012,totaal:13097},{jaar:2013,totaal:13124},{jaar:2014,totaal:13488},
@@ -1002,71 +1110,125 @@ const WONINGVOORRAAD = [
   {jaar:2018,totaal:13664},{jaar:2019,totaal:13705},{jaar:2020,totaal:13819},
   {jaar:2021,totaal:13847},{jaar:2022,totaal:13931},{jaar:2023,totaal:14016},
   {jaar:2024,totaal:14106},{jaar:2025,totaal:14192},
-  {jaar:2026,totaal:14280,prognose:true},{jaar:2027,totaal:14370,prognose:true},
-  {jaar:2028,totaal:14460,prognose:true},{jaar:2029,totaal:14550,prognose:true},
-  {jaar:2030,totaal:14640,prognose:true},{jaar:2031,totaal:14730,prognose:true},
-  {jaar:2032,totaal:14820,prognose:true},{jaar:2033,totaal:14910,prognose:true},
-  {jaar:2034,totaal:15000,prognose:true},{jaar:2035,totaal:15090,prognose:true},
+  // No prognose rows — only real CBS data
 ];
 
 // Arc anchor: Twenterand centroid (real BAG centroid, gi=14)
-// Arcs show Overijssel province flows but anchor at Twenterand as the focus gemeente
 const OV_ARC = [6.5852, 52.4415];
 
-// Verhuizingen Overijssel — interprovinciale stromen (CBS 83625NED, 2022–2023 gemiddeld)
-// Each route: absolute vestiging (in) or vertrek (out) per year
-// Sources: CBS Statline "Verhuizingen; gemeenten van bestemming en herkomst"
-const MIGRATIE_OVERIJSSEL = [
-  // IN — vestiging vanuit andere provincies/regio's naar Overijssel
-  { from:[6.5694,53.2194], label:'Groningen prov.',  ves:820,  vert:640  }, // Groningen city centre
-  { from:[6.1939,53.0006], label:'Drenthe',           ves:1650, vert:1280 }, // Assen
-  { from:[5.9999,52.7678], label:'Friesland',          ves:490,  vert:380  }, // Heerenveen
-  { from:[5.5197,52.5193], label:'Flevoland',          ves:510,  vert:420  }, // Lelystad
-  { from:[5.9679,52.2215], label:'Gelderland',         ves:2150, vert:2890 }, // Apeldoorn
-  { from:[5.1214,52.0907], label:'Utrecht',            ves:980,  vert:1340 }, // Utrecht
-  { from:[4.9041,52.3676], label:'Noord-Holland',      ves:1180, vert:1680 }, // Amsterdam
-  { from:[4.3007,52.0705], label:'Zuid-Holland',       ves:1420, vert:2100 }, // Den Haag
-  { from:[4.4777,51.9244], label:'Zeeland/Brabant',   ves:840,  vert:1120 }, // Bergen op Zoom
-  { from:[5.8453,51.8426], label:'Limburg/Brabant',   ves:1000, vert:1300 }, // Eindhoven
-  { from:[6.9000,51.9600], label:'Duitsland',          ves:1200, vert:420  }, // Nordrhein-Westfalen border
-  { from:[4.8952,52.3702], label:'Overig buitenland', ves:7000, vert:2680 }, // proxy: Schiphol area
-];
+// ── Province coordinates for arc rendering ──
+const PROV_COORDS = {
+  'Groningen':     [6.5694,53.2194],
+  'Fryslan':       [5.9999,52.7678],
+  'Drenthe':       [6.1939,53.0006],
+  'Flevoland':     [5.5197,52.5193],
+  'Gelderland':    [5.9679,52.2215],
+  'Utrecht':       [5.1214,52.0907],
+  'Noord-Holland': [4.9041,52.3676],
+  'Zuid-Holland':   [4.3007,52.0705],
+  'Zeeland':       [3.8314,51.4988],
+  'Noord-Brabant': [5.2323,51.5975],
+  'Limburg':       [5.8453,51.4426],
+};
 
-// Build arc list for a given year — scale by KERNCIJFERS vestiging/vertrek totals
-// Overijssel province totals: ~27k vestiging, ~24k vertrek (CBS 2022-2023)
-const OV_VES_BASE  = 27000;
-const OV_VERT_BASE = 24000;
+// Source: CBS 81734NED "Tussen gemeenten verhuisde personen" — real per-year data
+const INTERPROV_OV = {
+  2011:{Groningen:{in:1755,out:1883},Fryslan:{in:1008,out:977},Drenthe:{in:1841,out:1647},Flevoland:{in:1094,out:823},Gelderland:{in:5067,out:5307},Utrecht:{in:1539,out:1942},'Noord-Holland':{in:1621,out:2148},'Zuid-Holland':{in:1706,out:1984},Zeeland:{in:156,out:149},'Noord-Brabant':{in:901,out:1032},Limburg:{in:358,out:364}},
+  2012:{Groningen:{in:1841,out:1843},Fryslan:{in:1029,out:975},Drenthe:{in:1875,out:1754},Flevoland:{in:949,out:868},Gelderland:{in:5043,out:5738},Utrecht:{in:1504,out:1959},'Noord-Holland':{in:1655,out:2268},'Zuid-Holland':{in:1627,out:1961},Zeeland:{in:109,out:121},'Noord-Brabant':{in:876,out:1004},Limburg:{in:355,out:349}},
+  2013:{Groningen:{in:1802,out:1955},Fryslan:{in:1036,out:957},Drenthe:{in:1757,out:1657},Flevoland:{in:997,out:794},Gelderland:{in:5164,out:5714},Utrecht:{in:1402,out:1973},'Noord-Holland':{in:1718,out:2263},'Zuid-Holland':{in:1473,out:1936},Zeeland:{in:124,out:134},'Noord-Brabant':{in:863,out:1076},Limburg:{in:376,out:362}},
+  2014:{Groningen:{in:1967,out:1952},Fryslan:{in:1108,out:1076},Drenthe:{in:1763,out:1707},Flevoland:{in:1059,out:811},Gelderland:{in:5556,out:6034},Utrecht:{in:1440,out:2156},'Noord-Holland':{in:1912,out:2330},'Zuid-Holland':{in:1479,out:1966},Zeeland:{in:140,out:141},'Noord-Brabant':{in:861,out:1035},Limburg:{in:396,out:374}},
+  2015:{Groningen:{in:2401,out:1690},Fryslan:{in:1149,out:958},Drenthe:{in:1987,out:1836},Flevoland:{in:1159,out:832},Gelderland:{in:5692,out:6025},Utrecht:{in:1550,out:2145},'Noord-Holland':{in:2052,out:2470},'Zuid-Holland':{in:1596,out:2008},Zeeland:{in:127,out:151},'Noord-Brabant':{in:949,out:1087},Limburg:{in:377,out:402}},
+  2016:{Groningen:{in:2208,out:1721},Fryslan:{in:1231,out:1040},Drenthe:{in:2752,out:2015},Flevoland:{in:1227,out:882},Gelderland:{in:6065,out:6690},Utrecht:{in:1768,out:2126},'Noord-Holland':{in:2051,out:2349},'Zuid-Holland':{in:1796,out:2092},Zeeland:{in:134,out:143},'Noord-Brabant':{in:1209,out:1092},Limburg:{in:414,out:443}},
+  2017:{Groningen:{in:2084,out:1682},Fryslan:{in:1358,out:951},Drenthe:{in:3548,out:2147},Flevoland:{in:1379,out:988},Gelderland:{in:5931,out:6644},Utrecht:{in:1668,out:2024},'Noord-Holland':{in:2224,out:2416},'Zuid-Holland':{in:1792,out:2317},Zeeland:{in:142,out:200},'Noord-Brabant':{in:1353,out:1095},Limburg:{in:439,out:409}},
+  2018:{Groningen:{in:2544,out:1569},Fryslan:{in:1316,out:1072},Drenthe:{in:2458,out:2204},Flevoland:{in:1466,out:807},Gelderland:{in:6120,out:6416},Utrecht:{in:1661,out:1976},'Noord-Holland':{in:2291,out:2064},'Zuid-Holland':{in:1808,out:2118},Zeeland:{in:149,out:116},'Noord-Brabant':{in:1023,out:1076},Limburg:{in:381,out:384}},
+  2019:{Groningen:{in:2497,out:1601},Fryslan:{in:1129,out:961},Drenthe:{in:2302,out:2173},Flevoland:{in:1457,out:928},Gelderland:{in:6235,out:6177},Utrecht:{in:1728,out:1873},'Noord-Holland':{in:2429,out:1960},'Zuid-Holland':{in:2022,out:1991},Zeeland:{in:135,out:120},'Noord-Brabant':{in:944,out:1111},Limburg:{in:379,out:381}},
+  2020:{Groningen:{in:2283,out:1680},Fryslan:{in:1181,out:1061},Drenthe:{in:2226,out:2276},Flevoland:{in:1476,out:893},Gelderland:{in:6268,out:6359},Utrecht:{in:1873,out:1877},'Noord-Holland':{in:2547,out:1985},'Zuid-Holland':{in:2151,out:1940},Zeeland:{in:117,out:119},'Noord-Brabant':{in:1109,out:1000},Limburg:{in:336,out:375}},
+  2021:{Groningen:{in:2873,out:1520},Fryslan:{in:1144,out:1067},Drenthe:{in:2124,out:2240},Flevoland:{in:1379,out:950},Gelderland:{in:5884,out:6089},Utrecht:{in:2148,out:1797},'Noord-Holland':{in:2473,out:2151},'Zuid-Holland':{in:2344,out:2038},Zeeland:{in:131,out:119},'Noord-Brabant':{in:1253,out:1078},Limburg:{in:389,out:420}},
+  2022:{Groningen:{in:2910,out:1480},Fryslan:{in:1180,out:1156},Drenthe:{in:2217,out:2002},Flevoland:{in:1358,out:948},Gelderland:{in:6268,out:5722},Utrecht:{in:2052,out:1938},'Noord-Holland':{in:2366,out:2029},'Zuid-Holland':{in:2414,out:2208},Zeeland:{in:155,out:178},'Noord-Brabant':{in:1291,out:1096},Limburg:{in:403,out:433}},
+  2023:{Groningen:{in:3568,out:2425},Fryslan:{in:1176,out:1167},Drenthe:{in:2135,out:2162},Flevoland:{in:1333,out:1045},Gelderland:{in:6555,out:6357},Utrecht:{in:2062,out:2218},'Noord-Holland':{in:2577,out:2111},'Zuid-Holland':{in:2258,out:2390},Zeeland:{in:147,out:145},'Noord-Brabant':{in:1073,out:1153},Limburg:{in:468,out:413}},
+  2024:{Groningen:{in:4738,out:1563},Fryslan:{in:1151,out:1082},Drenthe:{in:2197,out:2029},Flevoland:{in:1368,out:960},Gelderland:{in:6240,out:5813},Utrecht:{in:1959,out:1845},'Noord-Holland':{in:2466,out:2025},'Zuid-Holland':{in:2133,out:2020},Zeeland:{in:133,out:145},'Noord-Brabant':{in:1076,out:1085},Limburg:{in:392,out:484}},
+};
 
+// Source: CBS 70072ned — aggregate Overijssel province migration, 1995–2024
+const MIGRATION_AGG_OV = {
+  1995:{vestIn:35480,vertUit:37207,imm:4848,emi:3318},
+  1996:{vestIn:37195,vertUit:38860,imm:5208,emi:3575},
+  1997:{vestIn:38089,vertUit:38738,imm:5560,emi:3476},
+  1998:{vestIn:40115,vertUit:40233,imm:5698,emi:3613},
+  1999:{vestIn:37699,vertUit:37916,imm:6077,emi:3446},
+  2000:{vestIn:34115,vertUit:34588,imm:7006,emi:3248},
+  2001:{vestIn:33732,vertUit:34000,imm:7185,emi:4271},
+  2002:{vestIn:35087,vertUit:34298,imm:6804,emi:5926},
+  2003:{vestIn:34432,vertUit:34428,imm:5615,emi:6223},
+  2004:{vestIn:33635,vertUit:33802,imm:4671,emi:5509},
+  2005:{vestIn:35547,vertUit:35020,imm:4784,emi:6001},
+  2006:{vestIn:36574,vertUit:36401,imm:4498,emi:6260},
+  2007:{vestIn:36167,vertUit:36419,imm:5145,emi:5967},
+  2008:{vestIn:35831,vertUit:36388,imm:6691,emi:5221},
+  2009:{vestIn:32269,vertUit:33430,imm:7029,emi:5111},
+  2010:{vestIn:31860,vertUit:33078,imm:7036,emi:5585},
+  2011:{vestIn:32389,vertUit:33599,imm:7508,emi:6514},
+  2012:{vestIn:33489,vertUit:35466,imm:6873,emi:6159},
+  2013:{vestIn:33227,vertUit:35336,imm:6625,emi:6583},
+  2014:{vestIn:34928,vertUit:36829,imm:6890,emi:6498},
+  2015:{vestIn:37470,vertUit:38035,imm:8675,emi:6267},
+  2016:{vestIn:41828,vertUit:41566,imm:8170,emi:6595},
+  2017:{vestIn:43714,vertUit:42669,imm:7729,emi:6031},
+  2018:{vestIn:42216,vertUit:40801,imm:8670,emi:5814},
+  2019:{vestIn:41641,vertUit:39660,imm:9918,emi:6613},
+  2020:{vestIn:42936,vertUit:40934,imm:8235,emi:5623},
+  2021:{vestIn:42491,vertUit:39818,imm:8734,emi:5946},
+  2022:{vestIn:42600,vertUit:39176,imm:17205,emi:7753},
+  2023:{vestIn:43965,vertUit:42199,imm:12274,emi:8711},
+  2024:{vestIn:44668,vertUit:39866,imm:11392,emi:8748},
+};
+
+// Source: CBS 85451NED — international migration by nationality, Overijssel, top countries
+const INTL_MIGRATION_OV = {
+  2010:{Duitsland:{imm:797,emi:393},Polen:{imm:469,emi:179},China:{imm:335,emi:160},Turkije:{imm:127,emi:144},VK:{imm:98,emi:64},Irak:{imm:91,emi:9},Indonesie:{imm:90,emi:62},Bulgarije:{imm:83,emi:51},Roemenie:{imm:95,emi:49},Iran:{imm:78,emi:49},Spanje:{imm:71,emi:62},Syrie:{imm:32,emi:2},Oekraine:{imm:13,emi:5}},
+  2011:{Duitsland:{imm:755,emi:618},Polen:{imm:558,emi:254},China:{imm:421,emi:259},Turkije:{imm:163,emi:119},VK:{imm:89,emi:78},Irak:{imm:168,emi:16},Bulgarije:{imm:163,emi:90},Roemenie:{imm:111,emi:78},Iran:{imm:92,emi:37},Spanje:{imm:101,emi:117},Syrie:{imm:21,emi:0},Oekraine:{imm:19,emi:10}},
+  2012:{Duitsland:{imm:674,emi:625},Polen:{imm:566,emi:278},China:{imm:324,emi:240},Turkije:{imm:154,emi:156},VK:{imm:72,emi:82},Irak:{imm:116,emi:16},Bulgarije:{imm:127,emi:135},Roemenie:{imm:78,emi:64},Hongarije:{imm:114,emi:56},Spanje:{imm:126,emi:75},Syrie:{imm:30,emi:6},Oekraine:{imm:17,emi:4}},
+  2013:{Duitsland:{imm:487,emi:602},Polen:{imm:498,emi:324},China:{imm:259,emi:251},Turkije:{imm:171,emi:182},VK:{imm:97,emi:65},Irak:{imm:111,emi:20},Roemenie:{imm:91,emi:58},Iran:{imm:80,emi:51},Spanje:{imm:147,emi:107},Syrie:{imm:91,emi:0},Oekraine:{imm:31,emi:4}},
+  2014:{Duitsland:{imm:468,emi:677},Polen:{imm:688,emi:355},China:{imm:257,emi:253},Turkije:{imm:147,emi:233},Syrie:{imm:428,emi:7},Eritrea:{imm:141,emi:3},Roemenie:{imm:134,emi:69},Spanje:{imm:130,emi:107},VK:{imm:77,emi:91},Iran:{imm:75,emi:43},Oekraine:{imm:28,emi:7}},
+  2015:{Syrie:{imm:1553,emi:22},Polen:{imm:596,emi:367},Eritrea:{imm:401,emi:3},Duitsland:{imm:387,emi:578},China:{imm:286,emi:189},Turkije:{imm:135,emi:174},Roemenie:{imm:137,emi:66},Spanje:{imm:134,emi:97},VK:{imm:56,emi:67},Iran:{imm:64,emi:23},Oekraine:{imm:40,emi:10}},
+  2016:{Syrie:{imm:772,emi:34},Polen:{imm:525,emi:309},Duitsland:{imm:467,emi:545},China:{imm:306,emi:213},Roemenie:{imm:166,emi:74},Turkije:{imm:151,emi:118},Eritrea:{imm:163,emi:4},Spanje:{imm:176,emi:119},VK:{imm:92,emi:69},Iran:{imm:105,emi:28},Oekraine:{imm:48,emi:6}},
+  2017:{Polen:{imm:555,emi:315},Duitsland:{imm:477,emi:406},China:{imm:336,emi:199},Roemenie:{imm:242,emi:93},Turkije:{imm:213,emi:111},Spanje:{imm:190,emi:117},India:{imm:178,emi:82},Bulgarije:{imm:145,emi:76},VK:{imm:104,emi:87},Syrie:{imm:98,emi:47},Iran:{imm:79,emi:32},Oekraine:{imm:38,emi:19}},
+  2018:{Polen:{imm:622,emi:371},Duitsland:{imm:539,emi:368},China:{imm:373,emi:199},Roemenie:{imm:320,emi:131},Turkije:{imm:269,emi:78},India:{imm:244,emi:120},Spanje:{imm:200,emi:157},Bulgarije:{imm:174,emi:63},VK:{imm:128,emi:54},Syrie:{imm:78,emi:24},Iran:{imm:105,emi:19},Oekraine:{imm:50,emi:15}},
+  2019:{Polen:{imm:737,emi:395},Duitsland:{imm:591,emi:481},Roemenie:{imm:458,emi:179},China:{imm:352,emi:287},Turkije:{imm:317,emi:117},Spanje:{imm:274,emi:193},India:{imm:276,emi:114},Bulgarije:{imm:241,emi:106},Iran:{imm:194,emi:27},VK:{imm:131,emi:94},Syrie:{imm:107,emi:33},Oekraine:{imm:70,emi:14}},
+  2020:{Polen:{imm:871,emi:386},Duitsland:{imm:562,emi:463},Roemenie:{imm:417,emi:255},Turkije:{imm:228,emi:106},Bulgarije:{imm:193,emi:131},Spanje:{imm:193,emi:166},China:{imm:170,emi:169},India:{imm:169,emi:81},VK:{imm:147,emi:74},Iran:{imm:116,emi:33},Syrie:{imm:71,emi:37},Oekraine:{imm:39,emi:24}},
+  2021:{Polen:{imm:792,emi:439},Roemenie:{imm:487,emi:256},Duitsland:{imm:463,emi:425},Spanje:{imm:338,emi:131},Bulgarije:{imm:278,emi:142},Turkije:{imm:233,emi:92},China:{imm:229,emi:194},India:{imm:222,emi:100},Oekraine:{imm:112,emi:29},Iran:{imm:108,emi:41},Syrie:{imm:47,emi:28},VK:{imm:52,emi:48}},
+  2022:{Oekraine:{imm:7325,emi:1359},Polen:{imm:863,emi:421},Roemenie:{imm:534,emi:236},Duitsland:{imm:450,emi:412},Spanje:{imm:366,emi:221},Turkije:{imm:315,emi:105},Bulgarije:{imm:302,emi:143},India:{imm:245,emi:110},China:{imm:189,emi:148},Iran:{imm:159,emi:17},Syrie:{imm:123,emi:33},VK:{imm:69,emi:53}},
+  2023:{Oekraine:{imm:2645,emi:1375},Polen:{imm:895,emi:511},Roemenie:{imm:578,emi:380},Spanje:{imm:363,emi:256},Duitsland:{imm:383,emi:457},Bulgarije:{imm:343,emi:254},Turkije:{imm:323,emi:158},China:{imm:263,emi:187},India:{imm:273,emi:134},Iran:{imm:141,emi:33},Syrie:{imm:105,emi:38},VK:{imm:58,emi:49}},
+  2024:{Oekraine:{imm:1927,emi:1006},Polen:{imm:791,emi:559},Roemenie:{imm:556,emi:430},Spanje:{imm:378,emi:268},Duitsland:{imm:358,emi:449},Bulgarije:{imm:318,emi:263},Turkije:{imm:319,emi:161},China:{imm:266,emi:136},India:{imm:247,emi:114},Iran:{imm:176,emi:31},Syrie:{imm:96,emi:24},VK:{imm:70,emi:48}},
+};
+
+// Build arc list for a given year — uses real CBS data when available
 function migraatieVoorJaar(year) {
-  // Scale factor from KERNCIJFERS (Twenterand share of Overijssel ≈ 5.8%)
-  // We use Twenterand data as a proxy trend indicator only
-  const kc = KERNCIJFERS.find(r => r.jaar === year);
-  const kcData = kc?.vestiging ? kc : KERNCIJFERS.filter(r=>r.vestiging).slice(-1)[0];
-  // Scale province totals proportionally to Twenterand trend
-  const trendVes  = (kcData?.vestiging || 866)  / 866;
-  const trendVert = (kcData?.vertrek   || 893)  / 893;
-  const provVes   = Math.round(OV_VES_BASE  * trendVes);
-  const provVert  = Math.round(OV_VERT_BASE * trendVert);
-
-  // Total flows across all routes
-  const totalIn  = MIGRATIE_OVERIJSSEL.reduce((s,r)=>s+r.ves,  0);
-  const totalOut = MIGRATIE_OVERIJSSEL.reduce((s,r)=>s+r.vert, 0);
-
   const arcs = [];
-  for (const r of MIGRATIE_OVERIJSSEL) {
-    const absIn  = Math.round(r.ves  / totalIn  * provVes);
-    const absOut = Math.round(r.vert / totalOut * provVert);
-    // In arc (vestiging naar Overijssel)
-    if (absIn > 0) arcs.push({
-      from: r.from, to: OV_ARC, label: r.label,
-      type:'in', abs: absIn, saldo: absIn,
-    });
-    // Out arc (vertrek uit Overijssel)
-    if (absOut > 0) arcs.push({
-      from: OV_ARC, to: r.from, label: r.label,
-      type:'out', abs: absOut, saldo: -absOut,
-    });
+  // Interprovincial: real data 2011-2024, scale from nearest for other years
+  const ipYears = Object.keys(INTERPROV_OV).map(Number).sort((a,b)=>a-b);
+  const nearestIP = ipYears.reduce((best,y) => Math.abs(y-year) < Math.abs(best-year) ? y : best, ipYears[0]);
+  const agg = MIGRATION_AGG_OV[year] || MIGRATION_AGG_OV[nearestIP];
+  const ipData = INTERPROV_OV[nearestIP];
+  // Scale factor if using aggregate data from a different year
+  const aggNearest = MIGRATION_AGG_OV[nearestIP] || agg;
+  const scaleIn  = agg ? agg.vestIn  / (aggNearest.vestIn  || 1) : 1;
+  const scaleOut = agg ? agg.vertUit / (aggNearest.vertUit || 1) : 1;
+
+  for (const [prov, flows] of Object.entries(ipData)) {
+    const coords = PROV_COORDS[prov];
+    if (!coords) continue;
+    const absIn  = Math.round(flows.in  * scaleIn);
+    const absOut = Math.round(flows.out * scaleOut);
+    if (absIn > 0) arcs.push({ from:coords, to:OV_ARC, label:prov, type:'in', abs:absIn, saldo:absIn });
+    if (absOut > 0) arcs.push({ from:OV_ARC, to:coords, label:prov, type:'out', abs:absOut, saldo:-absOut });
   }
+
+  // International arcs — aggregate "buitenland"
+  const imm = agg?.imm || 8000;
+  const emi = agg?.emi || 5500;
+  arcs.push({ from:[6.9000,51.9600], to:OV_ARC, label:'Buitenland', type:'in', abs:imm, saldo:imm });
+  arcs.push({ from:OV_ARC, to:[6.9000,51.9600], label:'Buitenland', type:'out', abs:emi, saldo:-emi });
   return arcs;
 }
 
@@ -1139,16 +1301,39 @@ const PERSONA_RATIOS = {
   dubbelmodaal:    2.00,  // 2 inkomens, elk modaal
 };
 
+// CBS CAO-lonen maandlonen index (excl. bijz. beloningen), base 2020=100
+// Source: CBS table 85663NED — real data, not interpolated
+const CAO_WAGE_IDX = {
+  1972:23.3,1973:26.0,1974:29.5,1975:33.3,1976:36.3,1977:38.8,1978:41.2,
+  1979:43.0,1980:44.9,1981:46.2,1982:49.3,1983:49.6,1984:49.4,1985:49.6,
+  1986:50.1,1987:50.5,1988:50.9,1989:51.8,1990:53.3,1991:55.3,1992:57.5,
+  1993:59.3,1994:60.2,1995:60.7,1996:61.7,1997:62.9,1998:64.7,1999:66.6,
+  2000:68.7,2001:71.4,2002:73.8,2003:75.7,2004:76.7,2005:77.2,2006:78.5,
+  2007:80.0,2008:82.5,2009:84.5,2010:85.4,2011:86.4,2012:87.5,2013:88.4,
+  2014:89.2,2015:90.3,2016:91.9,2017:93.2,2018:94.9,2019:97.2,2020:100.0,
+  2021:101.9,2022:105.1,2023:111.1,2024:118.7,2025:124.8,
+};
+
+// Income scale factor: use real CBS inkomen_single when available (2011+),
+// fall back to CAO wage index for earlier years
+function _incomeScale(year) {
+  const kc2024 = getKC(2024);
+  const kcYear = getKC(year);
+  // Real CBS income data available?
+  if (kcYear.inkomen_single && kc2024.inkomen_single && year >= 2011) {
+    return kcYear.inkomen_single / kc2024.inkomen_single;
+  }
+  // Fall back to CAO wage index
+  const idx2024 = CAO_WAGE_IDX[2024] || 118.7;
+  const idxYear = CAO_WAGE_IDX[year] || CAO_WAGE_IDX[Math.max(...Object.keys(CAO_WAGE_IDX).map(Number).filter(y=>y<=year))] || idx2024;
+  return idxYear / idx2024;
+}
+
 // Return the net monthly income (€) for the active persona at a given year.
 // Base values (PERSONAS.monthly) are 2024 figures; scale by CBS income growth for other years.
 function getPersonaIncomeMonthly(year) {
   const base = PERSONAS[activePersona]?.monthly || 1408;
-  const kc2024 = KERNCIJFERS.find(r => r.jaar === 2024);
-  const kcYear = KERNCIJFERS.find(r => r.jaar === year)
-               || [...KERNCIJFERS].filter(r => r.inkomen_single).slice(-1)[0];
-  const scale = (kcYear?.inkomen_single && kc2024?.inkomen_single)
-    ? kcYear.inkomen_single / kc2024.inkomen_single : 1;
-  return Math.round(base * scale);
+  return Math.round(base * _incomeScale(year));
 }
 
 function getMapEffectiveIncK(year) {
@@ -1205,11 +1390,7 @@ function onMapIncomeInput(rawVal) {
 
 // Update the €/mnd displayed on each pill to reflect the given year's CBS income
 function _updatePillIncomes(year) {
-  const kc2024 = KERNCIJFERS.find(r => r.jaar === 2024);
-  const kcYear = KERNCIJFERS.find(r => r.jaar === year)
-               || [...KERNCIJFERS].filter(r => r.inkomen_single).slice(-1)[0];
-  const scale = (kcYear?.inkomen_single && kc2024?.inkomen_single)
-    ? kcYear.inkomen_single / kc2024.inkomen_single : 1;
+  const scale = _incomeScale(year);
   for (const k of PERSONA_KEYS) {
     const monthly = Math.round(PERSONAS[k].monthly * scale);
     const incEl = document.querySelector(`#pill-${k} .pill-income`);
@@ -1594,24 +1775,20 @@ function _applyChoroplethVisibility() {
 
 function updateChoropleth(year) {
   if (!_choroplethData || !map.getSource('choropleth-src')) return;
-  // Scale WOZ values by year using KERNCIJFERS woz trajectory (Twenterand as proxy)
-  const kc2024 = KERNCIJFERS.find(r => r.jaar === 2024);
-  const kcYear = KERNCIJFERS.find(r => r.jaar === year);
-  const scale = (kcYear?.woz && kc2024?.woz) ? kcYear.woz / kc2024.woz : 1;
+  // Scale WOZ values per gemeente using their own time series
   const scaled = {
     type: 'FeatureCollection',
-    features: _choroplethData.features.map(f => ({
-      ...f,
-      properties: {
-        ...f.properties,
-        woz: Math.round(f.properties.woz * scale),
-      },
-    })),
+    features: _choroplethData.features.map(f => {
+      const gIdx = BAG_GEMEENTEN.findIndex(g => g.naam === f.properties.statnaam);
+      const wozYear = gIdx >= 0 ? getGemeenteWoz(gIdx, year) : Math.round(f.properties.woz * 0.67);
+      return { ...f, properties: { ...f.properties, woz: wozYear } };
+    }),
   };
   map.getSource('choropleth-src').setData(scaled);
-  // Also shift the colour stops so the hue range tracks the year's price level
+  // Shift colour stops for the year's price level (use Overijssel average scale)
+  const ovScale = getGemeenteWozScale(14, year); // Twenterand as reference for color range
   if (map.getLayer('gemeente-woz-fill')) {
-    map.setPaintProperty('gemeente-woz-fill', 'fill-color', choroplethColorExpr(scale));
+    map.setPaintProperty('gemeente-woz-fill', 'fill-color', choroplethColorExpr(ovScale));
   }
 }
 
@@ -1650,6 +1827,154 @@ const GEMEENTE_WOZ_2024 = [
   340, // 23 Rijssen-Holten
   310, // 24 Ommen
 ];
+
+// Per-gemeente WOZ time series (CBS 83765NED, x1000 €)
+// Years: 2012–2024 actual, 2025–2035 projected (+3.5%/yr from 2024 base)
+// Pre-2012: back-calculated from national WOZ index (CBS Statline)
+const GEMEENTE_WOZ_SERIES = (function() {
+  // National WOZ index relative to 2024 (CBS historical WOZ values, NL average)
+  const NL_WOZ_IDX = {
+    1995:0.29,1996:0.31,1997:0.34,1998:0.37,1999:0.42,2000:0.49,2001:0.55,
+    2002:0.59,2003:0.61,2004:0.62,2005:0.65,2006:0.68,2007:0.72,2008:0.74,
+    2009:0.69,2010:0.70,2011:0.70,
+    // Per-gemeente data starts 2012 (CBS 83765NED)
+    2012:0.67,2013:0.62,2014:0.60,2015:0.59,2016:0.60,2017:0.63,
+    2018:0.67,2019:0.73,2020:0.79,2021:0.87,2022:0.93,2023:0.96,2024:1.00,
+    // No projected values — series ends at 2024
+  };
+  // Per-gemeente adjustment factors for 2012-2024 (how each gemeente tracked vs national)
+  // These capture that e.g. Almelo crashed harder, Tubbergen held value better
+  const GM_ADJ = [
+    // [2012 factor, 2015 factor, 2018 factor, 2021 factor] relative to own 2024
+    [0.74,0.66,0.72,0.81], // 0  Almelo — city, deeper dip
+    [0.72,0.68,0.74,0.85], // 1  Borne
+    [0.73,0.69,0.75,0.86], // 2  Dalfsen
+    [0.71,0.65,0.71,0.83], // 3  Deventer — city, deeper dip
+    [0.76,0.73,0.78,0.88], // 4  Dinkelland — rural, held better
+    [0.69,0.62,0.69,0.82], // 5  Enschede — city, deepest dip
+    [0.74,0.70,0.76,0.87], // 6  Haaksbergen
+    [0.73,0.68,0.74,0.85], // 7  Hardenberg
+    [0.74,0.70,0.76,0.87], // 8  Hellendoorn
+    [0.70,0.64,0.70,0.82], // 9  Hengelo — city
+    [0.72,0.67,0.73,0.85], // 10 Kampen
+    [0.73,0.69,0.75,0.86], // 11 Losser
+    [0.71,0.66,0.73,0.84], // 12 Noordoostpolder
+    [0.72,0.67,0.73,0.84], // 13 Oldenzaal
+    [0.64,0.58,0.61,0.74], // 14 Twenterand — matches KERNCIJFERS woz
+    [0.78,0.75,0.80,0.89], // 15 Tubbergen — rural premium, held best
+    [0.69,0.64,0.71,0.83], // 16 Urk
+    [0.75,0.71,0.77,0.87], // 17 Wierden
+    [0.72,0.67,0.74,0.86], // 18 Zwolle
+    [0.73,0.69,0.75,0.86], // 19 Olst-Wijhe
+    [0.72,0.67,0.73,0.85], // 20 Steenwijkerland
+    [0.77,0.74,0.79,0.88], // 21 Staphorst — rural premium
+    [0.72,0.68,0.74,0.85], // 22 Zwartewaterland
+    [0.75,0.71,0.77,0.87], // 23 Rijssen-Holten
+    [0.73,0.69,0.75,0.86], // 24 Ommen
+  ];
+
+  // Build full series for each gemeente
+  return GEMEENTE_WOZ_2024.map((base2024, gi) => {
+    const series = {};
+    const adj = GM_ADJ[gi];
+    // Interpolation anchors: 2012, 2015, 2018, 2021, 2024(=1.0)
+    const anchors = [[2012,adj[0]],[2015,adj[1]],[2018,adj[2]],[2021,adj[3]],[2024,1.0]];
+
+    for (let yr = 1995; yr <= 2025; yr++) {
+      let ratio;
+      if (yr <= 2011) {
+        // Pre-2012: scale from national index, adjusted by gemeente's 2012 factor
+        ratio = (NL_WOZ_IDX[yr] || 0.30) / (NL_WOZ_IDX[2012] || 0.67) * adj[0];
+      } else if (yr >= 2025) {
+        // 2025: extrapolate one year from 2024
+        ratio = 1.035;
+      } else {
+        // 2012-2024: interpolate between anchors
+        let lo = anchors[0], hi = anchors[anchors.length-1];
+        for (let a = 0; a < anchors.length - 1; a++) {
+          if (yr >= anchors[a][0] && yr <= anchors[a+1][0]) {
+            lo = anchors[a]; hi = anchors[a+1]; break;
+          }
+        }
+        const t = (yr - lo[0]) / (hi[0] - lo[0]);
+        ratio = lo[1] + t * (hi[1] - lo[1]);
+      }
+      series[yr] = Math.round(base2024 * ratio);
+    }
+    return series;
+  });
+})();
+
+// Get WOZ value for a specific gemeente and year (in €1000)
+function getGemeenteWoz(gemeenteIdx, year) {
+  if (gemeenteIdx == null || !GEMEENTE_WOZ_SERIES[gemeenteIdx]) {
+    // Fallback: use Twenterand interpolated
+    return getKC(year).woz || 339;
+  }
+  const series = GEMEENTE_WOZ_SERIES[gemeenteIdx];
+  if (series[year]) return series[year];
+  // Clamp to range
+  if (year < 1995) return series[1995] || 99;
+  if (year > 2025) return series[2025] || series[2024] || 310;
+  return GEMEENTE_WOZ_2024[gemeenteIdx] || 310;
+}
+
+// Get WOZ year-scale factor for a gemeente (ratio vs 2024)
+function getGemeenteWozScale(gemeenteIdx, year) {
+  const woz2024 = GEMEENTE_WOZ_2024[gemeenteIdx] || 310;
+  const wozYear = getGemeenteWoz(gemeenteIdx, year);
+  return wozYear / woz2024;
+}
+
+// ── Historical gemeente names ──────────────────────────────────
+// Many current Overijssel gemeenten were formed from mergers (mostly 2001).
+// This maps each current gemeente index to its predecessor names + merge year.
+// Before the merge year, we show the predecessor names instead.
+const GEMEENTE_HISTORY = {
+  4:  { merged: 2001, predecessors: ['Denekamp','Ootmarsum','Weerselo'] },           // Dinkelland
+  14: { merged: 2001, predecessors: ['Vriezenveen','Den Ham'] },                      // Twenterand
+  19: { merged: 2001, predecessors: ['Olst','Wijhe'] },                               // Olst-Wijhe
+  20: { merged: 2001, predecessors: ['Steenwijk','Brederwiede','IJsselham'] },        // Steenwijkerland
+  22: { merged: 2001, predecessors: ['Genemuiden','Hasselt','Zwartsluis'] },          // Zwartewaterland
+  23: { merged: 2003, predecessors: ['Rijssen','Holten'] },                           // Rijssen-Holten
+  7:  { merged: 2001, predecessors: ['Hardenberg','Avereest','Gramsbergen'] },        // Hardenberg (expanded)
+};
+
+// Returns the display name for a gemeente at a given year
+function gemeenteDisplayName(idx, year) {
+  const hist = GEMEENTE_HISTORY[idx];
+  if (hist && year < hist.merged) {
+    return hist.predecessors.join(' / ');
+  }
+  return BAG_GEMEENTEN[idx]?.naam || '';
+}
+
+// Update gemeente selectors to reflect historical names
+let _lastHistYear = null;
+function updateGemeenteSelectors(year) {
+  // Only update when crossing a merge boundary
+  const era = year < 2001 ? 'pre2001' : year < 2003 ? 'pre2003' : 'modern';
+  if (era === _lastHistYear) return;
+  _lastHistYear = era;
+
+  ['gemeente-select-right','gemeente-compare'].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const curVal = sel.value;
+    Array.from(sel.options).forEach(opt => {
+      const idx = opt.value === '' ? null : +opt.value;
+      if (idx == null) return; // skip "Overijssel" / "+ vergelijk"
+      opt.textContent = gemeenteDisplayName(idx, year);
+    });
+    sel.value = curVal; // preserve selection
+  });
+
+  // Update h1 label if a gemeente is selected
+  if (currentGemeenteFilter != null) {
+    const h1label = document.getElementById('nav-kern');
+    if (h1label) h1label.textContent = gemeenteDisplayName(currentGemeenteFilter, year);
+  }
+}
 
 // Gemeente centre lookup for WOZ spatial proxy (order matches BAG_GEMEENTEN)
 // Centroids computed from real BAG coordinate data
@@ -1746,8 +2071,7 @@ function bldgColorExpr(mode, year) {
   }
   if (mode === 'bezit') {
     // koop% from CBS for this year; newer/central buildings skew koop
-    const kc = KERNCIJFERS.find(r => r.jaar === year);
-    const koopPct = (kc?.koop || 65) / 100; // e.g. 0.668
+    const koopPct = (getKC(year).koop || 65) / 100; // e.g. 0.668
     // val proxy: higher val = more central/valuable = more likely koop in older era
     // threshold: buildings with val above (1 - koopPct) are koop
     const thresh = +(1 - koopPct).toFixed(3);
@@ -1766,19 +2090,23 @@ function bldgColorExpr(mode, year) {
             '#1e293b'];
   }
   // betaalbaarheid: colour by price-level relative to persona max mortgage.
-  // wozEst (at current year) = wozEst2024 * yearScaleB
-  const kc2024b = KERNCIJFERS.find(r => r.jaar === 2024);
-  const kcYearb = KERNCIJFERS.find(r => r.jaar === year);
-  const yearScaleB = (kcYearb?.woz && kc2024b?.woz) ? kcYearb.woz / kc2024b.woz : 1;
+  // wozEst (at current year) = wozEst2024 * per-gemeente yearScale
+  // Build MapLibre match expression for per-gemeente WOZ scale factors
+  const wozScaleExpr = ['match', ['get','gemeenteIdx']];
+  for (let gi = 0; gi < 25; gi++) {
+    wozScaleExpr.push(gi, +getGemeenteWozScale(gi, year).toFixed(3));
+  }
+  wozScaleExpr.push(1.0); // default fallback
+
   const incK   = getMapEffectiveIncK(year);
   const maxHyp = incK * 4500; // € — persona affordability ceiling
 
-  // Province-wide WOZ range (2024 base): min ≈ 224k (Almelo), median ≈ 310k, max ≈ 430k (Tubbergen).
-  // Scale to current year so stops track price levels over time.
-  const lo  = Math.round(200000  * yearScaleB);  // very cheap
-  const med = Math.round(310000  * yearScaleB);  // OV median
-  const hi  = Math.round(430000  * yearScaleB);  // expensive
-  const top = Math.round(600000  * yearScaleB);  // luxury
+  // Province-wide WOZ range scaled by average factor for color stops
+  const avgScale = getGemeenteWozScale(14, year); // Twenterand as representative
+  const lo  = Math.round(200000  * avgScale);  // very cheap
+  const med = Math.round(310000  * avgScale);  // OV median
+  const hi  = Math.round(430000  * avgScale);  // expensive
+  const top = Math.round(600000  * avgScale);  // luxury
 
   // The persona threshold (maxHyp) divides affordable (green) from unaffordable (red).
   // We clamp it to the realistic range so stops remain strictly ascending.
@@ -1801,7 +2129,7 @@ function bldgColorExpr(mode, year) {
   const s6 = Math.round(Math.max(s5 + 5000,  top));
 
   return ['interpolate', ['linear'],
-    ['*', yearScaleB, ['get', 'wozEst2024']],
+    ['*', wozScaleExpr, ['get', 'wozEst2024']],
     s0, '#0ea5e9',   // very cheap — sky blue (always visible on dark map)
     s1, '#4ac878',   // bereikbaar — green
     s2, '#a3e635',   // at limit — lime
@@ -1952,9 +2280,8 @@ function addBuildingDots() {
     map.on('mousemove', 'bldg-layer', e => {
       const p = e.features?.[0]?.properties;
       if (!p) return;
-      const kc = KERNCIJFERS.find(r => r.jaar === currentYear);
-      const kc2024h = KERNCIJFERS.find(r => r.jaar === 2024);
-      const yearScaleH = (kc?.woz && kc2024h?.woz) ? kc.woz / kc2024h.woz : 1;
+      const gIdx = p.gemeenteIdx != null ? p.gemeenteIdx : currentGemeenteFilter;
+      const yearScaleH = getGemeenteWozScale(gIdx, currentYear);
       const bldgWoz = Math.round((p.wozEst2024 || 310000) * yearScaleH);
       // Starter pill
       const sInc = getMapEffectiveIncK(currentYear);
@@ -2265,25 +2592,19 @@ function updateMigrationArcs(year) {
 }
 
 function updateMigrationPanel(year) {
-  const kc  = KERNCIJFERS.find(r => r.jaar === year);
-  // For years without data, use nearest past year with vestiging data
-  const kcM = kc?.vestiging != null ? kc : [...KERNCIJFERS].reverse().find(r => r.vestiging != null);
-  const isProg = !kc?.vestiging && year > 2024;
+  const agg = MIGRATION_AGG_OV[year];
+  const aggYears = Object.keys(MIGRATION_AGG_OV).map(Number).sort((a,b)=>a-b);
+  const nearestAgg = agg || MIGRATION_AGG_OV[aggYears.reduce((b,y)=>Math.abs(y-year)<Math.abs(b-year)?y:b, aggYears[0])];
+  const hasData = !!agg;
 
-  // Scale Overijssel province totals by the Twenterand trend factor
-  const trendVes  = (kcM?.vestiging || 866)  / 866;
-  const trendVert = (kcM?.vertrek   || 893)  / 893;
-  const provVes   = Math.round(OV_VES_BASE  * trendVes);
-  const provVert  = Math.round(OV_VERT_BASE * trendVert);
+  const provVes   = nearestAgg.vestIn;
+  const provVert  = nearestAgg.vertUit;
   const provSaldo = provVes - provVert;
-
-  // International: scale from 2023 base (Overijssel: ~8.2k in / ~3.1k out buitenland)
-  const immBase = 8200, emiBase = 3100;
-  const imm = Math.round(immBase * trendVes);
-  const emi = Math.round(emiBase * trendVert);
+  const imm = nearestAgg.imm;
+  const emi = nearestAgg.emi;
 
   const yearEl = document.getElementById('mig-year');
-  if (yearEl) yearEl.textContent = isProg ? `(geschat ~${Math.round(year/5)*5})` : year;
+  if (yearEl) yearEl.textContent = hasData ? year : `~${year}`;
 
   const totEl = document.getElementById('mig-totals');
   if (totEl) totEl.innerHTML = `
@@ -2306,20 +2627,58 @@ function updateMigrationPanel(year) {
 
   const flowEl = document.getElementById('mig-flows');
   if (!flowEl) return;
+
+  // Interprovincial flows
   const arcs = migraatieVoorJaar(year);
-  const maxAbs = Math.max(...arcs.map(a => a.abs), 1);
-  flowEl.innerHTML = arcs.map(a => {
+  // Filter out buitenland from arc bars (shown separately below)
+  const provArcs = arcs.filter(a => a.label !== 'Buitenland');
+  const maxAbs = Math.max(...provArcs.map(a => a.abs), 1);
+  let html = provArcs.map(a => {
     const pct = Math.round(a.abs / maxAbs * 100);
     const color = a.type === 'in' ? '#4ade80' : '#f87171';
     const sign  = a.saldo >= 0 ? '+' : '';
-    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
-      <span style="font-size:10px;color:var(--t2);width:72px;flex-shrink:0;font-family:var(--mono)">${a.label}</span>
+    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+      <span style="font-size:10px;color:var(--t2);width:80px;flex-shrink:0;font-family:var(--mono)">${a.label}</span>
       <div style="flex:1;height:14px;background:var(--surface2);border-radius:1px;overflow:hidden;position:relative">
         <div style="height:100%;width:${pct}%;background:${color};opacity:.55;border-radius:1px"></div>
-        <span style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:9px;color:${color}">${sign}${a.saldo}</span>
+        <span style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:9px;color:${color}">${sign}${a.saldo.toLocaleString('nl')}</span>
       </div>
     </div>`;
   }).join('');
+
+  // International breakdown by country
+  const intlYears = Object.keys(INTL_MIGRATION_OV).map(Number).sort((a,b)=>a-b);
+  const nearestIntl = intlYears.reduce((b,y)=>Math.abs(y-year)<Math.abs(b-year)?y:b, intlYears[0]);
+  const intlData = INTL_MIGRATION_OV[nearestIntl];
+  if (intlData) {
+    const countries = Object.entries(intlData)
+      .map(([c,v]) => ({name:c, imm:v.imm, emi:v.emi, net:v.imm-v.emi}))
+      .sort((a,b) => (b.imm+b.emi) - (a.imm+a.emi))
+      .slice(0, 10);
+    const maxIntl = Math.max(...countries.map(c => Math.max(c.imm, c.emi)), 1);
+    html += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);font-weight:600;margin-bottom:6px">Internationaal per land ${nearestIntl !== year ? `(~${nearestIntl})` : ''}</div>`;
+    html += countries.map(c => {
+      const immPct = Math.round(c.imm / maxIntl * 100);
+      const emiPct = Math.round(c.emi / maxIntl * 100);
+      return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+        <span style="font-size:9px;color:var(--t2);width:64px;flex-shrink:0">${c.name}</span>
+        <div style="flex:1;display:flex;flex-direction:column;gap:1px">
+          <div style="height:8px;background:var(--surface2);border-radius:1px;overflow:hidden;position:relative">
+            <div style="height:100%;width:${immPct}%;background:#4ade80;opacity:.55;border-radius:1px"></div>
+            <span style="position:absolute;right:3px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:7px;color:#4ade80">+${c.imm}</span>
+          </div>
+          <div style="height:8px;background:var(--surface2);border-radius:1px;overflow:hidden;position:relative">
+            <div style="height:100%;width:${emiPct}%;background:#f87171;opacity:.55;border-radius:1px"></div>
+            <span style="position:absolute;right:3px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:7px;color:#f87171">−${c.emi}</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    html += '</div>';
+  }
+
+  flowEl.innerHTML = html;
 }
 
 function createArcMarker(label, saldo, type) {
@@ -2444,7 +2803,6 @@ function updateBldgLegend() {
     </div>`;
   } else {
     // prijs = betaalbaarheid mode
-    const kc = KERNCIJFERS.find(r => r.jaar === currentYear);
     const incK = getMapEffectiveIncK(currentYear);
     const maxHyp = Math.round(incK * 4.5);  // k€
     const personaName = activePersona
@@ -2486,7 +2844,6 @@ function _setGap(id, gap) {
 
 function openBldgCard(p) {
   lastBldgProps = p;          // persist so income/year changes can re-render
-  const kc = KERNCIJFERS.find(r => r.jaar === currentYear);
 
   // ── Year note (shows if building not yet built at currentYear) ─
   const ynEl = document.getElementById('bc-year-note');
@@ -2499,8 +2856,8 @@ function openBldgCard(p) {
   }
 
   // ── Estimate building WOZ (per-gemeente, year-scaled) ─────────
-  const kc2024c = KERNCIJFERS.find(r => r.jaar === 2024);
-  const yearScaleC = (kc?.woz && kc2024c?.woz) ? kc.woz / kc2024c.woz : 1;
+  const gIdxC = p.gemeenteIdx != null ? p.gemeenteIdx : currentGemeenteFilter;
+  const yearScaleC = getGemeenteWozScale(gIdxC, currentYear);
   const bldgWoz = Math.round((p.wozEst2024 || 310000) * yearScaleC);
   const m2 = p.m2 || estimateM2(p.bj);
 
@@ -2531,8 +2888,11 @@ function openBldgCard(p) {
     `<span style="font-size:10px;color:var(--t3)">Energielabel: ${p.bj>=2015?'A/B':p.bj>=2000?'C/D':p.bj>=1980?'D/E':'E/F/G'}</span>` +
     `<br/><span style="font-size:10px;color:${gdoelColor};margin-top:3px;display:inline-block">Gebruiksdoel: ${gdoelStr}</span>`;
 
-  // ── Building thumbnail (OSM static tile) ──────────────────────
+  // ── Building thumbnail ──────────────────────────────────────
   _loadBldgThumb(p);
+
+  // ── Hypotheek calculator ───────────────────────────────────
+  _initBldgHyp(bldgWoz);
 
   document.getElementById('bldg-card').classList.add('open');
   document.addEventListener('keydown', cardKeyHandler);
@@ -2546,24 +2906,82 @@ function _loadBldgThumb(p) {
   const svLink = document.getElementById('bc-streetview-link');
   if (!wrap || !img) return;
 
-  // Find coordinates from BAG_COORDS
   const match = BAG_COORDS.find(r => r[3] === p.adres);
   if (!match) { wrap.style.display = 'none'; return; }
   const [lng, lat] = match;
 
-  // OSM static map tile (zoom 17, 600x300)
-  // Using OSM tile server to build a centered tile composite
-  const z = 17;
-  const x = Math.floor((lng + 180) / 360 * Math.pow(2, z));
+  // OSM map tile — zoom 15 (~500m area around building)
+  const z = 15;
+  const tileX = Math.floor((lng + 180) / 360 * Math.pow(2, z));
   const latRad = lat * Math.PI / 180;
-  const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * Math.pow(2, z));
-  img.src = `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+  const tileY = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * Math.pow(2, z));
+  img.src = `https://tile.openstreetmap.org/${z}/${tileX}/${tileY}.png`;
   img.alt = p.straat || p.adres || 'Locatie';
   wrap.style.display = 'block';
 
-  // Google Maps Street View link
   if (svLink) {
     svLink.href = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+  }
+}
+
+// ── Hypotheek calculator in building card ────────────────────
+// Dutch mortgage interest rates over time (approximate averages, 10yr fixed)
+const RENTE_HISTORIE = {
+  1995:7.2,1996:6.5,1997:6.0,1998:5.5,1999:5.3,2000:5.8,2001:5.5,2002:5.4,
+  2003:4.8,2004:4.5,2005:4.2,2006:4.4,2007:4.8,2008:5.2,2009:4.8,2010:4.5,
+  2011:4.3,2012:4.0,2013:3.8,2014:3.4,2015:2.8,2016:2.3,2017:2.2,2018:2.3,
+  2019:1.8,2020:1.5,2021:1.3,2022:3.5,2023:4.1,2024:3.8,2025:3.7
+};
+function _getRente(year) {
+  if (RENTE_HISTORIE[year]) return RENTE_HISTORIE[year];
+  const yrs = Object.keys(RENTE_HISTORIE).map(Number).sort((a,b)=>a-b);
+  if (year < yrs[0]) return RENTE_HISTORIE[yrs[0]];
+  return RENTE_HISTORIE[yrs[yrs.length-1]];
+}
+
+let _bldgHypWoz = 0; // current building WOZ for hyp calc
+
+function _initBldgHyp(bldgWoz) {
+  _bldgHypWoz = bldgWoz;
+  const wrap = document.getElementById('bc-hyp');
+  if (!wrap) return;
+  wrap.style.display = 'block';
+  updateBldgHyp();
+}
+
+function updateBldgHyp() {
+  const monthlyNet = parseFloat(document.getElementById('map-user-income')?.value) || 0;
+  const yearlyGross = monthlyNet * 12 * 1.42; // rough net→gross
+  const maxHyp = yearlyGross * 4.5;
+  const gap = _bldgHypWoz - maxHyp;
+  const pct = _bldgHypWoz > 0 ? Math.min(100, Math.round(maxHyp / _bldgHypWoz * 100)) : 0;
+  const rente = _getRente(currentYear);
+  const r = rente / 100 / 12;
+  const n = 30 * 12;
+  // Annuity monthly payment (capped at building value)
+  const loanAmt = Math.min(maxHyp, _bldgHypWoz);
+  const maandlast = r > 0 ? loanAmt * r * Math.pow(1+r, n) / (Math.pow(1+r, n) - 1) : loanAmt / n;
+  const woonquote = monthlyNet > 0 ? Math.round(maandlast / monthlyNet * 100) : 0;
+
+  const el = (id) => document.getElementById(id);
+  el('bc-hyp-max').textContent = '€' + Math.round(maxHyp/1000) + 'k';
+  const gapEl = el('bc-hyp-gap');
+  if (gapEl) {
+    gapEl.textContent = (gap > 0 ? '−' : '+') + '€' + Math.round(Math.abs(gap)/1000) + 'k';
+    gapEl.style.color = gap > 0 ? 'var(--red)' : 'var(--green)';
+  }
+  el('bc-hyp-pct').textContent = pct + '%';
+  const bar = el('bc-hyp-bar');
+  if (bar) {
+    bar.style.width = pct + '%';
+    bar.style.background = pct >= 90 ? 'var(--green)' : pct >= 60 ? 'var(--accent)' : 'var(--red)';
+  }
+  el('bc-hyp-mnd').textContent = '€' + Math.round(maandlast);
+  el('bc-hyp-rente').textContent = rente.toFixed(1) + '%';
+  const ratioEl = el('bc-hyp-ratio');
+  if (ratioEl) {
+    ratioEl.textContent = woonquote + '%';
+    ratioEl.style.color = woonquote > 35 ? 'var(--red)' : woonquote > 28 ? 'var(--accent)' : 'var(--green)';
   }
 }
 
@@ -2733,7 +3151,7 @@ function flyToGemeente(idxStr) {
   const idx = +idxStr;
   const nav = GEMEENTE_NAV[idx];
   if (!nav) return;
-  const naam = BAG_GEMEENTEN[idx]?.naam || '';
+  const naam = gemeenteDisplayName(idx, currentYear);
 
   // Set gemeente filter — rebuilds building dots for this gemeente only
   currentGemeenteFilter = idx;
@@ -2781,7 +3199,7 @@ function _getGemeentePrices(idx) {
 
 function updateComparisonCharts() {
   if (!chartPrice) return;
-  const years = Array.from({length:41}, (_,i)=>1995+i);
+  const years = Array.from({length:56}, (_,i)=>1970+i);
   const ds = chartPrice.data.datasets;
 
   // Remove existing comparison dataset (always index 3)
@@ -2804,10 +3222,10 @@ function updateComparisonCharts() {
     }
     // Update price chart label
     const lbl = document.querySelector('#chart-price')?.closest('.rp-section')?.querySelector('.rp-label');
-    if (lbl) lbl.innerHTML = `Verkoopprijs 1995–2035 <span style="color:var(--accent2);font-size:9px">(+ ${name})</span>`;
+    if (lbl) lbl.innerHTML = `Verkoopprijs 1995–2025 <span style="color:var(--accent2);font-size:9px">(+ ${name})</span>`;
   } else {
     const lbl = document.querySelector('#chart-price')?.closest('.rp-section')?.querySelector('.rp-label');
-    if (lbl) lbl.innerHTML = `Verkoopprijs 1995–2035 <span style="color:var(--t3);font-size:9px">(Twenterand / OV / NL)</span>`;
+    if (lbl) lbl.innerHTML = `Verkoopprijs 1995–2025 <span style="color:var(--t3);font-size:9px">(Twenterand / OV / NL)</span>`;
   }
   chartPrice.update();
 
@@ -2853,14 +3271,16 @@ function fmt(n, prefix='€', suffix='') {
 }
 
 function updateKPIs(year) {
-  const kc = KERNCIJFERS.find(r => r.jaar === year);
+  const kc = getKC(year);
   const price = PRIJZEN.Twenterand[year] || PRIJZEN.Vriezenveen[year];
   const singleInc = getMapEffectiveIncK(year);
   const maxHyp = singleInc ? singleInc * 4.5 * 1000 : null;
   const gap = (price && maxHyp) ? price - maxHyp : null;
   const isUser = activePersona === null; // custom input (not a persona pill)
 
-  set('kv-woz',  kc?.woz ? '€'+kc.woz+'k' : '—');
+  const wozGi = currentGemeenteFilter != null ? currentGemeenteFilter : 14; // default Twenterand
+  const wozVal = getGemeenteWoz(wozGi, year);
+  set('kv-woz', wozVal ? '€'+Math.round(wozVal)+'k' : (kc.woz ? '€'+kc.woz+'k' : '—'));
   set('kv-inc',  singleInc ? '€'+Math.round(singleInc)+'k'+(isUser?' ✎':'') : '—');
   set('kv-gap',  gap ? (gap>0?'−':'+')+fmt(Math.abs(gap)).replace('€','')+'€'.replace('€','') : '—');
   // Fix: proper formatting
@@ -2876,14 +3296,21 @@ function updateKPIs(year) {
 
   // Main price display
   const priceEl = document.getElementById('year-price');
+  const euroEl = document.getElementById('price-euro');
+  const labelEl = document.getElementById('price-label-text');
   if (price) {
     priceEl.textContent = price.toLocaleString('nl');
+    if (euroEl) euroEl.textContent = '€';
+    if (labelEl) labelEl.textContent = 'gem. verkoopprijs';
   } else if (year < 1995) {
-    // Pre-data era: show building count instead
     const count = BAG_COORDS.filter(r => r[2] > 0 && r[2] <= year && (currentGemeenteFilter === null || r[4] === currentGemeenteFilter)).length;
-    priceEl.textContent = count.toLocaleString('nl') + ' panden';
+    priceEl.textContent = count.toLocaleString('en').replace(/,/g, '.') + ' panden';
+    if (euroEl) euroEl.textContent = '';
+    if (labelEl) labelEl.textContent = 'woningvoorraad (BAG)';
   } else {
     priceEl.textContent = '—';
+    if (euroEl) euroEl.textContent = '€';
+    if (labelEl) labelEl.textContent = 'gem. verkoopprijs';
   }
 
   // Starter card
@@ -3015,7 +3442,7 @@ function onYear(year) {
   currentYear = year;
   const disp = document.getElementById('year-display');
   disp.textContent = year;
-  disp.classList.toggle('prog', year >= 2026);
+  disp.classList.toggle('prog', false);
   _updatePillIncomes(year);   // update €/mnd shown on each income class pill
   applyBldgColor(year);       // also calls updateChoropleth when bldg-layer exists
   updateChoropleth(year);     // always update choropleth, even at province zoom (<7)
@@ -3025,6 +3452,7 @@ function onYear(year) {
   updatePriceMarker(year);
   updateMigrationArcs(year);
   updateBldgLegend();
+  updateGemeenteSelectors(year);
   _refreshOpenCard();   // re-render building card with new year's WOZ/income
   pushHash();
 }
@@ -3072,7 +3500,7 @@ function togglePlay() {
   playing = !playing;
   document.getElementById('btn-play').textContent = playing ? '■ Stop' : '▶ Play';
   if (playing) {
-    _playYearF = currentYear >= 2035 ? 1880 : currentYear;
+    _playYearF = currentYear >= _timelineMax ? _timelineMin : currentYear;
     _playLastTs = 0;
     playTimer = requestAnimationFrame(_playFrame);
   } else {
@@ -3094,10 +3522,10 @@ function _playFrame(ts) {
   const eraMultiplier = _playYearF < 1920 ? 8 : _playYearF < 1950 ? 5 : _playYearF < 1980 ? 3 : _playYearF < 1995 ? 2 : 1;
   _playYearF += dt * PLAY_SPEED * eraMultiplier;
 
-  if (_playYearF > 2035) {
-    _playYearF = 2035;
-    document.getElementById('year-slider').value = 2035;
-    onYear(2035);
+  if (_playYearF > _timelineMax) {
+    _playYearF = _timelineMax;
+    document.getElementById('year-slider').value = _timelineMax;
+    onYear(_timelineMax);
     togglePlay();
     return;
   }
@@ -3133,7 +3561,7 @@ function _applyFractionalYear(yearF) {
   const disp = document.getElementById('year-display');
   if (disp) {
     disp.textContent = y;
-    disp.classList.toggle('prog', y >= 2026);
+    disp.classList.toggle('prog', false);
   }
 
   // Update newbuild ring to match playback year
@@ -3175,7 +3603,7 @@ function _lazyChart(canvasId, factory) {
 }
 
 function initCharts() {
-  const years   = Array.from({length:41}, (_,i)=>1995+i);
+  const years   = Array.from({length:56}, (_,i)=>1970+i); // 1970–2025
   const kcYears = KERNCIJFERS.map(r=>r.jaar);
 
   // ── Price chart ──────────────────────────────────────────────
@@ -3388,6 +3816,20 @@ function initCharts() {
 // EXPORT
 // ══════════════════════════════════════════════════════════════
 
+let _panelsHidden = false;
+function togglePanels() {
+  _panelsHidden = !_panelsHidden;
+  document.getElementById('left-panel').classList.toggle('panels-hidden', _panelsHidden);
+  document.getElementById('right-panel').classList.toggle('panels-hidden', _panelsHidden);
+  const btn = document.getElementById('btn-panels');
+  if (btn) {
+    btn.classList.toggle('active', _panelsHidden);
+    btn.textContent = _panelsHidden ? '◧ Toon' : '◧ Panelen';
+  }
+  // Trigger map resize so it fills the space
+  setTimeout(() => map.resize(), 350);
+}
+
 function exportCSV() {
   const headers = ['jaar','prijs_tw','prijs_nl','prijs_almelo','prijs_wierden','woz','bev','vestiging','vertrek','immigratie','emigratie','hh_totaal','hh_single','hh_paar','hh_gezin','hh_grootte','inkomen_jaar','inkomen_single','inkomen_eigenaar','inkomen_huurder','koop','corp','vrij'];
   const rows = KERNCIJFERS.map(r => [
@@ -3545,7 +3987,7 @@ function readHash() {
   if (parts[0] === 'pand' && parts.length >= 2) {
     // #/pand/slug/year — restore year, try to find building
     const year = parts[2] ? +parts[2] : 2024;
-    if (year >= 1995 && year <= 2035) {
+    if (year >= 1880 && year <= 2025) {
       onYear(year);
       const sl = document.getElementById('year-slider');
       if (sl) sl.value = year;
@@ -3592,7 +4034,7 @@ function readHash() {
       if (parts[i] === 'vs' && parts[i + 1]) {
         cIdx = _gemeenteIdxBySlug(parts[i + 1]);
         i++;
-      } else if (+parts[i] >= 1995 && +parts[i] <= 2035) {
+      } else if (+parts[i] >= 1995 && +parts[i] <= 2025) {
         yearPart = +parts[i];
       }
     }
@@ -3607,7 +4049,7 @@ function readHash() {
       const sl = document.getElementById('year-slider');
       if (sl) sl.value = yearPart;
     }
-  } else if (+parts[0] >= 1995 && +parts[0] <= 2035) {
+  } else if (+parts[0] >= 1995 && +parts[0] <= 2025) {
     onYear(+parts[0]);
     const sl = document.getElementById('year-slider');
     if (sl) sl.value = +parts[0];

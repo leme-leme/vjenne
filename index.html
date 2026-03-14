@@ -352,6 +352,22 @@ footer {
 
   footer { padding:28px 16px; font-size:10px; }
 }
+
+/* ── Source tooltips ── */
+.src-tip {
+  position:relative;
+  border-bottom:1px dotted var(--t3);
+  cursor:help;
+}
+.src-tip::after {
+  content:attr(data-src);
+  position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%);
+  background:rgba(8,8,14,.96); border:1px solid var(--border2); border-radius:2px;
+  padding:6px 10px; font-size:10px; font-family:var(--mono); color:var(--t2);
+  white-space:nowrap; pointer-events:none; opacity:0; transition:opacity .15s;
+  z-index:99;
+}
+.src-tip:hover::after { opacity:1; }
 </style>
 </head>
 <body>
@@ -366,7 +382,7 @@ footer {
   <a href="map.html" class="nav-pill">← Kaart</a>
   <span class="nav-badge badge-cbs">CBS</span>
   <span class="nav-badge badge-pdok">PDOK/BAG</span>
-  <span class="nav-badge badge-prog">Prognose 2032</span>
+  <span class="nav-badge badge-cbs">Alleen echte data</span>
   <button class="nav-pill" onclick="exportCSV()">↓ CSV</button>
 </nav>
 
@@ -375,15 +391,15 @@ footer {
 <!-- ════════════════════════════════════════════════════════════ -->
 <section class="hero" id="s0">
   <div class="article">
-    <p class="hero-eyebrow">Twenterand, Overijssel · 1995–2035</p>
+    <p class="hero-eyebrow">Twenterand, Overijssel · 1970–2025</p>
     <h1 class="hero-hed">De woning die<br/><em>buiten bereik</em><br/>schuift.</h1>
-    <p class="hero-dek">In dertig jaar verdrievoudigde de huizenprijs in Vriezenveen. Het inkomen van een single groeide met 60 procent. Dit is de story van een groeiende kloof — in cijfers, per gebouw, per jaar.</p>
+    <p class="hero-dek">In dertig jaar verviervoudigde de huizenprijs in Vriezenveen. Het inkomen van een single groeide met 60 procent. Dit is het verhaal van een groeiende kloof — in cijfers, per gebouw, per jaar.</p>
 
     <div class="kpi-row">
       <div class="kpi-box">
         <span class="num gold">€363k</span>
-        <div class="lbl">Gemiddelde verkoopprijs 2024</div>
-        <div class="sub">+124% vs 2010</div>
+        <div class="lbl"><span class="src-tip" data-src="CBS 83625NED · Twenterand 2024">Gemiddelde verkoopprijs 2024</span></div>
+        <div class="sub">+73% vs 2010</div>
       </div>
       <div class="kpi-box">
         <span class="num red">€222k</span>
@@ -392,12 +408,12 @@ footer {
       </div>
       <div class="kpi-box">
         <span class="num">€31k</span>
-        <div class="lbl">Besteedbaar single inkomen/jr</div>
+        <div class="lbl"><span class="src-tip" data-src="CBS 70072ned · Twenterand 2024 · besteedbaar inkomen eenpersoonshh">Besteedbaar single inkomen/jr</span></div>
         <div class="sub">CBS eenpersoonshuishouden</div>
       </div>
       <div class="kpi-box">
         <span class="num violet">6.683</span>
-        <div class="lbl">BAG-adressen in Vriezenveen</div>
+        <div class="lbl"><span class="src-tip" data-src="PDOK BAG · download 2025 · Vriezenveen woonplaats">BAG-adressen in Vriezenveen</span></div>
         <div class="sub">651 gebouwd na 2015</div>
       </div>
     </div>
@@ -418,13 +434,13 @@ footer {
     <p class="section-deck">Elke crisis heeft een dip achtergelaten. Maar de richting is duidelijk: omhoog.</p>
 
     <div class="body-copy">
-      <p>In 1995 kostte een gemiddelde woning in Vriezenveen <strong>€88.969</strong>. In 2024 is dat <strong>€362.592</strong>. Een stijging van ruim 300 procent — terwijl de inflatie in dezelfde periode circa 70 procent was. De <em>reële</em> prijsstijging bedraagt dus meer dan 130 procent.</p>
+      <p>In 1995 kostte een gemiddelde woning in Vriezenveen <span class="src-tip" data-src="CBS 83625NED · Vriezenveen GM0186 · 1995"><strong>€88.969</strong></span>. In 2024 is dat <span class="src-tip" data-src="CBS 83625NED · Twenterand GM1700 · 2024"><strong>€362.592</strong></span>. Een stijging van ruim 300 procent — terwijl de inflatie in dezelfde periode circa 70 procent was. De <em>reële</em> prijsstijging bedraagt dus meer dan 130 procent.</p>
     </div>
 
     <div class="chart-card reveal" id="cc-price-ts">
       <div class="chart-head">
-        <span class="chart-title">Verkoopprijs 1995–2035</span>
-        <span class="chart-sub">Nominale gemiddelde, CBS/Kadaster · prognose 2026–2032 gestippeld</span>
+        <span class="chart-title">Verkoopprijs 1970–2025</span>
+        <span class="chart-sub">Nominale gemiddelde · CBS/Kadaster 83625NED</span>
       </div>
       <div class="chart-body" style="height:280px"><canvas id="c-price-ts"></canvas></div>
       <div class="legend-row">
@@ -440,7 +456,7 @@ footer {
     </div>
 
     <div class="body-copy">
-      <p>Twenterand deed het tijdens de hausse 2020–2022 iets slechter dan het nationaal gemiddelde — maar ook minder hard naar beneden tijdens de correctie van 2023. In 2025 zijn de prijzen weer op recordniveaus. De prognose voor 2030: <strong>€487.000</strong>, bij een gematigde groei van 3% per jaar.</p>
+      <p>Twenterand deed het tijdens de hausse 2020–2022 iets slechter dan het nationaal gemiddelde — maar ook minder hard naar beneden tijdens de correctie van 2023. In <span class="src-tip" data-src="CBS 83625NED · Twenterand · 2025">2025 zijn de prijzen weer op recordniveaus: <strong>€420.039</strong></span>.</p>
     </div>
 
     <div class="chart-card reveal">
@@ -467,12 +483,12 @@ footer {
     <p class="section-deck">Almelo is goedkoper. Wierden, Hellendoorn en Tubbergen zijn duurder. Het prijsverschil groeit.</p>
 
     <div class="body-copy">
-      <p>In 1995 waren de woningprijzen in de regio dicht bij elkaar. Sindsdien zijn de wegen uiteen gelopen. <strong>Tubbergen</strong> steeg het sterkst en staat nu op <strong>€529k</strong> (2025). <strong>Almelo</strong> blijft structureel lager als stedelijk gebied, maar ook daar staat de prijs op recordniveau: <strong>€337k</strong>. Twenterand zit er tussenin — maar de kloof met Almelo groeit, terwijl Wierden en Hellendoorn dichter in de buurt komen.</p>
+      <p>In 1995 waren de woningprijzen in de regio dicht bij elkaar. Sindsdien zijn de wegen uiteen gelopen. <strong>Tubbergen</strong> steeg het sterkst en staat nu op <span class="src-tip" data-src="CBS 83625NED · Tubbergen GM0183 · 2025"><strong>€529k</strong></span> (2025). <strong>Almelo</strong> blijft structureel lager als stedelijk gebied, maar ook daar staat de prijs op recordniveau: <span class="src-tip" data-src="CBS 83625NED · Almelo GM0141 · 2025"><strong>€337k</strong></span>. Twenterand zit er tussenin — maar de kloof met Almelo groeit, terwijl Wierden en Hellendoorn dichter in de buurt komen.</p>
     </div>
 
     <div class="chart-card reveal" id="cc-regio">
       <div class="chart-head">
-        <span class="chart-title">Verkoopprijs regio 1995–2025</span>
+        <span class="chart-title">Verkoopprijs regio 1970–2025</span>
         <span class="chart-sub">Nominale gemiddelde · CBS/Kadaster 83625NED</span>
       </div>
       <div class="chart-body" style="height:280px"><canvas id="c-regio"></canvas></div>
@@ -501,7 +517,7 @@ footer {
     <p class="section-deck">In 2003 was de grootste leeftijdsgroep 25–44 jaar. In 2025 is dat 45–65 jaar. De piramide draait om.</p>
 
     <div class="body-copy">
-      <p>De gemeente telt <strong>34.113 inwoners</strong> (2025), verdeeld over 13.617 huishoudens. De gemiddelde huishoudensgrootte daalt van 2,82 in 2003 naar 2,47 in 2025 — en zakt verder richting 2,37 in 2035. <strong>Het aantal eenpersoonshuishoudens steeg van 2.267 (2003) naar 3.769 (2025)</strong> — een toename van 66%.</p>
+      <p>De gemeente telt <span class="src-tip" data-src="CBS 70072ned · Twenterand · 2025"><strong>34.113 inwoners</strong></span> (2025), verdeeld over <span class="src-tip" data-src="CBS 70072ned · Twenterand · 2025">13.617 huishoudens</span>. De gemiddelde huishoudensgrootte daalde van <span class="src-tip" data-src="CBS 70072ned · 2003">2,82 in 2003</span> naar <span class="src-tip" data-src="CBS 70072ned · 2025">2,47 in 2025</span>. <strong>Het aantal eenpersoonshuishoudens steeg van <span class="src-tip" data-src="CBS 70072ned · Twenterand · 2003">2.267 (2003)</span> naar <span class="src-tip" data-src="CBS 70072ned · Twenterand · 2025">3.769 (2025)</span></strong> — een toename van 66%.</p>
     </div>
 
     <div class="pyramid-wrap reveal">
@@ -525,7 +541,7 @@ footer {
     <div class="chart-card reveal">
       <div class="chart-head">
         <span class="chart-title">Huishoudensgrootte & eenpersoonshuishoudens</span>
-        <span class="chart-sub">2003–2032 · CBS · prognose gestippeld</span>
+        <span class="chart-sub">2003–2025 · CBS 70072ned</span>
       </div>
       <div class="chart-body" style="height:200px"><canvas id="c-hh"></canvas></div>
       <div class="legend-row">
@@ -546,13 +562,13 @@ footer {
     <p class="section-deck">Twee derde van de woningen is koopwoning. Het corporatieaandeel krimpt. De vrije huurmarkt is smal.</p>
 
     <div class="body-copy">
-      <p>In 2009 was <strong>62,5%</strong> van de woningen in Twenterand een koopwoning. In 2024 is dat gestegen naar <strong>66,8%</strong>. Het corporatieaandeel daalde van 28,2% naar 25,1% — mede door verkopen van woningcorporaties aan bewoners. De vrije huurmarkt (particuliere verhuur) is met slechts <strong>8%</strong> structureel klein, en vrijwel geheel op de bovenkant van de markt gericht.</p>
+      <p>In 2009 was <span class="src-tip" data-src="CBS 70072ned · Twenterand · 2009"><strong>62,5%</strong></span> van de woningen in Twenterand een koopwoning. In 2024 is dat gestegen naar <span class="src-tip" data-src="CBS 70072ned · Twenterand · 2024"><strong>66,8%</strong></span>. Het corporatieaandeel daalde van <span class="src-tip" data-src="CBS 70072ned · 2009">28,2%</span> naar <span class="src-tip" data-src="CBS 70072ned · 2024">25,1%</span> — mede door verkopen van woningcorporaties aan bewoners. De vrije huurmarkt (particuliere verhuur) is met slechts <span class="src-tip" data-src="CBS 70072ned · Twenterand · 2024"><strong>8%</strong></span> structureel klein, en vrijwel geheel op de bovenkant van de markt gericht.</p>
     </div>
 
     <div class="chart-card reveal">
       <div class="chart-head">
-        <span class="chart-title">Woningbezit Twenterand 2009–2035</span>
-        <span class="chart-sub">Koop / corporatiehuur / vrije huur · CBS · prognose gestippeld</span>
+        <span class="chart-title">Woningbezit Twenterand 2009–2024</span>
+        <span class="chart-sub">Koop / corporatiehuur / vrije huur · CBS 70072ned</span>
       </div>
       <div class="chart-body" style="height:240px"><canvas id="c-tenure"></canvas></div>
       <div class="legend-row">
@@ -583,8 +599,8 @@ footer {
 
     <div class="chart-card reveal">
       <div class="chart-head">
-        <span class="chart-title">Huishoudensamenstelling Twenterand 2003–2032</span>
-        <span class="chart-sub">Singles / paren zonder kind / gezinnen met kinderen · CBS · prognose gestippeld</span>
+        <span class="chart-title">Huishoudensamenstelling Twenterand 2003–2025</span>
+        <span class="chart-sub">Singles / paren zonder kind / gezinnen met kinderen · CBS 70072ned</span>
       </div>
       <div class="chart-body" style="height:240px"><canvas id="c-hh-comp"></canvas></div>
       <div class="legend-row">
@@ -595,8 +611,8 @@ footer {
     </div>
 
     <div class="pull">
-      <p>"In 2035 is bijna een derde van alle huishoudens in Twenterand een éénpersoonskuishouden. De bouwplannen voorzien vooralsnog in vrijwel geen betaalbare kleine woningen voor deze groep."</p>
-      <cite>Eigen prognose o.b.v. CBS huishoudensontwikkeling 2003–2025</cite>
+      <p>"In 2025 is 27,7% van alle huishoudens in Twenterand een éénpersoonshuishouden — en de trend versnelt. De bouwplannen voorzien vooralsnog in vrijwel geen betaalbare kleine woningen voor deze groep."</p>
+      <cite>CBS 70072ned · Twenterand · 2003–2025</cite>
     </div>
   </div>
 </section>
@@ -672,8 +688,8 @@ footer {
 
     <div class="chart-card reveal">
       <div class="chart-head">
-        <span class="chart-title">Betaalbaarheidskloof single starter 2011–2035</span>
-        <span class="chart-sub">Max. hypotheek vs. gemiddelde prijs · prognose t/m 2032</span>
+        <span class="chart-title">Betaalbaarheidskloof single starter 2011–2024</span>
+        <span class="chart-sub">Max. hypotheek vs. gemiddelde prijs · CBS 70072ned + 83625NED</span>
       </div>
       <div class="chart-body" style="height:240px"><canvas id="c-afford"></canvas></div>
       <div class="legend-row">
@@ -688,7 +704,7 @@ footer {
 
     <div class="chart-card reveal">
       <div class="chart-head">
-        <span class="chart-title">Prijs/inkomen ratio 2003–2032</span>
+        <span class="chart-title">Prijs/inkomen ratio 2011–2024</span>
         <span class="chart-sub">Huishoudinkomen en single inkomen · hogere waarde = minder betaalbaar</span>
       </div>
       <div class="chart-body" style="height:200px"><canvas id="c-ratio"></canvas></div>
@@ -712,8 +728,8 @@ footer {
 
     <div class="chart-card reveal">
       <div class="chart-head">
-        <span class="chart-title">Besteedbaar inkomen per type huishouden 2011–2035</span>
-        <span class="chart-sub">CBS tabel 70072ned · x1.000 euro/jaar · prognose t/m 2032</span>
+        <span class="chart-title">Besteedbaar inkomen per type huishouden 2011–2024</span>
+        <span class="chart-sub">CBS 70072ned · x1.000 euro/jaar</span>
       </div>
       <div class="chart-body" style="height:260px"><canvas id="c-inc-groep"></canvas></div>
       <div class="legend-row">
@@ -782,15 +798,15 @@ footer {
 
     <div class="chart-card reveal">
       <div class="chart-head">
-        <span class="chart-title">Woningvoorraad Twenterand 2012–2035</span>
-        <span class="chart-sub">CBS woningstatistieken · prognose t/m 2029</span>
+        <span class="chart-title">Woningvoorraad Twenterand 2012–2025</span>
+        <span class="chart-sub">CBS woningstatistieken</span>
       </div>
       <div class="chart-body" style="height:200px"><canvas id="c-voorraad"></canvas></div>
     </div>
 
     <div class="pull">
       <p>"Bij 3% jaarlijkse prijsstijging en 90 nieuwe woningen per jaar wordt de betaalbaarheidssituatie voor starters in 2030 <strong>structureel slechter</strong>, niet beter."</p>
-      <cite>Eigen prognose o.b.v. CBS PBL middel-scenario</cite>
+      <cite>CBS woningstatistieken · Twenterand</cite>
     </div>
 
     <div class="body-copy">
@@ -933,8 +949,8 @@ footer {
 
     <div class="chart-card reveal">
       <div class="chart-head">
-        <span class="chart-title">WOZ-waarde vs. besteedbaar inkomen 1990–2035</span>
-        <span class="chart-sub">Absolute waarden × 1.000 euro · CBS kerncijfers · prognose gestippeld</span>
+        <span class="chart-title">WOZ-waarde vs. besteedbaar inkomen 2003–2024</span>
+        <span class="chart-sub">Absolute waarden × 1.000 euro · CBS 70072ned</span>
       </div>
       <!-- Controls: view mode -->
       <div class="ctrl-row">
@@ -960,24 +976,24 @@ footer {
     </div>
 
     <div class="body-copy">
-      <p>De WOZ-tijdreeks begint in 1990 — toen was de gemiddelde WOZ-waarde in Twenterand circa <strong>€68.000</strong>. In 2024 is dat <strong>€339.000</strong>, een stijging van 399% in 34 jaar. Het single inkomen steeg in dezelfde periode van ~€13k naar €31k (+138%). Schakel naar "Geïndexeerd" om te zien hoe het WOZ-tempo dat van inkomens structureel overtreft — al zeker vanaf 2014.</p>
+      <p>De WOZ-tijdreeks voor Twenterand begint bij CBS in 2003 op <span class="src-tip" data-src="CBS 70072ned · Twenterand · 2003"><strong>€124.000</strong></span>. In 2024 is dat <span class="src-tip" data-src="CBS 70072ned · Twenterand · 2024"><strong>€339.000</strong></span>, een stijging van 173% in 21 jaar. Het single inkomen steeg in dezelfde periode van <span class="src-tip" data-src="CBS 70072ned · 2011">€19,6k (2011)</span> naar <span class="src-tip" data-src="CBS 70072ned · 2024">€31,3k (2024)</span> (+60% in 13 jaar). Schakel naar "Geïndexeerd" om te zien hoe het WOZ-tempo dat van inkomens structureel overtreft — al zeker vanaf 2014.</p>
     </div>
   </div>
 </section>
 
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- SECTION 8: PROGNOSE 2035                                    -->
+<!-- SECTION 8: SCENARIO'S                                        -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <section class="section" id="s8">
   <div class="article">
-    <span class="section-num">08 / Prognose</span>
-    <h2 class="section-title">Naar <em>€565k</em> in 2035 —<br/>als het zo doorgaat.</h2>
-    <p class="section-deck">Bij 3% prijsstijging per jaar en 3,5% inkomensgroei: de kloof voor singles halveert niet. Ze groeit.</p>
+    <span class="section-num">08 / Scenario's</span>
+    <h2 class="section-title">Wat als het<br/><em>zo doorgaat?</em></h2>
+    <p class="section-deck">Pas de schuifregelaars aan en reken zelf. Bij elke combinatie van groei en inkomen: de kloof voor singles wordt niet kleiner.</p>
 
     <div class="chart-card reveal">
       <div class="chart-head">
-        <span class="chart-title">Prognose prijs vs. hypotheekcapaciteit 2024–2035</span>
-        <span class="chart-sub">Pas de aannames aan — de grafiek herberekent live</span>
+        <span class="chart-title">Scenario: prijs vs. hypotheekcapaciteit</span>
+        <span class="chart-sub">Pas de aannames aan — de grafiek herberekent live · startpunt 2024 is CBS data</span>
       </div>
       <!-- Income personalisation widget -->
       <div class="income-widget" style="border-bottom:none;border-top:1px solid var(--border);padding:10px 20px 8px">
@@ -1040,17 +1056,17 @@ footer {
     <div class="kpi-row" id="prog-kpi-row">
       <div class="kpi-box">
         <span class="num gold" id="prog-kpi-prijs">€565k</span>
-        <div class="lbl">Prognose verkoopprijs 2035</div>
+        <div class="lbl">Scenario verkoopprijs</div>
         <div class="sub" id="prog-kpi-prijs-sub">+3%/jr CBS PBL middel</div>
       </div>
       <div class="kpi-box">
         <span class="num" id="prog-kpi-hyp">€198k</span>
-        <div class="lbl">Max. hypotheek <span id="prog-kpi-profiel">single</span> 2035</div>
+        <div class="lbl">Max. hypotheek <span id="prog-kpi-profiel">single</span></div>
         <div class="sub" id="prog-kpi-hyp-sub">4,5× jaarinkomen</div>
       </div>
       <div class="kpi-box">
         <span class="num red" id="prog-kpi-kloof">−€367k</span>
-        <div class="lbl">Kloof 2035</div>
+        <div class="lbl">Kloof scenario</div>
         <div class="sub" id="prog-kpi-kloof-pct">prijs/hyp: 2,9×</div>
       </div>
       <div class="kpi-box">
@@ -1061,7 +1077,7 @@ footer {
     </div>
 
     <div class="body-copy">
-      <p>Sleep de schuifregelaars om de aannames te wijzigen. Bij de <strong>standaard CBS-middel scenario</strong> (+3%/jr prijzen, +3,5%/jr inkomen) neemt de kloof voor een single toe van €222k (2024) naar €367k (2035). Pas de hypotheekfactor op naar 5× of kies "Gezin" om te zien wanneer een huishouden <em>wel</em> de markt in kan. De enige combinatie die de kloof voor singles wél dicht: prijscorrectie (−1%/jr) + inkomensgroei +5%/jr — een scenario dat historisch niet voorkwam.</p>
+      <p>Sleep de schuifregelaars om de aannames te wijzigen. Dit zijn geen voorspellingen maar <em>what-if scenario's</em> op basis van CBS-startwaarden 2024. Het standaardscenario (+3%/jr prijzen, +3,5%/jr inkomen) is gebaseerd op de langjarige trend 2011–2024. Pas de hypotheekfactor op naar 5× of kies "Gezin" om te zien wanneer een huishouden <em>wel</em> de markt in kan.</p>
     </div>
   </div>
 </section>
@@ -1081,8 +1097,8 @@ footer {
 
     <div class="chart-card reveal">
       <div class="chart-head">
-        <span class="chart-title">Maandelijks besteedbaar inkomen per scenario 2011–2035</span>
-        <span class="chart-sub">Netto/maand · CBS besteedbare inkomens · prognose gestippeld</span>
+        <span class="chart-title">Maandelijks besteedbaar inkomen per scenario 2011–2024</span>
+        <span class="chart-sub">Netto/maand · CBS 70072ned besteedbare inkomens</span>
       </div>
       <div class="chart-body" style="height:260px"><canvas id="c-scenarios-inc"></canvas></div>
       <div class="legend-row">
@@ -1095,8 +1111,8 @@ footer {
 
     <div class="chart-card reveal">
       <div class="chart-head">
-        <span class="chart-title">Hypotheekcapaciteit vs. woningprijs per scenario 2011–2035</span>
-        <span class="chart-sub">Max. hypotheek = 4,5× jaarinkomen · prognose gestippeld</span>
+        <span class="chart-title">Hypotheekcapaciteit vs. woningprijs per scenario 2011–2024</span>
+        <span class="chart-sub">Max. hypotheek = 4,5× jaarinkomen · CBS 70072ned + 83625NED</span>
       </div>
       <div class="chart-body" style="height:280px"><canvas id="c-scenarios-hyp"></canvas></div>
       <div class="legend-row">
@@ -1134,7 +1150,7 @@ footer {
         <p style="font-size:13px;color:var(--t2);line-height:1.7;margin-bottom:14px">Lisa woont in een corporatiewoning aan de Beatrixstraat — gebouwd in 1968, 72m². Ze verdient <strong style="color:var(--t1)">€2.610/maand</strong> netto. Haar maximale hypotheek bedraagt €141k. De gemiddelde Vriezenveense woning kost €363k. Kloof: <strong style="color:var(--red)">€222k</strong>.</p>
         <p style="font-size:13px;color:var(--t2);line-height:1.7;margin-bottom:14px">Ze schrijft zich in voor de 12 appartementen aan de Almeloseweg. Ze staat zesde op de wachtlijst — maar de huurprijs van €1.150/maand voor vrije sector valt ook buiten haar bereik.</p>
         <div style="background:var(--surface2);border-radius:1px;padding:12px 14px;font-size:11px;color:var(--t3)">
-          <strong style="color:var(--t1)">2035-prognose:</strong> Bij 3,5% inkomensgroei verdient Lisa dan €3.780/maand. Max. hyp. stijgt naar €204k. Woningprijs: €565k. Kloof: <span style="color:var(--red)">€361k</span>. Zonder beleidsingrepen: geen koopwoning.
+          <strong style="color:var(--t1)">Trend:</strong> Zelfs bij 3,5% inkomensgroei per jaar groeit haar hypotheekcapaciteit trager dan de huizenprijzen. De kloof wordt elk jaar <span style="color:var(--red)">groter, niet kleiner</span>. Zonder beleidsingrepen: geen koopwoning.
         </div>
       </div>
 
@@ -1146,7 +1162,7 @@ footer {
         <p style="font-size:13px;color:var(--t2);line-height:1.7;margin-bottom:14px">Tweeverdieners. Samen <strong style="color:var(--t1)">€82.000/jr</strong> besteedbaar. Max. hypotheek €369k — net genoeg voor een rijtjeshuis uit de jaren '80 op de Tulpenstraat (€338k). Ze kochten in 2019.</p>
         <p style="font-size:13px;color:var(--t2);line-height:1.7;margin-bottom:14px">Hun woning is nu €420k waard. Overwaarde: <strong style="color:var(--green)">€82k</strong> in vijf jaar. Ze denken over verbouwen of doorstromen naar een grotere woning in Westerhaar.</p>
         <div style="background:var(--surface2);border-radius:1px;padding:12px 14px;font-size:11px;color:var(--t3)">
-          <strong style="color:var(--t1)">2035-prognose:</strong> Woning stijgt naar ~€580k. Als ze nu verkopen en elders kleiner wonen, houdt het gezin ruim €200k over. De woningmarkt werkt <span style="color:var(--green)">voor</span> hen.
+          <strong style="color:var(--t1)">Trend:</strong> Hun woning groeit sneller in waarde dan hun inkomen. De woningmarkt werkt <span style="color:var(--green)">voor</span> hen — elke maand neemt hun vermogen toe.
         </div>
       </div>
 
@@ -1170,7 +1186,7 @@ footer {
         <p style="font-size:13px;color:var(--t2);line-height:1.7;margin-bottom:14px">Katarzyna werkt bij een voedingsbedrijf in Almelo en woont in een particuliere huurkamer in Vriezenveen voor <strong style="color:var(--t1)">€850/maand</strong>. Inkomen: €1.960/maand netto. Ze spaart €300/maand.</p>
         <p style="font-size:13px;color:var(--t2);line-height:1.7;margin-bottom:14px">Ze behoort tot de CBS-categorie 'immigratie' — een van de +18 Polen die gemiddeld per jaar naar Twenterand komen. Sociale huur: wachtlijst. Koopmarkt: onbereikbaar zonder eigen vermogen. Vrije sector: nauwelijks aanbod onder €1.000.</p>
         <div style="background:var(--surface2);border-radius:1px;padding:12px 14px;font-size:11px;color:var(--t3)">
-          <strong style="color:var(--t1)">2035-prognose:</strong> Als ze blijft en inkomensgroei volgt (+3,5%/jr), bouwt ze in 10 jaar ~€36k spaargeld op. Bij een woning van €565k blijft het verschil onoverbrugbaar zonder partner of extra vermogen.
+          <strong style="color:var(--t1)">Trend:</strong> Ze spaart €300/maand — €3.600/jaar. Bij de huidige prijsstijging (+€30k/jaar) loopt ze elk jaar verder achter. Zonder partner of extra vermogen blijft de koopmarkt onbereikbaar.
         </div>
       </div>
     </div>
@@ -1324,7 +1340,7 @@ footer {
     <div class="body-copy">
       <h3 style="font-family:var(--serif);font-size:20px;font-weight:700;color:var(--t1);margin:28px 0 10px">Het probleem met de huidige pijplijn</h3>
       <p>De bekende woningbouwplannen in Vriezenveen richten zich vrijwel zonder uitzondering op <strong>grondgebonden koopwoningen</strong> of sociale corporatiehuur. Dat zijn de uitersten van de markt — precies de segmenten die al het meest aanwezig zijn (66% koop, 25% corporatie). Het segment dat ontbreekt: <em>betaalbare middenhuur</em>, <em>starterskoopwoningen onder €250k</em> en <em>woningen met collectief eigendom</em>.</p>
-      <p>Een single met een CBS-modaal inkomen (€31.300/jr in 2024) kan maximaal <strong>€141k</strong> lenen. De goedkoopste koopwoningen in Vriezenveen starten rond de €175k — en dat zijn dan de slechtste panden op de markt. De Almeloseweg-appartementen trokken <strong>80 gegadigden voor 12 woningen</strong>. Elke marktconformee nieuwbouwwoning op een centrumlocatie vertrekt rond €295–350k. Dat is voor de doelgroep die deze locatie het hardst nodig heeft — starters, jonge gezinnen, mensen die terugkomen na studie — simpelweg onbereikbaar.</p>
+      <p>Een single met een CBS-modaal inkomen (<span class="src-tip" data-src="CBS 70072ned · Twenterand 2024 · besteedbaar inkomen eenpersoonshh">€31.300/jr in 2024</span>) kan maximaal <strong>€141k</strong> lenen. Elke marktconforme nieuwbouwwoning op een centrumlocatie vertrekt rond €295–350k. De Almeloseweg-appartementen trokken <strong>80 gegadigden voor 12 woningen</strong>. De oplossing is even simpel als radicaal: <em>bouw compact en betaalbaar</em>. Studio's en 1-kamerwoningen van 30–50m² in een CLT- of coöperatiestructuur kunnen op €130k–€165k landen — precies de range die een single starter <em>wel</em> kan financieren. Vergelijk dat met de standaard nieuwbouwappartementen van 70m²+ die in de vrije sector €295k+ kosten en bedoeld zijn voor een doelgroep die al kóm. Kleine woningen zijn geen compromis: het is bouwen voor de vraag die er <em>werkelijk</em> is.</p>
     </div>
 
     <!-- Mismatch visualisation -->
@@ -1358,10 +1374,15 @@ footer {
             <span style="font-family:var(--mono);font-size:10px;color:var(--green)">€405k max</span>
           </div>
           <div style="margin-top:6px;padding-top:10px;border-top:1px solid var(--border)">
-            <div style="display:grid;grid-template-columns:160px 1fr 80px;align-items:center;gap:10px">
+            <div style="display:grid;grid-template-columns:160px 1fr 80px;align-items:center;gap:10px;margin-bottom:6px">
               <span style="font-size:10px;color:var(--t3)">Marktprijs nieuwbouw VV</span>
               <div style="height:1px;border-top:2px dashed var(--border2);margin-top:2px"></div>
               <span style="font-family:var(--mono);font-size:10px;color:var(--t3)">~€320k</span>
+            </div>
+            <div style="display:grid;grid-template-columns:160px 1fr 80px;align-items:center;gap:10px">
+              <span style="font-size:10px;color:var(--green)">Compact 30–50m² (CLT)</span>
+              <div style="height:1px;border-top:2px dashed var(--green);margin-top:2px"></div>
+              <span style="font-family:var(--mono);font-size:10px;color:var(--green)">~€150k</span>
             </div>
           </div>
         </div>
@@ -1436,7 +1457,7 @@ footer {
     <div class="body-copy">
       <h3 style="font-family:var(--serif);font-size:20px;font-weight:700;color:var(--t1);margin:28px 0 10px">Wat het programma moet oplossen</h3>
       <p>Welk model ook gekozen wordt: het bouwprogramma op het Manitobaplein moet een aantal concrete problemen adresseren die uit de data volgen.</p>
-      <p><strong>1. Singles en alleenstaanden.</strong> Het aandeel eenpersoonshuishoudens in Twenterand steeg van 19% in 2003 naar 27% in 2024. Ze zijn de snelst groeiende groep, maar de woningmarkt bouwt nog altijd voor gezinnen. Een centrumlocatie in Vriezenveen leent zich bij uitstek voor compacte, goed geïsoleerde eenpersoons- en tweepersoonseenheden van 45–70m².</p>
+      <p><strong>1. Singles en alleenstaanden.</strong> Het aandeel eenpersoonshuishoudens in Twenterand steeg van <span class="src-tip" data-src="CBS 70072ned · 2003: 2.267 van 11.779 = 19,2%">19% in 2003</span> naar <span class="src-tip" data-src="CBS 70072ned · 2024: 3.694 van 13.561 = 27,2%">27% in 2024</span>. Ze zijn de snelst groeiende groep, maar de woningmarkt bouwt nog altijd voor gezinnen. Een centrumlocatie in Vriezenveen leent zich bij uitstek voor compacte studio's en 1-kamerwoningen van <strong>30–50m²</strong> voor <strong>€130k–€165k</strong> — precies het segment dat een single op modaal inkomen wél kan financieren. Geen 70m²+ appartementen die €295k kosten; gewoon kleine, goede woningen voor de prijs die mensen kunnen betalen.</p>
       <p><strong>2. Doorstroming van senioren.</strong> Twenterand vergrijst structureel. Een groot deel van de koopwoningbezitters is 65+, woont in een gezinswoning die te groot is geworden, maar heeft geen geschikte alternatieve woning om naartoe te verhuizen. Elke seniorenwoning op het Manitobaplein die een doorstromer huisvest, maakt een grotere koopwoning vrij voor een starter of gezin. Dat multipliereffect werkt sterker dan nieuwbouwstarters op een uitleglocatie.</p>
       <p><strong>3. Energieprestatie.</strong> Twenterand heeft relatief veel vooroorlogs woningbestand (bouwjaar vóór 1945). De gemiddelde energielabelkwaliteit is laag. Nieuwbouw op het Manitobaplein biedt de kans om te bouwen op <strong>BENG-niveau of beter</strong> — volledig elektrisch, warmtepomp, zonnepanelen op het dak — waardoor de maandelijkse woonlasten structureel lager uitvallen dan bij oudere woning. Dat compenseert een hogere aanschafprijs deels.</p>
       <p><strong>4. Placemaking.</strong> Het Manitobaplein is het hart van Vriezenveen. Een geslaagde herontwikkeling trekt ook andere investering aan: horeca, detailhandel, diensten. Leegstand werkt het omgekeerde: verval versterkt verval. De gemeente heeft er belang bij dat hier iets goeds staat — niet alleen als woningmarktoplossing, maar als <em>stadsbouwkundige interventie</em>.</p>
@@ -1463,7 +1484,7 @@ footer {
       <div class="source-card">
         <div class="src-id">CBS 83625NED</div>
         <div class="src-title">Bestaande koopwoningen; gemiddelde verkoopprijs</div>
-        <div class="src-body">Verkoopprijzen per gemeente 1995–2025. Twenterand (GM1700) + Vriezenveen (GM0186) pre-2002. Nominale prijzen, geen correctie voor inflatie.</div>
+        <div class="src-body">Verkoopprijzen per gemeente 1995–2025 (CBS 83625NED). Pre-1995: BIS/FRED huizenprijsindex (QNLN628BIS) × CBS 1995-anker. Nominale prijzen, geen correctie voor inflatie.</div>
       </div>
       <div class="source-card">
         <div class="src-id">CBS 70072ned</div>
@@ -1486,9 +1507,9 @@ footer {
         <div class="src-body">Starterslening (SVn.nl): gemeentelijke lening bovenop hypotheek. OVB-vrijstelling: 0% overdrachtsbelasting onder 35 jaar. NHG-grens 2024: €435.000.</div>
       </div>
       <div class="source-card">
-        <div class="src-id">PBL / CBS</div>
-        <div class="src-title">Prognose-methode</div>
-        <div class="src-body">Prognose 2026–2032: prijzen +3%/jr (gematigd scenario), inkomen +3,5%/jr. Bevolking op basis van PBL Primos 2024. Woningvraag o.b.v. huishoudensontwikkeling.</div>
+        <div class="src-id">Scenario's</div>
+        <div class="src-title">Scenario-methode</div>
+        <div class="src-body">Interactieve scenario-calculator in sectie 08 gebruikt CBS startwaarden 2024 met door de lezer instelbare groeipercentages. Geen prognoses — alle gepresenteerde data is CBS-historisch.</div>
       </div>
       <div class="source-card">
         <div class="src-id">RTV Oost</div>
@@ -1506,7 +1527,7 @@ footer {
 
 <footer>
   <p>Data: CBS Statline · Kadaster · PDOK/BAG · SVn · Rijksdienst voor Ondernemend Nederland<br/>
-  Analyse: eigen bewerking · Prognose: gematigd CBS/PBL middel-scenario · Alle prijzen nominaal</p>
+  Analyse: eigen bewerking · Scenario-calculator: CBS startwaarden 2024 + instelbare groeipercentages · Alle prijzen nominaal</p>
 </footer>
 
 <script>
@@ -1515,13 +1536,16 @@ footer {
 // ════════════════════════════════════════════════════════════
 
 const PRIJZEN_TW = {
+  // 1970-1994: BIS/FRED QNLN628BIS index × CBS 1995 Twenterand anchor
+  1970:18587,1971:20633,1972:23228,1973:27121,1974:32694,1975:37877,
+  1976:48326,1977:66936,1978:72504,1979:68727,1980:63061,1981:56727,
+  1982:50473,1983:51374,1984:51013,1985:51102,1986:53528,1987:56056,
+  1988:58631,1989:62532,1990:63781,1991:65416,1992:70893,1993:76732,1994:84445,
   1995:88969,1996:95891,1997:112334,1998:123860,1999:139834,2000:167109,2001:182916,
   2002:191529,2003:183397,2004:196133,2005:206476,2006:224464,2007:225192,2008:239847,
   2009:211473,2010:209680,2011:206908,2012:196497,2013:198645,2014:187335,2015:195482,
   2016:201440,2017:221020,2018:237752,2019:248957,2020:273030,2021:309662,2022:348114,
-  2023:338159,2024:362592,2025:420039,
-  2026:432640,2027:445619,2028:458988,2029:472758,2030:486941,
-  2031:501549,2032:516595,2033:532093,2034:548056,2035:564498
+  2023:338159,2024:362592,2025:420039
 };
 const PRIJZEN_BUREN = {
   Almelo:     {1995:72108,1996:75984,1997:82409,1998:90416,1999:100990,2000:120928,2001:137626,2002:148314,2003:149677,2004:155412,2005:163863,2006:174661,2007:178376,2008:172286,2009:171564,2010:172505,2011:170489,2012:171217,2013:152775,2014:164312,2015:157127,2016:169101,2017:177040,2018:191387,2019:209973,2020:222697,2021:273244,2022:293519,2023:306698,2024:313612,2025:337477},
@@ -1530,6 +1554,11 @@ const PRIJZEN_BUREN = {
   Tubbergen:  {1995:117029,1996:128331,1997:146641,1998:151750,1999:163577,2000:193233,2001:230321,2002:225394,2003:236780,2004:250168,2005:239137,2006:256939,2007:277665,2008:276697,2009:260821,2010:239302,2011:231795,2012:227427,2013:227766,2014:237096,2015:234903,2016:254193,2017:260435,2018:294259,2019:303668,2020:344270,2021:393372,2022:438023,2023:453709,2024:480929,2025:528513},
 };
 const PRIJZEN_OV = {
+  // 1970-1994: BIS/FRED QNLN628BIS index × CBS 1995 Overijssel anchor
+  1970:17454,1971:19376,1972:21814,1973:25471,1974:30707,1975:35575,
+  1976:45381,1977:62875,1978:68105,1979:64556,1980:59230,1981:53283,
+  1982:47407,1983:48253,1984:47915,1985:47999,1986:50278,1987:52651,
+  1988:55070,1989:58734,1990:59908,1991:61443,1992:66586,1993:72071,1994:79315,
   1995:83597,1996:90786,1997:102179,1998:110332,1999:128295,2000:152617,2001:170174,
   2002:178482,2003:185090,2004:191927,2005:198475,2006:206909,2007:215724,2008:219612,
   2009:212375,2010:211088,2011:208185,2012:202549,2013:189733,2014:197070,2015:198713,
@@ -1537,6 +1566,11 @@ const PRIJZEN_OV = {
   2023:365733,2024:393428,2025:420923
 };
 const PRIJZEN_NL = {
+  // 1970-1994: BIS/FRED QNLN628BIS index × CBS 1995 NL anchor
+  1970:19577,1971:21733,1972:24467,1973:28569,1974:34443,1975:39905,
+  1976:50907,1977:70529,1978:76397,1979:72416,1980:66443,1981:59773,
+  1982:53179,1983:54128,1984:53749,1985:53843,1986:56399,1987:59063,
+  1988:61777,1989:65888,1990:67205,1991:68927,1992:74697,1993:80849,1994:88976,
   1995:93750,1996:102607,1997:113163,1998:124540,1999:144778,2000:172050,2001:188397,
   2002:199752,2003:204829,2004:212723,2005:222706,2006:235843,2007:248325,2008:254918,
   2009:238259,2010:239530,2011:240059,2012:226661,2013:213353,2014:222218,2015:230194,
@@ -1571,13 +1605,7 @@ const KC = [
   {jaar:2023,bev:33867,woz:326,ves:1028,vert:912,imm:148,emi:58,inc_jaar:60.2,inc_single:29.9,inc_eigen:72.1,inc_huur:34.3,koop:66.1,corp:25.6,vrij:8.2,hh:13434,hh_s:3639,hh_p:4249,hh_g:5546,hh_gr:2.49},
   {jaar:2024,bev:34073,woz:339,ves:907,vert:866,imm:150,emi:111,inc_jaar:64.7,inc_single:31.3,inc_eigen:77.6,inc_huur:37.0,koop:66.8,corp:25.1,vrij:8.1,hh:13561,hh_s:3694,hh_p:4287,hh_g:5580,hh_gr:2.48},
   {jaar:2025,bev:34113,woz:354,ves:null,vert:null,imm:null,emi:null,inc_jaar:null,inc_single:null,inc_eigen:null,inc_huur:null,koop:null,corp:null,vrij:null,hh:13617,hh_s:3769,hh_p:4243,hh_g:5605,hh_gr:2.47,age0_4:1661,age5_9:1869,age10_14:2167,age15_19:2251,age20_24:2212,age25_44:7693,age45_64:9059,age65_79:5509,age80:1692},
-  {jaar:2026,bev:34200,woz:368,ves:null,vert:null,imm:null,emi:null,inc_jaar:67.0,inc_single:32.4,inc_eigen:80.4,inc_huur:38.3,koop:67.2,corp:24.8,vrij:8.0,hh:13700,hh_s:3840,hh_p:4310,hh_g:5550,hh_gr:2.46,prognose:true},
-  {jaar:2027,bev:34270,woz:383,ves:null,vert:null,imm:null,emi:null,inc_jaar:69.4,inc_single:33.5,inc_eigen:83.2,inc_huur:39.6,koop:67.5,corp:24.5,vrij:8.0,hh:13790,hh_s:3915,hh_p:4340,hh_g:5535,hh_gr:2.45,prognose:true},
-  {jaar:2028,bev:34330,woz:398,ves:null,vert:null,imm:null,emi:null,inc_jaar:71.8,inc_single:34.7,inc_eigen:86.1,inc_huur:41.0,koop:67.8,corp:24.2,vrij:8.0,hh:13880,hh_s:3990,hh_p:4370,hh_g:5520,hh_gr:2.44,prognose:true},
-  {jaar:2029,bev:34380,woz:414,ves:null,vert:null,imm:null,emi:null,inc_jaar:74.3,inc_single:35.9,inc_eigen:89.1,inc_huur:42.4,koop:68.0,corp:24.0,vrij:8.0,hh:13970,hh_s:4065,hh_p:4400,hh_g:5505,hh_gr:2.43,prognose:true},
-  {jaar:2030,bev:34420,woz:430,ves:null,vert:null,imm:null,emi:null,inc_jaar:76.9,inc_single:37.1,inc_eigen:92.2,inc_huur:43.9,koop:68.2,corp:23.8,vrij:8.0,hh:14060,hh_s:4145,hh_p:4430,hh_g:5485,hh_gr:2.42,prognose:true},
-  {jaar:2031,bev:34450,woz:447,ves:null,vert:null,imm:null,emi:null,inc_jaar:79.6,inc_single:38.4,inc_eigen:95.4,inc_huur:45.4,koop:68.5,corp:23.5,vrij:8.0,hh:14150,hh_s:4225,hh_p:4455,hh_g:5470,hh_gr:2.41,prognose:true},
-  {jaar:2032,bev:34480,woz:465,ves:null,vert:null,imm:null,emi:null,inc_jaar:82.4,inc_single:39.7,inc_eigen:98.7,inc_huur:47.0,koop:68.7,corp:23.3,vrij:8.0,hh:14240,hh_s:4310,hh_p:4480,hh_g:5450,hh_gr:2.40,prognose:true}
+  // No prognose rows — only real CBS data
 ];
 
 const WONINGVOORRAAD = [
@@ -1586,11 +1614,8 @@ const WONINGVOORRAAD = [
   {jaar:2018,totaal:13664},{jaar:2019,totaal:13705},{jaar:2020,totaal:13819},
   {jaar:2021,totaal:13847},{jaar:2022,totaal:13931},{jaar:2023,totaal:14016},
   {jaar:2024,totaal:14106},{jaar:2025,totaal:14192},
-  {jaar:2026,totaal:14280,p:true},{jaar:2027,totaal:14370,p:true},
-  {jaar:2028,totaal:14460,p:true},{jaar:2029,totaal:14550,p:true},
-  
-  
-  
+  // No prognose rows
+
 ];
 
 const MIGRATIE_LEGACY = [
@@ -1807,7 +1832,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initAllCharts() {
-  const years = Array.from({length:41}, (_,i)=>1995+i);
+  const years = Array.from({length:56}, (_,i)=>1970+i); // 1970–2025
   const kcYears = KC.map(r=>r.jaar);
 
   // ── 1. Price timeseries ──────────────────────────────────
@@ -1817,7 +1842,6 @@ function initAllCharts() {
       datasets:[
         { label:'Twenterand', data:years.map(y=>PRIJZEN_TW[y]||null),
           borderColor:'#e8c97e', borderWidth:2.5, tension:0.3, fill:false,
-          segment:{ borderDash:ctx=>ctx.p0DataIndex>=22?[5,4]:undefined },
           pointHoverBackgroundColor:'#e8c97e', pointHoverRadius:5 },
         { label:'Overijssel', data:years.map(y=>PRIJZEN_OV[y]||null),
           borderColor:'#4a4a60', borderWidth:1.5, tension:0.3, fill:false },
@@ -1834,12 +1858,11 @@ function initAllCharts() {
   const base2010tw = PRIJZEN_TW[2010], base2010nl = PRIJZEN_NL[2010];
   new Chart(document.getElementById('c-price-idx'), {
     type:'line', data:{
-      labels: Array.from({length:33},(_,i)=>2003+i),
+      labels: Array.from({length:23},(_,i)=>2003+i),
       datasets:[
-        { label:'Twenterand', data:Array.from({length:33},(_,i)=>2003+i).map(y=>{
+        { label:'Twenterand', data:Array.from({length:23},(_,i)=>2003+i).map(y=>{
             const p=PRIJZEN_TW[y]; return p?+(p/base2010tw*100).toFixed(1):null;
-          }), borderColor:'#e8c97e', borderWidth:2.5, tension:0.3,
-          segment:{borderDash:ctx=>ctx.p0DataIndex>=22?[5,4]:undefined} },
+          }), borderColor:'#e8c97e', borderWidth:2.5, tension:0.3 },
         { label:'Nederland', data:Array.from({length:23},(_,i)=>2003+i).map(y=>{
             const p=PRIJZEN_NL[y]; return p?+(p/base2010nl*100).toFixed(1):null;
           }), borderColor:'#4a4a60', borderWidth:1.5, tension:0.3 },
@@ -1855,16 +1878,16 @@ function initAllCharts() {
       datasets:[
         { label:'Eigenaar', data:incKC.map(r=>r.inc_eigen*1000),
           borderColor:'#4ade80', borderWidth:2, tension:0.3,
-          segment:{borderDash:ctx=>ctx.p0DataIndex>=13?[5,4]:undefined} },
+          },
         { label:'Huishouden', data:incKC.map(r=>r.inc_jaar*1000),
           borderColor:'#e8c97e', borderWidth:2, tension:0.3,
-          segment:{borderDash:ctx=>ctx.p0DataIndex>=13?[5,4]:undefined} },
+          },
         { label:'Huurder', data:incKC.map(r=>r.inc_huur*1000),
           borderColor:'#f87171', borderWidth:2, tension:0.3,
-          segment:{borderDash:ctx=>ctx.p0DataIndex>=13?[5,4]:undefined} },
+          },
         { label:'Single', data:incKC.map(r=>r.inc_single*1000),
           borderColor:'#7c6af0', borderWidth:2, tension:0.3,
-          segment:{borderDash:ctx=>ctx.p0DataIndex>=13?[5,4]:undefined} },
+          },
       ]
     }, options:{...CD, scales:{...CD.scales, y:{...CD.scales.y, ticks:{...CD.scales.y.ticks, callback:fmtEur}}},
       plugins:{...CD.plugins, tooltip:{...CD.plugins.tooltip, mode:'index', intersect:false, callbacks:{
@@ -1879,11 +1902,11 @@ function initAllCharts() {
       labels: afKC.map(r=>r.jaar),
       datasets:[
         { label:'Max. hyp.', data:afKC.map(r=>r.inc_single*4.5*1000),
-          backgroundColor:afKC.map(r=>r.prognose?'rgba(74,222,128,.25)':'rgba(74,222,128,.55)'), stack:'a' },
+          backgroundColor:'rgba(74,222,128,.55)', stack:'a' },
         { label:'Tekort', data:afKC.map(r=>{
             const p=PRIJZEN_TW[r.jaar]||0; const h=r.inc_single*4.5*1000;
             return Math.max(0,p-h);
-          }), backgroundColor:afKC.map(r=>r.prognose?'rgba(224,82,82,.25)':'rgba(224,82,82,.55)'), stack:'a' },
+          }), backgroundColor:'rgba(224,82,82,.55)', stack:'a' },
       ]
     }, options:{...CD, scales:{...CD.scales,
       x:{...CD.scales.x},
@@ -1902,11 +1925,11 @@ function initAllCharts() {
         { label:'Prijs/huishouden', data:ratioKC.map(r=>{
             const p=PRIJZEN_TW[r.jaar]; return p && r.inc_jaar ? +(p/(r.inc_jaar*1000)).toFixed(2):null;
           }), borderColor:'#e8c97e', borderWidth:2, tension:0.3,
-          segment:{borderDash:ctx=>ctx.p0DataIndex>=13?[5,4]:undefined} },
+          },
         { label:'Prijs/single', data:ratioKC.map(r=>{
             const p=PRIJZEN_TW[r.jaar]; return p && r.inc_single ? +(p/(r.inc_single*1000)).toFixed(2):null;
           }), borderColor:'#e05252', borderWidth:2, tension:0.3,
-          segment:{borderDash:ctx=>ctx.p0DataIndex>=13?[5,4]:undefined} },
+          },
         // Reference line at 6×
         { label:'Grens (6×)', data:ratioKC.map(()=>6),
           borderColor:'rgba(255,255,255,.15)', borderWidth:1, borderDash:[4,4], pointRadius:0 },
@@ -1923,10 +1946,10 @@ function initAllCharts() {
       datasets:[
         { label:'Gem. grootte', data:KC.map(r=>r.hh_gr),
           borderColor:'#e8c97e', borderWidth:2, tension:0.3, yAxisID:'y',
-          segment:{borderDash:ctx=>ctx.p0DataIndex>=22?[5,4]:undefined} },
+          },
         { label:'1-persoonsHH', data:KC.map(r=>r.hh_s),
           borderColor:'#7c6af0', borderWidth:2, tension:0.3, yAxisID:'y2',
-          segment:{borderDash:ctx=>ctx.p0DataIndex>=22?[5,4]:undefined} },
+          },
       ]
     }, options:{...CD, scales:{
       x:CD.scales.x,
@@ -1938,51 +1961,24 @@ function initAllCharts() {
   });
 
   // ── 7. WOZ vs income — extended to 1990, interactive ─────
-  // WOZ data 1990–2002 (CBS kerncijfers + Kadaster historisch)
-  const WOZ_HIST = {
-    1990:68, 1991:73, 1992:80, 1993:87, 1994:93, 1995:99,
-    1996:106,1997:115,1998:127,1999:140,2000:155,2001:168,2002:180,
-  };
-  // Single income 1990–2002 (CBS besteedbaar inkomen, interpolated)
-  const INC_SINGLE_HIST = {
-    1990:12.8,1991:13.2,1992:13.6,1993:13.9,1994:14.2,1995:14.6,
-    1996:15.0,1997:15.5,1998:16.2,1999:16.9,2000:17.6,2001:18.2,2002:18.8,
-  };
-  const INC_EIGEN_HIST = {
-    1990:22,1991:23,1992:24,1993:24.5,1994:25,1995:26,
-    1996:27,1997:28.5,1998:30,1999:31.5,2000:33,2001:35,2002:37,
-  };
-  const INC_HUUR_HIST = {
-    1990:14.5,1991:15,1992:15.5,1993:15.8,1994:16.2,1995:16.5,
-    1996:17,1997:17.5,1998:18,1999:18.5,2000:19,2001:20,2002:21,
-  };
-
-  // Build full 1990–2035 timeline
-  const WOZ_FULL_YEARS = [];
-  for (let y=1990; y<=2032; y++) WOZ_FULL_YEARS.push(y);
+  // WOZ + income — only real CBS data from KC array (2003–2025)
+  const WOZ_FULL_YEARS = KC.map(r=>r.jaar);
 
   function getWozVal(y) {
-    if (WOZ_HIST[y] !== undefined) return WOZ_HIST[y];
     const row = KC.find(r=>r.jaar===y);
     return row?.woz || null;
   }
   function getIncSingle(y) {
-    if (INC_SINGLE_HIST[y] !== undefined) return INC_SINGLE_HIST[y];
     const row = KC.find(r=>r.jaar===y);
     return row?.inc_single || null;
   }
   function getIncEigen(y) {
-    if (INC_EIGEN_HIST[y] !== undefined) return INC_EIGEN_HIST[y];
     const row = KC.find(r=>r.jaar===y);
     return row?.inc_eigen || null;
   }
   function getIncHuur(y) {
-    if (INC_HUUR_HIST[y] !== undefined) return INC_HUUR_HIST[y];
     const row = KC.find(r=>r.jaar===y);
     return row?.inc_huur || null;
-  }
-  function isProgYear(y) {
-    return y > 2024;
   }
 
   let wozMode = 'abs';
@@ -1998,31 +1994,24 @@ function initAllCharts() {
       return [
         { label:'WOZ-waarde (×1k€)', data:WOZ_FULL_YEARS.map(y=>getWozVal(y)),
           borderColor:'#e8c97e', borderWidth:2.5, tension:0.3,
-          segment:{borderDash:ctx=>isProgYear(WOZ_FULL_YEARS[ctx.p1DataIndex])?[5,4]:undefined} },
+          },
         { label:'Eigenaar inkomen (×1k€)', data:WOZ_FULL_YEARS.map(y=>getIncEigen(y)),
-          borderColor:'#4ade80', borderWidth:1.5, tension:0.3,
-          segment:{borderDash:ctx=>isProgYear(WOZ_FULL_YEARS[ctx.p1DataIndex])?[5,4]:undefined} },
+          borderColor:'#4ade80', borderWidth:1.5, tension:0.3 },
         { label:'Single inkomen (×1k€)', data:WOZ_FULL_YEARS.map(y=>getIncSingle(y)),
-          borderColor:'#7c6af0', borderWidth:1.5, tension:0.3,
-          segment:{borderDash:ctx=>isProgYear(WOZ_FULL_YEARS[ctx.p1DataIndex])?[5,4]:undefined} },
+          borderColor:'#7c6af0', borderWidth:1.5, tension:0.3 },
         { label:'Huurder inkomen (×1k€)', data:WOZ_FULL_YEARS.map(y=>getIncHuur(y)),
-          borderColor:'#f87171', borderWidth:1.5, tension:0.3,
-          segment:{borderDash:ctx=>isProgYear(WOZ_FULL_YEARS[ctx.p1DataIndex])?[5,4]:undefined} },
+          borderColor:'#f87171', borderWidth:1.5, tension:0.3 },
       ];
     } else {
       return [
         { label:'WOZ-waarde (index)', data:WOZ_FULL_YEARS.map(y=>getWozVal(y) ? +((getWozVal(y)/baseWoz*100).toFixed(1)) : null),
-          borderColor:'#e8c97e', borderWidth:2.5, tension:0.3,
-          segment:{borderDash:ctx=>isProgYear(WOZ_FULL_YEARS[ctx.p1DataIndex])?[5,4]:undefined} },
+          borderColor:'#e8c97e', borderWidth:2.5, tension:0.3 },
         { label:'Eigenaar inkomen (index)', data:WOZ_FULL_YEARS.map(y=>getIncEigen(y) ? +((getIncEigen(y)/baseE*100).toFixed(1)) : null),
-          borderColor:'#4ade80', borderWidth:1.5, tension:0.3,
-          segment:{borderDash:ctx=>isProgYear(WOZ_FULL_YEARS[ctx.p1DataIndex])?[5,4]:undefined} },
+          borderColor:'#4ade80', borderWidth:1.5, tension:0.3 },
         { label:'Single inkomen (index)', data:WOZ_FULL_YEARS.map(y=>getIncSingle(y) ? +((getIncSingle(y)/baseS*100).toFixed(1)) : null),
-          borderColor:'#7c6af0', borderWidth:1.5, tension:0.3,
-          segment:{borderDash:ctx=>isProgYear(WOZ_FULL_YEARS[ctx.p1DataIndex])?[5,4]:undefined} },
+          borderColor:'#7c6af0', borderWidth:1.5, tension:0.3 },
         { label:'Huurder inkomen (index)', data:WOZ_FULL_YEARS.map(y=>getIncHuur(y) ? +((getIncHuur(y)/baseH*100).toFixed(1)) : null),
-          borderColor:'#f87171', borderWidth:1.5, tension:0.3,
-          segment:{borderDash:ctx=>isProgYear(WOZ_FULL_YEARS[ctx.p1DataIndex])?[5,4]:undefined} },
+          borderColor:'#f87171', borderWidth:1.5, tension:0.3 },
       ];
     }
   }
@@ -2291,13 +2280,13 @@ function initAllCharts() {
       datasets:[
         { label:'Koop %', data:tenureKC.map(r=>r.koop),
           borderColor:'#4ade80', borderWidth:2, tension:0.3, fill:false,
-          segment:{borderDash:ctx=>tenureKC[ctx.p0DataIndex]?.prognose?[5,4]:undefined} },
+          },
         { label:'Corporatiehuur %', data:tenureKC.map(r=>r.corp),
           borderColor:'#60a5fa', borderWidth:2, tension:0.3, fill:false,
-          segment:{borderDash:ctx=>tenureKC[ctx.p0DataIndex]?.prognose?[5,4]:undefined} },
+          },
         { label:'Vrije huur %', data:tenureKC.map(r=>r.vrij),
           borderColor:'#f59e0b', borderWidth:2, tension:0.3, fill:false,
-          segment:{borderDash:ctx=>tenureKC[ctx.p0DataIndex]?.prognose?[5,4]:undefined} },
+          },
       ]
     }, options:{...CD,
       scales:{...CD.scales, y:{...CD.scales.y,
@@ -2315,13 +2304,13 @@ function initAllCharts() {
       datasets:[
         { label:'Eenpersoonshuishoudens', data:KC.map(r=>r.hh_s),
           borderColor:'#7c6af0', borderWidth:2.5, tension:0.3,
-          segment:{borderDash:ctx=>KC[ctx.p0DataIndex]?.prognose?[5,4]:undefined} },
+          },
         { label:'Paar zonder kinderen', data:KC.map(r=>r.hh_p),
           borderColor:'#e8c97e', borderWidth:2, tension:0.3,
-          segment:{borderDash:ctx=>KC[ctx.p0DataIndex]?.prognose?[5,4]:undefined} },
+          },
         { label:'Gezinnen met kinderen', data:KC.map(r=>r.hh_g),
           borderColor:'#4ade80', borderWidth:2, tension:0.3,
-          segment:{borderDash:ctx=>KC[ctx.p0DataIndex]?.prognose?[5,4]:undefined} },
+          },
       ]
     }, options:{...CD,
       scales:{...CD.scales, y:{...CD.scales.y,
@@ -2339,16 +2328,16 @@ function initAllCharts() {
       datasets:[
         { label:'Eigenaar (gem.)', data:scKC.map(r=>Math.round(r.inc_eigen*1000/12)),
           borderColor:'#4ade80', borderWidth:2, tension:0.3,
-          segment:{borderDash:ctx=>scKC[ctx.p0DataIndex]?.prognose?[5,4]:undefined} },
+          },
         { label:'Huishouden (gem.)', data:scKC.map(r=>Math.round(r.inc_jaar*1000/12)),
           borderColor:'#e8c97e', borderWidth:2, tension:0.3,
-          segment:{borderDash:ctx=>scKC[ctx.p0DataIndex]?.prognose?[5,4]:undefined} },
+          },
         { label:'Single / starter', data:scKC.map(r=>Math.round(r.inc_single*1000/12)),
           borderColor:'#7c6af0', borderWidth:2.5, tension:0.3,
-          segment:{borderDash:ctx=>scKC[ctx.p0DataIndex]?.prognose?[5,4]:undefined} },
+          },
         { label:'Huurder (gem.)', data:scKC.map(r=>Math.round(r.inc_huur*1000/12)),
           borderColor:'#f87171', borderWidth:2, tension:0.3,
-          segment:{borderDash:ctx=>scKC[ctx.p0DataIndex]?.prognose?[5,4]:undefined} },
+          },
       ]
     }, options:{...CD,
       scales:{...CD.scales, y:{...CD.scales.y,
@@ -2366,20 +2355,20 @@ function initAllCharts() {
         { label:'Prijs Twenterand', data:scKC.map(r=>PRIJZEN_TW[r.jaar]||null),
           borderColor:'rgba(255,255,255,.55)', borderWidth:2.5, tension:0.3,
           borderDash:[6,3],
-          segment:{borderDash:ctx=>scKC[ctx.p0DataIndex]?.prognose?[5,4]:[6,3]} },
+          },
         { label:'Eigenaar max. hyp.', data:scKC.map(r=>r.inc_eigen*4.5*1000),
           borderColor:'#4ade80', borderWidth:1.5, tension:0.3, fill:false,
-          segment:{borderDash:ctx=>scKC[ctx.p0DataIndex]?.prognose?[5,4]:undefined} },
+          },
         { label:'Huishouden max. hyp.', data:scKC.map(r=>r.inc_jaar*4.5*1000),
           borderColor:'#e8c97e', borderWidth:1.5, tension:0.3, fill:false,
-          segment:{borderDash:ctx=>scKC[ctx.p0DataIndex]?.prognose?[5,4]:undefined} },
+          },
         { label:'Single max. hyp.', data:scKC.map(r=>r.inc_single*4.5*1000),
           borderColor:'#7c6af0', borderWidth:2, tension:0.3,
           fill:{target:0, below:'rgba(124,106,240,.1)'},
-          segment:{borderDash:ctx=>scKC[ctx.p0DataIndex]?.prognose?[5,4]:undefined} },
+          },
         { label:'Huurder max. hyp.', data:scKC.map(r=>r.inc_huur*4.5*1000),
           borderColor:'#f87171', borderWidth:1.5, tension:0.3, fill:false,
-          segment:{borderDash:ctx=>scKC[ctx.p0DataIndex]?.prognose?[5,4]:undefined} },
+          },
       ]
     }, options:{...CD,
       scales:{...CD.scales, y:{...CD.scales.y,
@@ -2444,7 +2433,7 @@ function buildPyramid() {
 function buildAffordTable() {
   const tbody = document.getElementById('afford-tbody');
   if (!tbody) return;
-  const years = [2011,2013,2015,2017,2019,2021,2022,2023,2024,2026,2028,2030,2035];
+  const years = [2011,2013,2015,2017,2019,2021,2022,2023,2024];
   const isUser = userIncomeMonthly > 0;
   tbody.innerHTML = years.map(y => {
     const kc = KC.find(r=>r.jaar===y);
@@ -2454,9 +2443,8 @@ function buildAffordTable() {
     const maxHyp = incK * 4.5 * 1000;
     const gap    = price - maxHyp;
     const ratio  = (price/(incK*1000)).toFixed(1);
-    const isProg = kc.prognose ? '★' : '';
     return `<tr>
-      <td style="color:${kc.prognose?'var(--accent2)':'var(--t2)'};font-size:11px">${y}${isProg}</td>
+      <td style="color:var(--t2);font-size:11px">${y}</td>
       <td class="num" style="${isUser?'color:var(--accent2)':''}">€${Math.round(incK)}k${isUser?' ✎':''}</td>
       <td class="num">€${Math.round(maxHyp/1000)}k</td>
       <td class="num">€${Math.round(price/1000)}k</td>
@@ -2797,12 +2785,12 @@ function buildNewsLinksGrid() {
 }
 
 function exportCSV() {
-  const headers = ['jaar','prijs_tw','prijs_nl','woz','bev','hh','hh_single','inc_jaar','inc_single','inc_eigenaar','inc_huurder','koop','hh_grootte','prognose'];
+  const headers = ['jaar','prijs_tw','prijs_nl','woz','bev','hh','hh_single','inc_jaar','inc_single','inc_eigenaar','inc_huurder','koop','hh_grootte'];
   const rows = KC.map(r => [
     r.jaar, PRIJZEN_TW[r.jaar]||'', PRIJZEN_NL[r.jaar]||'',
     r.woz,r.bev,r.hh,r.hh_s,
     r.inc_jaar,r.inc_single,r.inc_eigen,r.inc_huur,
-    r.koop,r.hh_gr, r.prognose?1:0
+    r.koop,r.hh_gr
   ].join(','));
   const csv = [headers.join(','), ...rows].join('\n');
   const a = document.createElement('a');
