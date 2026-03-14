@@ -10,7 +10,15 @@
 <link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet"/>
 <script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="data/bag/bag_data.js"></script>
+<script src="data/bag/bag_data_0.js"></script>
+<script src="data/bag/bag_data_1.js"></script>
+<script src="data/bag/bag_data_2.js"></script>
+<script src="data/bag/bag_data_3.js"></script>
+<script src="data/bag/bag_data_4.js"></script>
+<script>
+// Merge chunks into single BAG_COORDS array
+const BAG_COORDS = [].concat(BAG_CHUNK_0, BAG_CHUNK_1, BAG_CHUNK_2, BAG_CHUNK_3, BAG_CHUNK_4);
+</script>
 <style>
   :root {
     --bg:       #08080e;

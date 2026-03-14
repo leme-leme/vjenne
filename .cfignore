@@ -1,0 +1,10 @@
+scripts/
+.git/
+.github/
+.wrangler/
+README.md
+*.md
+package.json
+wrangler.toml
+data/bag/bag_data.js
+data/bag/bag_data.js.gz
