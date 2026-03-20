@@ -17,7 +17,20 @@
 <script src="data/bag/bag_data_4.js"></script>
 <script>
 // Merge chunks into single BAG_COORDS array
-const BAG_COORDS = [].concat(BAG_CHUNK_0, BAG_CHUNK_1, BAG_CHUNK_2, BAG_CHUNK_3, BAG_CHUNK_4);
+let BAG_COORDS = [];
+try {
+  const chunks = [
+    typeof BAG_CHUNK_0 !== 'undefined' ? BAG_CHUNK_0 : [],
+    typeof BAG_CHUNK_1 !== 'undefined' ? BAG_CHUNK_1 : [],
+    typeof BAG_CHUNK_2 !== 'undefined' ? BAG_CHUNK_2 : [],
+    typeof BAG_CHUNK_3 !== 'undefined' ? BAG_CHUNK_3 : [],
+    typeof BAG_CHUNK_4 !== 'undefined' ? BAG_CHUNK_4 : [],
+  ];
+  BAG_COORDS = chunks.flat();
+  console.log('BAG_COORDS loaded:', BAG_COORDS.length, 'objects');
+} catch(e) {
+  console.error('BAG chunk merge failed:', e);
+}
 </script>
 <style>
   :root {
