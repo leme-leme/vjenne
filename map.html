@@ -10,26 +10,55 @@
 <link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet"/>
 <script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="data/bag/bag_data_0.js"></script>
-<script src="data/bag/bag_data_1.js"></script>
-<script src="data/bag/bag_data_2.js"></script>
-<script src="data/bag/bag_data_3.js"></script>
-<script src="data/bag/bag_data_4.js"></script>
 <script>
-// Merge chunks into single BAG_COORDS array
+// BAG data loaded async from compact binary (mobile-friendly)
 let BAG_COORDS = [];
-try {
-  const chunks = [
-    typeof BAG_CHUNK_0 !== 'undefined' ? BAG_CHUNK_0 : [],
-    typeof BAG_CHUNK_1 !== 'undefined' ? BAG_CHUNK_1 : [],
-    typeof BAG_CHUNK_2 !== 'undefined' ? BAG_CHUNK_2 : [],
-    typeof BAG_CHUNK_3 !== 'undefined' ? BAG_CHUNK_3 : [],
-    typeof BAG_CHUNK_4 !== 'undefined' ? BAG_CHUNK_4 : [],
-  ];
-  BAG_COORDS = chunks.flat();
-  console.log('BAG_COORDS loaded:', BAG_COORDS.length, 'objects');
-} catch(e) {
-  console.error('BAG chunk merge failed:', e);
+let BAG_GEMEENTEN = [];
+const GDOEL_MAP = ['w','i','k','o'];
+
+async function loadBAGData() {
+  try {
+    // Load gemeenten + binary coords in parallel
+    const [gemRes, binRes] = await Promise.all([
+      fetch('data/bag/bag_gemeenten.json'),
+      fetch('data/bag/bag_coords.bin'),
+    ]);
+    BAG_GEMEENTEN = await gemRes.json();
+
+    const buf = await binRes.arrayBuffer();
+    const view = new DataView(buf);
+    const count = view.getUint32(0, true);
+    BAG_COORDS = new Array(count);
+
+    let off = 4;
+    for (let i = 0; i < count; i++) {
+      const lng  = view.getFloat32(off, true);     off += 4;
+      const lat  = view.getFloat32(off, true);     off += 4;
+      const bj   = view.getUint16(off, true);      off += 2;
+      const gi   = view.getUint8(off);             off += 1;
+      const m2   = view.getUint16(off, true);      off += 2;
+      const gd   = view.getUint8(off);             off += 1;
+      BAG_COORDS[i] = [lng, lat, bj, '', gi, m2, GDOEL_MAP[gd] || 'o'];
+    }
+    console.log('BAG binary loaded:', BAG_COORDS.length, 'objects');
+
+    // Load addresses in background (not needed for initial render)
+    fetch('data/bag/bag_addrs.gz')
+      .then(r => r.blob())
+      .then(blob => blob.stream().pipeThrough(new DecompressionStream('gzip')))
+      .then(stream => new Response(stream).text())
+      .then(text => {
+        const addrs = text.split('\n');
+        for (let i = 0; i < Math.min(addrs.length, BAG_COORDS.length); i++) {
+          BAG_COORDS[i][3] = addrs[i];
+        }
+        console.log('BAG addresses loaded');
+      })
+      .catch(e => console.warn('Address load failed (non-critical):', e));
+
+  } catch(e) {
+    console.error('BAG data load failed:', e);
+  }
 }
 </script>
 <style>
@@ -1470,7 +1499,10 @@ window._map = map;
 map.addControl(new maplibregl.NavigationControl({showCompass:false}), 'bottom-right');
 map.addControl(new maplibregl.ScaleControl({unit:'metric'}), 'bottom-left');
 
-map.on('load', () => {
+map.on('load', async () => {
+  // Load BAG data (binary, mobile-friendly)
+  await loadBAGData();
+
   // Set Twenterand filter BEFORE building dots so only ~7k objects are loaded initially
   const DEFAULT_GI = 14; // Twenterand (gi=14)
   currentGemeenteFilter = DEFAULT_GI;
