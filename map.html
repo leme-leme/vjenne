@@ -2441,14 +2441,18 @@ function _ensureMigCanvas() {
   _migCanvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2';
   mapEl.appendChild(_migCanvas);
   _migCtx = _migCanvas.getContext('2d');
-  // Keep canvas pixel-size in sync with container
-  const ro = new ResizeObserver(() => {
-    _migCanvas.width  = mapEl.clientWidth;
-    _migCanvas.height = mapEl.clientHeight;
-  });
+  // Keep canvas pixel-size in sync with container (DPI-aware)
+  function _resizeMigCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    const w = mapEl.clientWidth;
+    const h = mapEl.clientHeight;
+    _migCanvas.width  = w * dpr;
+    _migCanvas.height = h * dpr;
+    _migCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  const ro = new ResizeObserver(_resizeMigCanvas);
   ro.observe(mapEl);
-  _migCanvas.width  = mapEl.clientWidth;
-  _migCanvas.height = mapEl.clientHeight;
+  _resizeMigCanvas();
 }
 
 // Each ping: { t: 0..1 progress, phase: stagger offset }
@@ -2495,7 +2499,7 @@ function _startPingLoop() {
     const dt = _lastPingTime ? Math.min((ts - _lastPingTime) / 1000, 0.05) : 0.016;
     _lastPingTime = ts;
 
-    const W = _migCanvas.width, H = _migCanvas.height;
+    const W = _migCanvas.clientWidth, H = _migCanvas.clientHeight;
     _migCtx.clearRect(0, 0, W, H);
 
     if (!layerOn.migration || currentStyle === 'dark') { arcAnimFrame = requestAnimationFrame(frame); return; }
