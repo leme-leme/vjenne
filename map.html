@@ -42,19 +42,20 @@ async function loadBAGData() {
     }
     console.log('BAG binary loaded:', BAG_COORDS.length, 'objects');
 
-    // Load addresses in background (not needed for initial render)
-    fetch('data/bag/bag_addrs.gz')
-      .then(r => r.blob())
-      .then(blob => blob.stream().pipeThrough(new DecompressionStream('gzip')))
-      .then(stream => new Response(stream).text())
-      .then(text => {
-        const addrs = text.split('\n');
-        for (let i = 0; i < Math.min(addrs.length, BAG_COORDS.length); i++) {
-          BAG_COORDS[i][3] = addrs[i];
-        }
-        console.log('BAG addresses loaded');
-      })
-      .catch(e => console.warn('Address load failed (non-critical):', e));
+    // Load addresses — needed for building tooltips/cards
+    try {
+      const addrRes = await fetch('data/bag/bag_addrs.gz');
+      const addrBlob = await addrRes.blob();
+      const addrStream = addrBlob.stream().pipeThrough(new DecompressionStream('gzip'));
+      const addrText = await new Response(addrStream).text();
+      const addrs = addrText.split('\n');
+      for (let i = 0; i < Math.min(addrs.length, BAG_COORDS.length); i++) {
+        BAG_COORDS[i][3] = addrs[i];
+      }
+      console.log('BAG addresses loaded:', addrs.length);
+    } catch(e) {
+      console.warn('Address load failed:', e);
+    }
 
   } catch(e) {
     console.error('BAG data load failed:', e);
@@ -2230,8 +2231,10 @@ function bldgRadiusExpr(year) {
     7,  ['interpolate', ['linear'], ['get','m2'],  60, 0.8,  160, 1.0],
     9,  ['interpolate', ['linear'], ['get','m2'],  60, 1.4,  160, 1.8],
     11, ['interpolate', ['linear'], ['get','m2'],  60, 2.0,  160, 2.8],
-    13, ['interpolate', ['linear'], ['get','m2'],  60, 3.0,  160, 4.0],
-    15, ['interpolate', ['linear'], ['get','m2'],  60, 3.5,  160, 5.0],
+    13, ['interpolate', ['linear'], ['get','m2'],  60, 3.5,  160, 5.0],
+    15, ['interpolate', ['linear'], ['get','m2'],  60, 5.0,  160, 7.0],
+    17, ['interpolate', ['linear'], ['get','m2'],  60, 7.0,  160, 10.0],
+    19, ['interpolate', ['linear'], ['get','m2'],  60, 10.0, 160, 14.0],
   ];
 
   if (!isAnimating) {
